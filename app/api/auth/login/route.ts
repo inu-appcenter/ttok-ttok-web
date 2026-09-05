@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
-const ACCESS_TOKEN_COOKIE = "ttok_access_token";
-const REFRESH_TOKEN_COOKIE = "ttok_refresh_token";
+import {
+  ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+} from "@/shared/lib/auth/cookies";
 const INVALID_CREDENTIALS_MESSAGE =
   "학번 또는 비밀번호가 일치하지 않습니다.";
 const INVALID_INPUT_MESSAGE = "학번과 비밀번호를 모두 입력해주세요.";
@@ -54,6 +56,50 @@ function isLoginTokenData(value: unknown): value is LoginTokenData {
     typeof data.refreshToken === "string" &&
     typeof data.refreshTokenExpiresAt === "string"
   );
+}
+
+function getJwtExpiresAt(token: string) {
+  const payload = token.split(".")[1];
+
+  if (!payload) {
+    return undefined;
+  }
+
+  try {
+    const base64Payload = payload
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .padEnd(Math.ceil(payload.length / 4) * 4, "=");
+    const decodedPayload: unknown = JSON.parse(atob(base64Payload));
+
+    if (
+      !decodedPayload ||
+      typeof decodedPayload !== "object" ||
+      typeof (decodedPayload as Record<string, unknown>).exp !== "number"
+    ) {
+      return undefined;
+    }
+
+    const expiresAt = new Date(
+      (decodedPayload as Record<string, number>).exp * 1000,
+    );
+
+    return Number.isNaN(expiresAt.getTime()) ? undefined : expiresAt;
+  } catch {
+    return undefined;
+  }
+}
+
+function getExpiresAt(token: string, fallbackExpiresAt: string) {
+  const jwtExpiresAt = getJwtExpiresAt(token);
+
+  if (jwtExpiresAt) {
+    return jwtExpiresAt;
+  }
+
+  const expiresAt = new Date(fallbackExpiresAt);
+
+  return Number.isNaN(expiresAt.getTime()) ? undefined : expiresAt;
 }
 
 function getErrorMessage(status: number, response: ApiResponse) {
@@ -125,12 +171,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const accessTokenExpiresAt = new Date(response.data.accessTokenExpiresAt);
-    const refreshTokenExpiresAt = new Date(response.data.refreshTokenExpiresAt);
+    const accessTokenExpiresAt = getExpiresAt(
+      response.data.accessToken,
+      response.data.accessTokenExpiresAt,
+    );
+    const refreshTokenExpiresAt = getExpiresAt(
+      response.data.refreshToken,
+      response.data.refreshTokenExpiresAt,
+    );
 
     if (
-      Number.isNaN(accessTokenExpiresAt.getTime()) ||
-      Number.isNaN(refreshTokenExpiresAt.getTime())
+      !accessTokenExpiresAt ||
+      !refreshTokenExpiresAt ||
+      accessTokenExpiresAt.getTime() <= Date.now() ||
+      refreshTokenExpiresAt.getTime() <= Date.now()
     ) {
       return NextResponse.json(
         { message: SERVER_ERROR_MESSAGE },
