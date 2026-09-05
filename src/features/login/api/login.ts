@@ -7,6 +7,12 @@ type LoginErrorResponse = {
   message?: unknown;
 };
 
+type LoginSuccessResponse = {
+  isNew?: unknown;
+  memberId?: unknown;
+  ok?: unknown;
+};
+
 export async function login(
   credentials: LoginCredentials,
 ): Promise<LoginResult> {
@@ -20,7 +26,13 @@ export async function login(
     });
 
     if (response.ok) {
-      return { ok: true };
+      const result: LoginSuccessResponse = await response.json().catch(() => ({}));
+
+      if (typeof result.isNew !== "boolean" || typeof result.memberId !== "number") {
+        return { message: LOGIN_ERROR_MESSAGE, ok: false };
+      }
+
+      return { isNew: result.isNew, memberId: result.memberId, ok: true };
     }
 
     const error: LoginErrorResponse = await response.json().catch(() => ({}));

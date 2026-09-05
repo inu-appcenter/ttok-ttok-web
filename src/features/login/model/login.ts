@@ -4,7 +4,7 @@ export type LoginCredentials = {
 };
 
 export type LoginResult =
-  | { ok: true }
+  | { isNew: boolean; memberId: number; ok: true }
   | {
       message: string;
       ok: false;

@@ -54,7 +54,7 @@ export function LoginForm({ initialHasError = false }: LoginFormProps) {
       return;
     }
 
-    router.replace("/");
+    router.replace(result.isNew ? "/onboarding" : "/");
     router.refresh();
   };
 

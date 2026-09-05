@@ -18,6 +18,8 @@ type LoginRequest = {
 type LoginTokenData = {
   accessToken: string;
   accessTokenExpiresAt: string;
+  isNew: boolean;
+  memberId: number;
   refreshToken: string;
   refreshTokenExpiresAt: string;
 };
@@ -53,6 +55,8 @@ function isLoginTokenData(value: unknown): value is LoginTokenData {
   return (
     typeof data.accessToken === "string" &&
     typeof data.accessTokenExpiresAt === "string" &&
+    typeof data.isNew === "boolean" &&
+    typeof data.memberId === "number" &&
     typeof data.refreshToken === "string" &&
     typeof data.refreshTokenExpiresAt === "string"
   );
@@ -192,7 +196,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const nextResponse = NextResponse.json({ ok: true });
+    const nextResponse = NextResponse.json({
+      isNew: response.data.isNew,
+      memberId: response.data.memberId,
+      ok: true,
+    });
     const cookieOptions = {
       httpOnly: true,
       sameSite: "lax" as const,

@@ -15,6 +15,11 @@ type OnboardingQuestion = {
   type: "choice" | "lab-search" | "multi-choice" | "text";
 };
 
+type OnboardingAnswerValue = string | string[];
+type OnboardingAnswers = Partial<
+  Record<OnboardingQuestionId, OnboardingAnswerValue>
+>;
+
 const ONBOARDING_PURPOSE = {
   explore: "연구실을 알아보고 있어요",
   member: "학부연구생 / 대학원생이에요",
@@ -101,4 +106,8 @@ function getOnboardingQuestions(purpose?: string) {
 }
 
 export { getOnboardingQuestions, ONBOARDING_PURPOSE, ONBOARDING_QUESTIONS };
-export type { OnboardingQuestion, OnboardingQuestionId };
+export type {
+  OnboardingAnswers,
+  OnboardingQuestion,
+  OnboardingQuestionId,
+};
