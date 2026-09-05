@@ -2,8 +2,11 @@
 
 import type { FormEvent } from "react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button, Field, Logo } from "@/shared/ui";
+
+import { login } from "../api/login";
 
 const LOGIN_ERROR_MESSAGE = "학번 또는 비밀번호가 일치하지 않습니다.";
 
@@ -12,18 +15,50 @@ export type LoginFormProps = {
 };
 
 export function LoginForm({ initialHasError = false }: LoginFormProps) {
-  const [hasError, setHasError] = useState(initialHasError);
+  const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState(
+    initialHasError ? LOGIN_ERROR_MESSAGE : "",
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = () => {
-    if (hasError) {
-      setHasError(false);
+    if (errorMessage) {
+      setErrorMessage("");
     }
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setHasError(true);
+
+    if (isSubmitting) {
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    const studentNumber = formData.get("studentNumber");
+    const password = formData.get("password");
+
+    if (typeof studentNumber !== "string" || typeof password !== "string") {
+      setErrorMessage("학번과 비밀번호를 모두 입력해주세요.");
+      return;
+    }
+
+    setErrorMessage("");
+    setIsSubmitting(true);
+
+    const result = await login({ password, studentNumber });
+
+    if (!result.ok) {
+      setErrorMessage(result.message);
+      setIsSubmitting(false);
+      return;
+    }
+
+    router.replace("/");
+    router.refresh();
   };
+
+  const hasError = Boolean(errorMessage);
 
   return (
     <form
@@ -43,9 +78,10 @@ export function LoginForm({ initialHasError = false }: LoginFormProps) {
         inputMode="numeric"
         invalid={hasError}
         label="학번"
-        name="studentId"
+        name="studentNumber"
         onChange={handleChange}
         placeholder="학번을 입력해주세요."
+        required
       />
       <Field
         autoComplete="current-password"
@@ -54,10 +90,16 @@ export function LoginForm({ initialHasError = false }: LoginFormProps) {
         name="password"
         onChange={handleChange}
         placeholder="비밀번호를 입력해주세요."
+        required
         type="password"
       />
 
-      <Button className="w-full" size="lg" type="submit">
+      <Button
+        className="w-full"
+        isLoading={isSubmitting}
+        size="lg"
+        type="submit"
+      >
         로그인
       </Button>
 
@@ -65,7 +107,7 @@ export function LoginForm({ initialHasError = false }: LoginFormProps) {
         aria-live="polite"
         className={`h-5 text-center text-[length:var(--font-size-label2)] leading-[1.5] text-text-error ${hasError ? "visible" : "invisible"}`}
       >
-        {LOGIN_ERROR_MESSAGE}
+        {errorMessage || LOGIN_ERROR_MESSAGE}
       </p>
     </form>
   );
