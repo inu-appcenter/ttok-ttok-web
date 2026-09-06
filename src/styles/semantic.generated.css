@@ -32,9 +32,9 @@
   --color-bg-primary-press: var(--color-primary-primary-500);
   --color-bg-primary-subtle: var(--color-primary-primary-50);
   --color-bg-disabled: var(--color-gray-gray-100);
-  --color-bg-success: var(--color-green-green-50);
-  --color-bg-warning: var(--color-yellow-yellow-50);
-  --color-bg-error: var(--color-red-red-50);
+  --color-bg-success: var(--color-green-green-300);
+  --color-bg-warning: var(--color-yellow-yellow-300);
+  --color-bg-error: var(--color-red-red-300);
   --color-bg-secondary: var(--color-secondary-secondary-300);
   --color-bg-secondary-hover: var(--color-secondary-secondary-400);
   --color-bg-secondary-press: var(--color-secondary-secondary-500);
