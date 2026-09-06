@@ -10,6 +10,7 @@ export type MemberResearchProfile = {
 export type MemberProfile = {
   accountLabel: string;
   email: string;
+  isUndergraduateResearcher: boolean;
   researchProfile?: MemberResearchProfile;
   roleLabel: string;
 };

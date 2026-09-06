@@ -3,6 +3,7 @@ import type { MemberProfile } from "./member-profile";
 export const MOCK_MEMBER_PROFILE: MemberProfile = {
   accountLabel: "인천대 SSO 계정",
   email: "username@inu.ac.kr",
+  isUndergraduateResearcher: true,
   researchProfile: {
     coffeeChatPublic: true,
     department: "컴퓨터공학부",
