@@ -10,6 +10,10 @@ type MobileBottomNavItem = {
   label: string;
 };
 
+export type MobileBottomNavProps = {
+  activeHref?: string;
+};
+
 const items: MobileBottomNavItem[] = [
   {
     href: "/",
@@ -34,8 +38,9 @@ const items: MobileBottomNavItem[] = [
 const AI_GRADIENT =
   "linear-gradient(90deg, #a7c0db 0%, #b4bade 33%, #c2aed6 66%, #d699c5 100%)";
 
-export function MobileBottomNav() {
+export function MobileBottomNav({ activeHref }: MobileBottomNavProps) {
   const pathname = usePathname() ?? "";
+  const currentPathname = activeHref ?? pathname;
 
   return (
     <nav
@@ -45,10 +50,11 @@ export function MobileBottomNav() {
       {items.map((item) => {
         const isActive =
           item.href === "/"
-            ? pathname === item.href ||
-              pathname.startsWith("/labs/") ||
-              pathname.startsWith("/search")
-            : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            ? currentPathname === item.href ||
+              currentPathname.startsWith("/labs/") ||
+              currentPathname.startsWith("/search")
+            : currentPathname === item.href ||
+              currentPathname.startsWith(`${item.href}/`);
         const isAiActive = isActive && item.href === "/recommendations";
         const activeColor = isAiActive ? AI_GRADIENT : "var(--color-text-primary)";
 

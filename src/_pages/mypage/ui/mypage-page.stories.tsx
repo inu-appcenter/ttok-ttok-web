@@ -21,6 +21,24 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const Mobile: Story = {
+  parameters: {
+    viewport: {
+      defaultViewport: "mobile375",
+      options: {
+        mobile375: {
+          name: "Mobile 375",
+          styles: {
+            height: "812px",
+            width: "375px",
+          },
+          type: "mobile",
+        },
+      },
+    },
+  },
+};
+
 export const WithdrawalDialogOpen: Story = {
   args: {
     initialWithdrawalDialogOpen: true,
