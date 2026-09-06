@@ -31,23 +31,26 @@ pnpm build
 ## 3. 디렉터리 구조
 
 ```text
+app/           # Next.js App Router 진입점(라우트 파일만 유지)
+pages/         # Pages Router 미사용 표시용 빈 디렉터리
 src/
-├── app/       # Next.js 라우팅, 레이아웃, 프로바이더, 전역 설정
-├── views/     # 라우트에 대응하는 화면 구성
+├── _app/      # 애플리케이션 초기화, 프로바이더, 전역 설정
+├── _pages/    # 라우트에 대응하는 화면 구성
 ├── widgets/   # 여러 기능과 엔티티를 조합한 독립적인 UI 블록
 ├── features/  # 사용자의 행동과 비즈니스 기능
 ├── entities/  # 핵심 비즈니스 개체
 └── shared/    # 프로젝트 전반에서 재사용하는 기반 코드
 ```
 
-Next.js의 `app` 디렉터리와 FSD의 페이지 계층이 이름으로 충돌하지 않도록 FSD 페이지 계층은 `views`로 사용한다.
+루트 `app`은 Next.js App Router의 예약 파일만 두고 실제 화면 구성은 `src/_pages`에 위임한다. FSD의 `app`, `pages` 레이어는 Next.js 예약 디렉터리와 구분하기 위해 `_app`, `_pages`로 표기한다. 루트 `pages`에는 `.gitkeep`만 유지하며 Pages Router 코드는 작성하지 않는다.
 
 ### 레이어별 역할
 
 | 레이어 | 역할 | 예시 |
 | --- | --- | --- |
-| `app` | 라우트 진입점과 애플리케이션 초기화 | 라우트, 레이아웃, 전역 Provider |
-| `views` | 한 페이지의 전체 구성 | 연구실 목록 화면, 연구실 상세 화면 |
+| 루트 `app` | Next.js 라우트 진입점 | `page.tsx`, `layout.tsx`, 메타데이터 파일 |
+| `_app` | 애플리케이션 초기화 | 전역 스타일, 전역 Provider, 앱 설정 |
+| `_pages` | 한 페이지의 전체 구성 | 연구실 목록 화면, 연구실 상세 화면 |
 | `widgets` | 페이지에서 독립적인 큰 UI 영역 | 헤더, 연구실 검색 결과 목록 |
 | `features` | 사용자가 수행하는 기능 | 연구실 검색, 모집 상태 필터, 커피챗 신청 |
 | `entities` | 도메인 데이터와 관련 UI | 연구실, 사용자, 후기 |
@@ -58,7 +61,7 @@ Next.js의 `app` 디렉터리와 FSD의 페이지 계층이 이름으로 충돌�
 상위 레이어는 하위 레이어만 참조한다.
 
 ```text
-app -> views -> widgets -> features -> entities -> shared
+root app -> _app / _pages -> widgets -> features -> entities -> shared
 ```
 
 - 같은 레이어의 다른 슬라이스를 직접 참조하지 않는 것을 원칙으로 한다.
@@ -89,7 +92,7 @@ features/search-lab/
 
 ## 4. Next.js 작성 기준
 
-- `src/app`의 라우트 파일은 얇게 유지하고 화면 구성은 `views`에 위임한다.
+- 루트 `app`의 라우트 파일은 얇게 유지하고 화면 구성은 `src/_pages`에 위임한다.
 - 컴포넌트는 기본적으로 Server Component로 작성한다.
 - 상태, 이벤트, 브라우저 API가 필요한 경계에만 `'use client'`를 선언한다.
 - `'use client'`를 페이지 전체에 적용하기보다 상호작용이 필요한 작은 컴포넌트로 한정한다.
@@ -98,12 +101,8 @@ features/search-lab/
 - 서버 전용 값이나 비밀 키가 클라이언트 번들에 포함되지 않도록 한다.
 
 ```tsx
-// src/app/labs/page.tsx
-import { LabsView } from '@/views/labs';
-
-export default function LabsPage() {
-  return <LabsView />;
-}
+// app/labs/page.tsx
+export { LabsPage as default } from '@/_pages/labs';
 ```
 
 ## 5. TypeScript

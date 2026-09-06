@@ -131,7 +131,7 @@ async function build(tokens, files) {
       css: {
         transformGroup: 'tokens-studio',
         transforms: ['name/kebab'],
-        buildPath: 'src/styles/',
+        buildPath: 'src/_app/styles/tokens/',
         files,
       },
     },

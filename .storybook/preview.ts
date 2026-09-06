@@ -1,6 +1,6 @@
 import type { Preview } from "@storybook/nextjs-vite";
 
-import "../src/app/globals.css";
+import "../src/_app/styles/globals.css";
 
 const preview: Preview = {
   parameters: {
@@ -12,7 +12,7 @@ const preview: Preview = {
     },
     options: {
       storySort: {
-        order: ["Shared", "Entities", "Features", "Widgets", "Views", "Pages"],
+        order: ["Shared", "Entities", "Features", "Widgets", "Pages"],
       },
     },
   },
