@@ -103,7 +103,7 @@ export function SiteHeader({
         <div className="ml-auto flex shrink-0 items-center overflow-hidden">
           {isAuthenticated ? (
             <Link
-              className="flex cursor-pointer items-center gap-[var(--spacing-spacing-0-5)] rounded-sm px-[var(--spacing-spacing-1)] text-[22px] font-semibold leading-[1.5] tracking-[-0.01em] text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
+              className="hidden cursor-pointer items-center gap-[var(--spacing-spacing-0-5)] rounded-sm px-[var(--spacing-spacing-1)] text-[22px] font-semibold leading-[1.5] tracking-[-0.01em] text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary md:flex"
               href="/mypage"
             >
               <Image alt="" height={22} src="/icons/header/profile.svg" width={22} />

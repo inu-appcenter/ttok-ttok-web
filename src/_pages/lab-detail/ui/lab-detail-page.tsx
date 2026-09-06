@@ -8,11 +8,12 @@ import {
 } from "@/features/lab-detail-actions";
 import { Tag } from "@/shared/ui";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
-import { SiteHeader } from "@/widgets/site-header";
+import { AuthenticatedSiteHeader } from "@/widgets/site-header";
 
 import { MobileAiSummary } from "./mobile-ai-summary";
 
 export type LabDetailPageProps = {
+  isAuthenticated?: boolean;
   lab: LabDetail;
 };
 
@@ -24,12 +25,15 @@ function getHomepageLabel(homepageUrl: string) {
   }
 }
 
-export function LabDetailPage({ lab }: LabDetailPageProps) {
+export function LabDetailPage({
+  isAuthenticated = false,
+  lab,
+}: LabDetailPageProps) {
   const { memberCounts } = lab;
 
   return (
     <div className="min-h-screen bg-bg-default text-text-default">
-      <SiteHeader activeItem="search" />
+      <AuthenticatedSiteHeader activeItem="search" />
       <main className="flex flex-col gap-5 px-4 pb-[calc(111px_+_env(safe-area-inset-bottom))] pt-[27px] md:hidden">
         <MobileAiSummary paragraphs={lab.aiSummary} />
 
@@ -134,7 +138,10 @@ export function LabDetailPage({ lab }: LabDetailPageProps) {
           )}
         </section>
 
-        <LabContactCard contact={lab.contact} />
+        <LabContactCard
+          contact={lab.contact}
+          isAuthenticated={isAuthenticated}
+        />
         <ProvideLabInfoCard />
         <div className="text-center">
           <ReportLabButton />
@@ -258,7 +265,10 @@ export function LabDetailPage({ lab }: LabDetailPageProps) {
           </section>
 
           <div className="mt-10 flex flex-col gap-[18px] lg:mt-[296px]">
-            <LabContactCard contact={lab.contact} />
+            <LabContactCard
+              contact={lab.contact}
+              isAuthenticated={isAuthenticated}
+            />
             <ProvideLabInfoCard />
           </div>
         </aside>

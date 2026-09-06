@@ -6,41 +6,40 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { MOCK_LABS, SelectedLabCard } from "@/entities/lab";
-import { Field } from "@/shared/ui";
+import { Button, Field } from "@/shared/ui";
 
 import {
   getOnboardingQuestions,
-  ONBOARDING_QUESTIONS,
 } from "../model/onboarding-steps";
+import type { OnboardingAnswers } from "../model/onboarding-steps";
 import { ChatMessage } from "./chat-message";
 import { OnboardingProgress } from "./onboarding-progress";
 import { OnboardingSubmit } from "./onboarding-submit";
 import { MultiQuickReplies, QuickReplies } from "./quick-replies";
 
-type AnswerValue = string | string[];
-type Answers = Partial<
-  Record<(typeof ONBOARDING_QUESTIONS)[number]["id"], AnswerValue>
->;
-
 type OnboardingFlowProps = {
   completionHref?: string;
+  onComplete?: (answers: OnboardingAnswers) => Promise<void>;
   renderLabSearch: (props: {
     onSelect: (labId: string) => void;
     selectedLabId?: string;
   }) => ReactNode;
 };
 
-function formatAnswer(answer: AnswerValue | undefined) {
+function formatAnswer(answer: string | string[] | undefined) {
   return Array.isArray(answer) ? answer.join(", ") : answer;
 }
 
 export function OnboardingFlow({
   completionHref = "/",
+  onComplete,
   renderLabSearch,
 }: OnboardingFlowProps) {
-  const [answers, setAnswers] = useState<Answers>({});
+  const [answers, setAnswers] = useState<OnboardingAnswers>({});
   const [pendingAnswer, setPendingAnswer] = useState("");
   const [pendingSelections, setPendingSelections] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const activeStepRef = useRef<HTMLElement>(null);
   const isInitialRender = useRef(true);
 
@@ -96,6 +95,22 @@ export function OnboardingFlow({
     setPendingSelections([]);
   }
 
+  async function handleCompletion() {
+    if (!onComplete || isSubmitting) {
+      return;
+    }
+
+    setSubmitError("");
+    setIsSubmitting(true);
+
+    try {
+      await onComplete(answers);
+    } catch {
+      setSubmitError("온보딩 저장 중 문제가 발생했습니다. 다시 시도해주세요.");
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <>
       <OnboardingProgress currentStep={currentStep} />
@@ -136,13 +151,35 @@ export function OnboardingFlow({
               <p className="text-[length:var(--font-size-body3)] font-normal leading-[1.5] text-text-subtle">
                 이제 “똑똑”에서 자세한 연구실 정보를 확인해보세요!
               </p>
-              <Link
-                className="mt-[var(--spacing-spacing-3)] inline-flex cursor-pointer items-center justify-center gap-[var(--spacing-spacing-1-5)] rounded-[var(--radius-md)] border border-[color:var(--color-bg-primary-hover)] bg-bg-default px-[var(--spacing-spacing-6)] py-[var(--spacing-spacing-3)] text-[length:var(--font-size-headline1)] font-semibold leading-[1.4] text-[color:var(--color-bg-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                href={completionHref}
-              >
-                시작하기
-                <Image alt="" height={18} src="/icons/arrow-right.svg" width={18} />
-              </Link>
+              {onComplete ? (
+                <>
+                  <Button
+                    className="mt-[var(--spacing-spacing-3)]"
+                    disabled={isSubmitting}
+                    isLoading={isSubmitting}
+                    onClick={handleCompletion}
+                    type="button"
+                  >
+                    시작하기
+                  </Button>
+                  {submitError ? (
+                    <p
+                      aria-live="polite"
+                      className="mt-[var(--spacing-spacing-2)] text-[length:var(--font-size-label2)] text-text-error"
+                    >
+                      {submitError}
+                    </p>
+                  ) : null}
+                </>
+              ) : (
+                <Link
+                  className="mt-[var(--spacing-spacing-3)] inline-flex cursor-pointer items-center justify-center gap-[var(--spacing-spacing-1-5)] rounded-[var(--radius-md)] border border-[color:var(--color-bg-primary-hover)] bg-bg-default px-[var(--spacing-spacing-6)] py-[var(--spacing-spacing-3)] text-[length:var(--font-size-headline1)] font-semibold leading-[1.4] text-[color:var(--color-bg-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
+                  href={completionHref}
+                >
+                  시작하기
+                  <Image alt="" height={18} src="/icons/arrow-right.svg" width={18} />
+                </Link>
+              )}
             </div>
           </section>
         ) : (
