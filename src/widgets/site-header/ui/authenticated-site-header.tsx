@@ -1,6 +1,4 @@
-import { cookies } from "next/headers";
-
-import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
+import { getAuthSession } from "@/shared/lib/auth/session";
 
 import {
   SiteHeader,
@@ -10,12 +8,12 @@ import {
 export async function AuthenticatedSiteHeader(
   props: Omit<SiteHeaderProps, "isAuthenticated">,
 ) {
-  const cookieStore = await cookies();
+  const { isAuthenticated } = await getAuthSession();
 
   return (
     <SiteHeader
       {...props}
-      isAuthenticated={cookieStore.has(ACCESS_TOKEN_COOKIE)}
+      isAuthenticated={isAuthenticated}
     />
   );
 }
