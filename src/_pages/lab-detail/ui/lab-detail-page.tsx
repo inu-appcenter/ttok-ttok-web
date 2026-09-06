@@ -13,6 +13,7 @@ import { AuthenticatedSiteHeader } from "@/widgets/site-header";
 import { MobileAiSummary } from "./mobile-ai-summary";
 
 export type LabDetailPageProps = {
+  isAuthenticated?: boolean;
   lab: LabDetail;
 };
 
@@ -24,7 +25,10 @@ function getHomepageLabel(homepageUrl: string) {
   }
 }
 
-export function LabDetailPage({ lab }: LabDetailPageProps) {
+export function LabDetailPage({
+  isAuthenticated = false,
+  lab,
+}: LabDetailPageProps) {
   const { memberCounts } = lab;
 
   return (
@@ -134,7 +138,10 @@ export function LabDetailPage({ lab }: LabDetailPageProps) {
           )}
         </section>
 
-        <LabContactCard contact={lab.contact} />
+        <LabContactCard
+          contact={lab.contact}
+          isAuthenticated={isAuthenticated}
+        />
         <ProvideLabInfoCard />
         <div className="text-center">
           <ReportLabButton />
@@ -258,7 +265,10 @@ export function LabDetailPage({ lab }: LabDetailPageProps) {
           </section>
 
           <div className="mt-10 flex flex-col gap-[18px] lg:mt-[296px]">
-            <LabContactCard contact={lab.contact} />
+            <LabContactCard
+              contact={lab.contact}
+              isAuthenticated={isAuthenticated}
+            />
             <ProvideLabInfoCard />
           </div>
         </aside>

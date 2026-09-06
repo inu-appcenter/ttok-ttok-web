@@ -21,6 +21,13 @@ export const Default: Story = {
   },
 };
 
+export const Authenticated: Story = {
+  args: {
+    isAuthenticated: true,
+    lab: MOCK_LAB_DETAILS[0],
+  },
+};
+
 export const EmptyResearchInformation: Story = {
   args: {
     lab: MOCK_LAB_DETAILS[1],

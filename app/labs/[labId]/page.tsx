@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { LabDetailPage } from "@/_pages/lab-detail";
 import { getLabById } from "@/entities/lab";
+import { getAuthSession } from "@/shared/lib/auth/session";
 
 type LabPageProps = {
   params: Promise<{ labId: string }>;
@@ -22,9 +23,12 @@ export async function generateMetadata({ params }: LabPageProps): Promise<Metada
 
 export default async function Page({ params }: LabPageProps) {
   const { labId } = await params;
-  const lab = await getLabById(labId);
+  const [lab, { isAuthenticated }] = await Promise.all([
+    getLabById(labId),
+    getAuthSession(),
+  ]);
 
   if (!lab) notFound();
 
-  return <LabDetailPage lab={lab} />;
+  return <LabDetailPage isAuthenticated={isAuthenticated} lab={lab} />;
 }
