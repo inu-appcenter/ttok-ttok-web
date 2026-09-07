@@ -15,6 +15,9 @@ const preview: Preview = {
         order: ["Shared", "Entities", "Features", "Widgets", "Pages"],
       },
     },
+    nextjs: {
+      appDirectory: true,
+    },
   },
   tags: ["autodocs"],
 };
