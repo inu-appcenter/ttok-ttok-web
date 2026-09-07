@@ -40,8 +40,45 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Publish to Chromatic
+        id: chromatic
         if: env.CHROMATIC_PROJECT_TOKEN != ''
         uses: chromaui/action@latest
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           onlyChanged: true
+
+      - name: Notify Slack
+        if: always() && steps.chromatic.outputs.storybookUrl != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          STORYBOOK_URL: ${{ steps.chromatic.outputs.storybookUrl }}
+          BUILD_URL: ${{ steps.chromatic.outputs.buildUrl }}
+          CHROMATIC_RESULT: ${{ steps.chromatic.outcome }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          CHANGE_TITLE: ${{ github.event.pull_request.title || github.event.head_commit.message }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          jq -n \
+            --arg result "$CHROMATIC_RESULT" \
+            --arg branch "$BRANCH_NAME" \
+            --arg title "$CHANGE_TITLE" \
+            --arg storybook "$STORYBOOK_URL" \
+            --arg build "$BUILD_URL" \
+            --arg run "$RUN_URL" \
+            '{
+              text: "Chromatic 배포 결과",
+              blocks: [
+                {
+                  type: "section",
+                  text: {
+                    type: "mrkdwn",
+                    text: ("*Chromatic 배포 결과: " + $result + "*\n브랜치: `" + $branch + "`\n변경: " + $title + "\n<" + $storybook + "|Storybook 보기> · <" + $build + "|Chromatic 결과> · <" + $run + "|Actions 로그>")
+                  }
+                }
+              ]
+            }' |
+          curl --fail-with-body \
+            --request POST \
+            --header "Content-Type: application/json" \
+            --data @- \
+            "$SLACK_WEBHOOK_URL"
