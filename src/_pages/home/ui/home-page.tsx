@@ -7,18 +7,19 @@ import { MobileLabExplorer } from "@/features/search-lab";
 import { SearchField } from "@/shared/ui";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
 import { SiteFooter } from "@/widgets/site-footer";
-import { AuthenticatedSiteHeader } from "@/widgets/site-header";
+import { SiteHeader } from "@/widgets/site-header";
 
 const popularCategories = ["AI / ML", "데이터", "보안", "시스템", "비전", "NLP"];
 
 export type HomePageProps = {
+  isAuthenticated?: boolean;
   labs: LabSummary[];
 };
 
-export function HomePage({ labs }: HomePageProps) {
+export function HomePage({ isAuthenticated = false, labs }: HomePageProps) {
   return (
     <div className="min-h-screen overflow-x-hidden bg-bg-default pb-[calc(111px_+_env(safe-area-inset-bottom))] text-text-default md:pb-0">
-      <AuthenticatedSiteHeader activeItem="home" />
+      <SiteHeader activeItem="home" isAuthenticated={isAuthenticated} />
       <main>
         <div className="px-4 pb-11 pt-[27px] md:hidden">
           <section className="relative flex h-[156px] flex-col justify-center overflow-hidden rounded-[var(--radius-xl)] bg-[linear-gradient(90deg,#749fda_1.38%,#abc2e2_54.82%,#cba5d1_145.41%)] px-4 pb-4 pt-8">

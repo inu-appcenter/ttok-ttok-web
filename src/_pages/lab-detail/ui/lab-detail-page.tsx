@@ -8,7 +8,7 @@ import {
 } from "@/features/lab-detail-actions";
 import { Tag } from "@/shared/ui";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
-import { AuthenticatedSiteHeader } from "@/widgets/site-header";
+import { SiteHeader } from "@/widgets/site-header";
 
 import { MobileAiSummary } from "./mobile-ai-summary";
 
@@ -33,7 +33,7 @@ export function LabDetailPage({
 
   return (
     <div className="min-h-screen bg-bg-default text-text-default">
-      <AuthenticatedSiteHeader activeItem="search" />
+      <SiteHeader activeItem="search" isAuthenticated={isAuthenticated} />
       <main className="flex flex-col gap-5 px-4 pb-[calc(111px_+_env(safe-area-inset-bottom))] pt-[27px] md:hidden">
         <MobileAiSummary paragraphs={lab.aiSummary} />
 
