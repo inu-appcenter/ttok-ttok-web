@@ -52,7 +52,7 @@ export function LabDetailPage({
           </h2>
           <div className="mt-[10px] flex flex-wrap gap-[14px]">
             {lab.tags.map((tag) => (
-              <Tag className="!bg-[#bfd5f3] py-0" key={tag} tone="primary">
+              <Tag className="!bg-[#bfd5f3]" key={tag} size="sm" tone="primary">
                 {tag}
               </Tag>
             ))}
@@ -153,7 +153,7 @@ export function LabDetailPage({
           <header className="border-b border-border-subtle py-[30px]">
             <div className="flex flex-wrap gap-[14px]">
               {lab.tags.map((tag) => (
-                <Tag className="!bg-[#bfd5f3] py-0" key={tag} tone="primary">
+                <Tag className="!bg-[#bfd5f3]" key={tag} size="sm" tone="primary">
                   {tag}
                 </Tag>
               ))}
