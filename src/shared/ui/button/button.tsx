@@ -40,9 +40,15 @@ const disabledClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "h-[37px] px-[var(--spacing-spacing-4)] text-[length:var(--font-size-body3)]",
-  md: "h-[44px] px-[var(--spacing-spacing-5)] text-[length:var(--font-size-body2)]",
-  lg: "h-[51px] px-[var(--spacing-spacing-6)] text-[length:var(--font-size-body1)]",
+  sm: "h-[37px] rounded-[var(--radius-md)] px-[var(--spacing-spacing-4)] text-[length:var(--font-size-body3)]",
+  md: "h-[44px] rounded-[var(--radius-lg)] px-[var(--spacing-spacing-5)] text-[length:var(--font-size-body2)]",
+  lg: "h-[51px] rounded-[var(--radius-xl)] px-[var(--spacing-spacing-6)] text-[length:var(--font-size-body1)]",
+};
+
+const iconSizeClasses: Record<ButtonSize, string> = {
+  sm: "size-[14px]",
+  md: "size-4",
+  lg: "size-[18px]",
 };
 
 export function Button({
@@ -57,22 +63,24 @@ export function Button({
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || isLoading;
+  const isSizeAwareVariant = variant !== "outline" && variant !== "text";
+  const iconSize = isSizeAwareVariant ? size : "lg";
 
   return (
     <button
-      className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-[var(--spacing-spacing-1)] rounded-[var(--radius-xl)] font-normal leading-[1.5] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary ${variantClasses[variant]} ${disabledClasses[variant]} ${variant === "text" ? "" : sizeClasses[size]} ${className ?? ""}`}
+      className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-[var(--spacing-spacing-1)] font-normal leading-[1.5] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary ${variantClasses[variant]} ${disabledClasses[variant]} ${isSizeAwareVariant ? sizeClasses[size] : variant === "outline" ? "rounded-[var(--radius-xl)]" : ""} ${className ?? ""}`}
       disabled={isDisabled}
       aria-busy={isLoading || undefined}
       {...props}
     >
       {leadingIcon ? (
-        <span className="flex size-[18px] shrink-0 items-center justify-center [&>img]:size-full">
+        <span className={`flex ${iconSizeClasses[iconSize]} shrink-0 items-center justify-center [&>img]:size-full`}>
           {leadingIcon}
         </span>
       ) : null}
       <span className="whitespace-nowrap">{isLoading ? "처리 중..." : children}</span>
       {trailingIcon ? (
-        <span className="flex size-[18px] shrink-0 items-center justify-center [&>img]:size-full">
+        <span className={`flex ${iconSizeClasses[iconSize]} shrink-0 items-center justify-center [&>img]:size-full`}>
           {trailingIcon}
         </span>
       ) : null}

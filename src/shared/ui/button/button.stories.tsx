@@ -49,6 +49,16 @@ export const IconVariants: Story = {
   ),
 };
 
+export const IconSizes: Story = {
+  render: (args) => (
+    <div className="flex items-center gap-4">
+      <Button {...args} leadingIcon={icon} size="lg" />
+      <Button {...args} leadingIcon={icon} size="md" />
+      <Button {...args} leadingIcon={icon} size="sm" />
+    </div>
+  ),
+};
+
 export const FigmaMatrix: Story = {
   render: (args) => (
     <div className="grid grid-cols-3 items-center gap-4">

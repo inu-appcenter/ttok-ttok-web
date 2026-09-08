@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { LabCard } from "@/entities/lab";
@@ -151,24 +150,14 @@ export function MobileLabExplorer({ labs }: MobileLabExplorerProps) {
   return (
     <>
       <div className="flex flex-col gap-5">
-        <div className="flex h-[37px] w-full items-center gap-2 overflow-hidden rounded-[var(--radius-xl)] border border-border-subtle bg-bg-default px-3 focus-within:border-border-primary">
-          <Image alt="" height={16} src="/icons/home/mobile/search.svg" width={16} />
-          <input
-            aria-label="연구실명, 교수명 또는 키워드 검색"
-            className="min-w-0 flex-1 bg-transparent text-[length:var(--font-size-caption1)] leading-[1.5] text-text-default outline-none placeholder:text-text-subtle"
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="연구실명 · 교수명 · 키워드 검색"
-            type="search"
-            value={searchQuery}
-          />
-          <Link
-            className="inline-flex shrink-0 items-center gap-0.5 rounded-[var(--radius-lg)] bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] px-2.5 py-1 text-[length:var(--font-size-caption2)] font-semibold leading-[1.5] text-text-inverse focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-            href="/recommendations"
-          >
-            <Image alt="" height={12} src="/icons/home/ai-button-sparkles.svg" width={12} />
-            AI 연구실 추천
-          </Link>
-        </div>
+        <SearchField
+          aria-label="연구실명, 교수명 또는 키워드 검색"
+          elevated={false}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="연구실명 · 교수명 · 키워드 검색"
+          size="sm"
+          value={searchQuery}
+        />
 
         <div className="flex gap-1">
           <FilterButton
@@ -216,7 +205,6 @@ export function MobileLabExplorer({ labs }: MobileLabExplorerProps) {
               <SearchField
                 autoFocus
                 elevated
-                hoverBackground={false}
                 onChange={(event) => setFieldQuery(event.target.value)}
                 placeholder="분야 검색"
                 size="sm"
@@ -261,7 +249,6 @@ export function MobileLabExplorer({ labs }: MobileLabExplorerProps) {
               <SearchField
                 autoFocus
                 elevated
-                hoverBackground={false}
                 onChange={(event) => setDepartmentQuery(event.target.value)}
                 placeholder="학과 검색"
                 size="sm"

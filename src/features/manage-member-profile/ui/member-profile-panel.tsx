@@ -108,7 +108,7 @@ function DesktopProfileView({
         <p className="mt-0.5 text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle">
           {profile.accountLabel}
         </p>
-        <Tag className="mt-2 !py-0" tone="primary">
+        <Tag className="mt-2" size="sm" tone="primary">
           {profile.roleLabel}
         </Tag>
         <Button

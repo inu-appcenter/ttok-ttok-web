@@ -1,5 +1,6 @@
 export type LabSummary = {
   department: string;
+  description: string;
   labId: string;
   name: string;
   professorName: string;

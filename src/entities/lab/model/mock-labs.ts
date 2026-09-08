@@ -6,6 +6,7 @@ export const MOCK_LABS: LabSummary[] = [
     name: "지능형 데이터 시스템 연구실",
     professorName: "김다윤",
     department: "컴퓨터공학부",
+    description: "대규모 트래픽에서 침입 탐지 모델을 만들고, 캠퍼스망 데이터로 검증합니다.",
     tags: ["데이터베이스", "빅데이터", "ML시스템"],
   },
   {
@@ -13,6 +14,7 @@ export const MOCK_LABS: LabSummary[] = [
     name: "인공지능 응용 연구실",
     professorName: "이OO",
     department: "산업공학부",
+    description: "산업 현장의 문제를 인공지능으로 해결하는 방법을 연구합니다.",
     tags: ["인공지능", "최적화"],
   },
   {
@@ -20,6 +22,7 @@ export const MOCK_LABS: LabSummary[] = [
     name: "데이터마이닝 연구실",
     professorName: "박OO",
     department: "컴퓨터공학부",
+    description: "복잡한 데이터에서 의미 있는 패턴과 지식을 찾아냅니다.",
     tags: ["데이터마이닝", "추천시스템"],
   },
   {
@@ -27,6 +30,7 @@ export const MOCK_LABS: LabSummary[] = [
     name: "머신러닝 이론 연구실",
     professorName: "최OO",
     department: "산업공학부",
+    description: "신뢰할 수 있는 머신러닝 모델의 이론과 알고리즘을 탐구합니다.",
     tags: ["머신러닝", "딥러닝"],
   },
   {
@@ -34,13 +38,14 @@ export const MOCK_LABS: LabSummary[] = [
     name: "로보틱스 연구실",
     professorName: "정OO",
     department: "기계공학부",
+    description: "지능형 로봇의 인지와 제어 기술을 연구합니다.",
     tags: ["로보틱스", "제어"],
   },
 ];
 
 const DEFAULT_DETAIL: Omit<
   LabDetail,
-  "department" | "labId" | "name" | "professorName" | "tags"
+  "department" | "description" | "labId" | "name" | "professorName" | "tags"
 > = {
   aiSummary: ["연구실 상세 정보와 주요 연구 내용을 준비하고 있습니다."],
   contact: {

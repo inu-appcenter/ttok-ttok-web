@@ -1,9 +1,11 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
 type TagTone = "default" | "neutral" | "primary" | "secondary" | "subtle" | "success" | "warning" | "error";
+type TagSize = "sm" | "md";
 
 export type TagProps = HTMLAttributes<HTMLSpanElement> & {
   children: ReactNode;
+  size?: TagSize;
   tone?: TagTone;
 };
 
@@ -18,10 +20,15 @@ const toneClasses: Record<TagTone, string> = {
   error: "bg-bg-error text-text-error text-[length:var(--font-size-label2)] font-semibold",
 };
 
-export function Tag({ children, className, tone = "default", ...props }: TagProps) {
+const sizeClasses: Record<TagSize, string> = {
+  sm: "py-0",
+  md: "py-[var(--spacing-spacing-0-5)]",
+};
+
+export function Tag({ children, className, size = "md", tone = "default", ...props }: TagProps) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-[var(--spacing-spacing-2-5)] py-[var(--spacing-spacing-0-5)] leading-[1.5] ${toneClasses[tone]} ${className ?? ""}`}
+      className={`inline-flex items-center rounded-full px-[var(--spacing-spacing-2-5)] leading-[1.5] ${sizeClasses[size]} ${toneClasses[tone]} ${className ?? ""}`}
       {...props}
     >
       {children}
@@ -40,5 +47,5 @@ const recruitmentStatus: Record<RecruitmentStatus, { label: string; tone: TagTon
 export function RecruitmentStatusTag({ status }: { status: RecruitmentStatus }) {
   const currentStatus = recruitmentStatus[status];
 
-  return <Tag tone={currentStatus.tone}>{currentStatus.label}</Tag>;
+  return <Tag size="sm" tone={currentStatus.tone}>{currentStatus.label}</Tag>;
 }

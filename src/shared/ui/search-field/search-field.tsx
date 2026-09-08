@@ -42,7 +42,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
       className,
       disabled,
       elevated = true,
-      hoverBackground = true,
+      hoverBackground = false,
       onKeyDown,
       onSearch,
       rounded = "all",
@@ -62,11 +62,11 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
 
     return (
       <div
-        className={`flex items-center border border-border-subtle bg-bg-default transition-colors focus-within:border-border-primary focus-within:bg-bg-default has-[:disabled]:border-border-disabled has-[:disabled]:bg-bg-disabled ${hoverBackground ? "hover:bg-bg-subtle" : ""} ${elevated ? (size === "sm" ? "shadow-[0_2px_8px_var(--color-opacity-black-10)]" : "shadow-[0_4px_16px_var(--color-opacity-black-10)]") : "shadow-none"} ${sizeClasses[size]} ${roundedClasses[size][rounded]}`}
+        className={`flex items-center border border-border-subtle bg-[#ffffff] transition-colors focus-within:border-border-primary focus-within:bg-[#ffffff] ${disabled ? "border-border-disabled bg-bg-disabled" : ""} ${hoverBackground ? "hover:bg-bg-subtle" : ""} ${elevated ? (size === "sm" ? "shadow-[0_2px_8px_var(--color-opacity-black-10)]" : "shadow-[0_4px_16px_var(--color-opacity-black-10)]") : "shadow-none"} ${sizeClasses[size]} ${roundedClasses[size][rounded]}`}
       >
         <input
           {...props}
-          className={`min-w-0 flex-1 bg-transparent font-normal leading-[1.5] text-text-default outline-none placeholder:text-text-subtle disabled:cursor-not-allowed disabled:text-text-disabled disabled:placeholder:text-text-disabled ${className ?? ""}`}
+          className={`min-w-0 flex-1 appearance-none bg-[#ffffff] font-normal leading-[1.5] text-text-default outline-none placeholder:text-text-subtle disabled:cursor-not-allowed disabled:bg-[#ffffff] disabled:text-text-disabled disabled:placeholder:text-text-disabled ${className ?? ""}`}
           disabled={disabled}
           onKeyDown={handleKeyDown}
           ref={ref}
