@@ -3,8 +3,7 @@ import Link from "next/link";
 
 import { LabCard } from "@/entities/lab";
 import type { LabSummary } from "@/entities/lab";
-import { MobileLabExplorer } from "@/features/search-lab";
-import { SearchField } from "@/shared/ui";
+import { HomeSearchField, MobileLabExplorer } from "@/features/search-lab";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
 import { SiteFooter } from "@/widgets/site-footer";
 import { SiteHeader } from "@/widgets/site-header";
@@ -116,12 +115,7 @@ export function HomePage({ isAuthenticated = false, labs }: HomePageProps) {
 
         <section className="mx-auto flex w-full max-w-[1440px] flex-col gap-[var(--spacing-spacing-4)] px-6 py-10 sm:flex-row sm:items-center md:px-[clamp(24px,8.89vw,128px)]">
           <div className="w-full flex-1">
-            <SearchField
-              aria-label="연구실 검색"
-              elevated={false}
-              placeholder="연구실명 · 교수명 · 키워드 검색"
-              size="lg"
-            />
+            <HomeSearchField />
           </div>
         </section>
 
