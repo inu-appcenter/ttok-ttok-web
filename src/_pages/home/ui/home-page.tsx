@@ -123,13 +123,6 @@ export function HomePage({ isAuthenticated = false, labs }: HomePageProps) {
               size="lg"
             />
           </div>
-          <Link
-            className="inline-flex shrink-0 items-center justify-center gap-1 overflow-hidden rounded-[var(--radius-xl)] bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] px-[var(--spacing-spacing-4)] py-[var(--spacing-spacing-2)] text-[length:var(--font-size-headline2)] font-semibold leading-[1.4] tracking-[-0.01em] text-text-inverse focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-            href="/recommendations"
-          >
-            <Image alt="" height={16} src="/icons/home/ai-button-sparkles.svg" width={16} />
-            AI 연구실 추천
-          </Link>
         </section>
 
         <section className="mx-auto flex w-full max-w-[1440px] flex-col gap-[var(--spacing-spacing-4)] px-6 py-[var(--spacing-spacing-2)] md:px-[clamp(24px,8.89vw,128px)]">
