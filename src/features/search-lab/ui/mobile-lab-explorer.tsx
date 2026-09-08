@@ -154,6 +154,7 @@ export function MobileLabExplorer({ labs }: MobileLabExplorerProps) {
           aria-label="연구실명, 교수명 또는 키워드 검색"
           elevated={false}
           onChange={(event) => setSearchQuery(event.target.value)}
+          onSearch={() => setSearchQuery(searchQuery)}
           placeholder="연구실명 · 교수명 · 키워드 검색"
           size="sm"
           value={searchQuery}
@@ -206,6 +207,7 @@ export function MobileLabExplorer({ labs }: MobileLabExplorerProps) {
                 autoFocus
                 elevated
                 onChange={(event) => setFieldQuery(event.target.value)}
+                onSearch={() => setFieldQuery(fieldQuery)}
                 placeholder="분야 검색"
                 size="sm"
                 value={fieldQuery}
@@ -250,6 +252,7 @@ export function MobileLabExplorer({ labs }: MobileLabExplorerProps) {
                 autoFocus
                 elevated
                 onChange={(event) => setDepartmentQuery(event.target.value)}
+                onSearch={() => setDepartmentQuery(departmentQuery)}
                 placeholder="학과 검색"
                 size="sm"
                 value={departmentQuery}

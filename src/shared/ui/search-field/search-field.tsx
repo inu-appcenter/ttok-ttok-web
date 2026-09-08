@@ -76,7 +76,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
         <button
           aria-label="검색"
           className="ml-[var(--spacing-spacing-2)] flex shrink-0 cursor-pointer items-center justify-center rounded-full text-icon-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary disabled:cursor-default"
-          disabled={disabled || !onSearch}
+          disabled={disabled}
           onClick={() => onSearch?.(String(value ?? ""))}
           type="button"
         >
