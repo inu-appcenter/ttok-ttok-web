@@ -11,9 +11,9 @@ export type LogoProps = {
 
 const logoAssets: Record<LogoVariant, { height: number; src: string; width: number }> = {
   horizontal: { height: 62, src: "/logos/ttok-horizontal.svg", width: 120 },
-  stacked: { height: 120, src: "/logos/ttok-stacked.svg", width: 78 },
+  stacked: { height: 114, src: "/logos/ttok-vertical-text-icon.svg", width: 79 },
   vertical: { height: 112, src: "/logos/ttok-vertical.svg", width: 140 },
-  wordmark: { height: 41, src: "/logos/ttok-wordmark.svg", width: 74 },
+  wordmark: { height: 45, src: "/logos/ttok-text.svg", width: 79 },
 };
 
 export function Logo({
