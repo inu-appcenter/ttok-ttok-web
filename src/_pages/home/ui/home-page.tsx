@@ -20,17 +20,17 @@ export function HomePage({ isAuthenticated = false, labs }: HomePageProps) {
     <div className="min-h-screen overflow-x-hidden bg-bg-default pb-[calc(111px_+_env(safe-area-inset-bottom))] text-text-default md:pb-0">
       <SiteHeader activeItem="home" isAuthenticated={isAuthenticated} />
       <main>
-        <div className="px-4 pb-11 pt-[27px] md:hidden">
+        <div className="px-4 pt-[27px] md:px-0 md:pt-0">
           <HomeBanner />
+        </div>
 
+        <div className="px-4 pb-11 md:hidden">
           <div className="mt-5">
             <MobileLabExplorer labs={labs} />
           </div>
         </div>
 
         <div className="hidden md:block">
-        <HomeBanner />
-
         <section className="mx-auto flex w-full max-w-[1440px] flex-col gap-[var(--spacing-spacing-4)] px-6 py-10 sm:flex-row sm:items-center md:px-[clamp(24px,8.89vw,128px)]">
           <div className="w-full flex-1">
             <HomeSearchField />
