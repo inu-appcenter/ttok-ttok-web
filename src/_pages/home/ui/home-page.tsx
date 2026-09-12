@@ -4,10 +4,9 @@ import { LabCard } from "@/entities/lab";
 import type { LabSummary } from "@/entities/lab";
 import { HomeSearchField, MobileLabExplorer } from "@/features/search-lab";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
+import { HomeBanner } from "@/widgets/home-banner";
 import { SiteFooter } from "@/widgets/site-footer";
 import { SiteHeader } from "@/widgets/site-header";
-
-import { HomeBanner } from "./home-banner";
 
 const popularCategories = ["AI / ML", "데이터", "보안", "시스템", "비전", "NLP"];
 
