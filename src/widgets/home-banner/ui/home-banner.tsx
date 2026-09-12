@@ -48,6 +48,10 @@ function BannerArtwork({ index }: { index: BannerIndex }) {
   }
 
   const assetName = index === 1 ? "sticky" : "subjects";
+  const desktopArtwork =
+    index === 1
+      ? { className: "h-[296px] w-[409px]", sizes: "409px" }
+      : { className: "h-[221px] w-[306px]", sizes: "306px" };
 
   return (
     <>
@@ -59,11 +63,11 @@ function BannerArtwork({ index }: { index: BannerIndex }) {
           src={`/images/home/banner/${assetName}-mobile.webp`}
         />
       </span>
-      <span className="relative hidden h-[296px] w-[409px] md:block">
+      <span className={`relative hidden md:block ${desktopArtwork.className}`}>
         <Image
           alt=""
           fill
-          sizes="409px"
+          sizes={desktopArtwork.sizes}
           src={`/images/home/banner/${assetName}-desktop.webp`}
         />
       </span>
