@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 
 import { LabCard } from "@/entities/lab";
@@ -21,6 +20,15 @@ export type AiRecommendationsPageProps = {
 
 const promptPlaceholder =
   "예) 추천시스템에 관심이 있고, 파이썬으로 크롤링 프로젝트를 해봤어요. 데이터 다루는 걸 좋아합니다.";
+
+function AiSparklesIcon() {
+  return (
+    <span
+      aria-hidden="true"
+      className="block size-5 bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] [mask-image:url(/icons/home/mobile/sparkles.svg)] [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain] [-webkit-mask-image:url(/icons/home/mobile/sparkles.svg)] [-webkit-mask-position:center] [-webkit-mask-repeat:no-repeat] [-webkit-mask-size:contain]"
+    />
+  );
+}
 
 export function AiRecommendationsPage({
   initialPrompt = "",
@@ -48,7 +56,7 @@ export function AiRecommendationsPage({
           <section className="flex flex-col gap-[10px] md:gap-9">
             <div className="rounded-[var(--radius-md)] bg-bg-default p-3 md:p-0">
               <div className="flex items-center gap-1 md:hidden">
-                <Image alt="" height={20} src="/icons/home/mobile/sparkles.svg" width={20} />
+                <AiSparklesIcon />
                 <h1 className="bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] bg-clip-text text-[length:var(--font-size-heading1)] font-semibold leading-[1.5] tracking-[-0.01em] text-transparent">
                   AI 랩 추천
                 </h1>
@@ -94,7 +102,7 @@ export function AiRecommendationsPage({
             </div>
 
             <div className="flex items-center gap-1 md:gap-2">
-              <Image alt="" height={20} src="/icons/home/mobile/sparkles.svg" width={20} />
+              <AiSparklesIcon />
               <h1 className="bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] bg-clip-text text-[length:var(--font-size-headline1)] font-semibold leading-[1.4] tracking-[-0.01em] text-transparent md:text-[length:var(--font-size-heading1)] md:leading-[1.5]">
                 이런 연구실이 잘 맞을 것 같아요
               </h1>
