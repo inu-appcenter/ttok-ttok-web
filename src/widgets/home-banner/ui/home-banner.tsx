@@ -16,76 +16,24 @@ type BannerIndex = 0 | 1 | 2;
 
 const banners = [
   {
-    background:
-      "bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)]",
+    desktopImage: "/images/home/banner/slide-1-desktop.png",
     description: "관심 분야와 조건만 알려주면, 꼭 맞는 연구실을 추천해드려요",
+    mobileImage: "/images/home/banner/slide-1-mobile.png",
     title: <>나에게 딱 맞는 연구실,<br />AI가 찾아드려요</>,
   },
   {
-    background: "bg-[#d699c5]",
+    desktopImage: "/images/home/banner/slide-2-desktop.png",
     description: "직접 경험한 연구실 정보를 공유하고, 더 나은 선택을 도와주세요",
+    mobileImage: "/images/home/banner/slide-2-mobile.png",
     title: <>연구실 정보를 제공해주세요!<br />후배들에게 큰 도움이 됩니다</>,
   },
   {
-    background: "bg-[#a7c0db]",
+    desktopImage: "/images/home/banner/slide-3-desktop.png",
     description: "“AI 연구실 요약”을 통해 쉽게 확인해보세요",
+    mobileImage: "/images/home/banner/slide-3-mobile.png",
     title: <>여기저기 흩어진 연구실 공고,<br />한 곳에서 모아보세요</>,
   },
 ] as const;
-
-function BannerArtwork({ index }: { index: BannerIndex }) {
-  if (index === 0) {
-    return (
-      <>
-        <span className="relative block size-[43px] md:hidden">
-          <Image
-            alt=""
-            fill
-            sizes="43px"
-            src="/images/home/banner/sparkle-mobile.png"
-          />
-        </span>
-        <span className="relative hidden size-[180px] md:block">
-          <Image
-            alt=""
-            fill
-            sizes="180px"
-            src="/images/home/banner/sparkle-desktop.png"
-          />
-        </span>
-      </>
-    );
-  }
-
-  const assetName = index === 1 ? "sticky" : "subjects";
-  const desktopArtwork =
-    index === 1
-      ? { className: "h-[296px] w-[409px]", sizes: "409px" }
-      : { className: "h-[221px] w-[306px]", sizes: "306px" };
-
-  return (
-    <>
-      <span
-        className={`relative block md:hidden ${index === 1 ? "h-[57px] w-[84px]" : "h-[61px] w-[84px]"}`}
-      >
-        <Image
-          alt=""
-          fill
-          sizes="(max-width: 767px) 84px"
-          src={`/images/home/banner/${assetName}-mobile.png`}
-        />
-      </span>
-      <span className={`relative hidden md:block ${desktopArtwork.className}`}>
-        <Image
-          alt=""
-          fill
-          sizes={desktopArtwork.sizes}
-          src={`/images/home/banner/${assetName}-desktop.png`}
-        />
-      </span>
-    </>
-  );
-}
 
 function Pagination({
   activeIndex,
@@ -175,7 +123,7 @@ export function HomeBanner() {
   return (
     <section
       aria-label="서비스 소개 배너"
-      className="relative h-40 overflow-hidden rounded-[var(--radius-xl)] text-white md:h-[360px] md:rounded-none"
+      className="relative aspect-[5/2] overflow-hidden rounded-[var(--radius-xl)] text-white md:aspect-auto md:h-[360px] md:rounded-none"
       onBlur={handleBlur}
       onFocus={pauseAutoplay}
       onMouseEnter={pauseAutoplay}
@@ -188,10 +136,28 @@ export function HomeBanner() {
         {banners.map((banner, index) => (
           <article
             aria-hidden={activeIndex !== index}
-            className={`min-w-full px-6 ${banner.background} md:px-8`}
+            className="relative w-full shrink-0 px-6 md:px-8"
             key={index}
           >
-            <div className="relative mx-auto flex h-full max-w-[1184px] items-center justify-between gap-5 md:items-start md:pt-[77px]">
+            <span aria-hidden="true" className="absolute inset-0 md:hidden">
+              <Image
+                alt=""
+                fill
+                priority={index === 0}
+                sizes="100vw"
+                src={banner.mobileImage}
+              />
+            </span>
+            <span aria-hidden="true" className="absolute inset-0 hidden md:block">
+              <Image
+                alt=""
+                fill
+                priority={index === 0}
+                sizes="100vw"
+                src={banner.desktopImage}
+              />
+            </span>
+            <div className="relative mx-auto flex h-full max-w-[1184px] items-center md:items-start md:pt-[77px]">
               <div className="z-10 flex flex-col gap-5">
                 <h1 className="text-[16px] font-semibold leading-[1.4] tracking-[-0.01em] md:text-[40px] md:font-bold md:leading-[1.3] md:tracking-[-0.025em]">
                   {banner.title}
@@ -199,15 +165,6 @@ export function HomeBanner() {
                 <p className="whitespace-nowrap text-[11px] leading-[1.5] text-white/85 md:text-[18px]">
                   {banner.description}
                 </p>
-              </div>
-              <div
-                className={
-                  index === 1
-                    ? "shrink-0 md:absolute md:right-[-41px] md:top-4"
-                    : "shrink-0"
-                }
-              >
-                <BannerArtwork index={index as BannerIndex} />
               </div>
             </div>
           </article>
