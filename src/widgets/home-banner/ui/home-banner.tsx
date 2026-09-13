@@ -191,7 +191,7 @@ export function HomeBanner() {
             className={`min-w-full px-6 ${banner.background} md:px-8`}
             key={index}
           >
-            <div className="mx-auto flex h-full max-w-[1184px] items-center justify-between gap-5 md:items-start md:pt-[77px]">
+            <div className="relative mx-auto flex h-full max-w-[1184px] items-center justify-between gap-5 md:items-start md:pt-[77px]">
               <div className="z-10 flex flex-col gap-5">
                 <h1 className="text-[16px] font-semibold leading-[1.4] tracking-[-0.01em] md:text-[40px] md:font-bold md:leading-[1.3] md:tracking-[-0.025em]">
                   {banner.title}
@@ -200,7 +200,13 @@ export function HomeBanner() {
                   {banner.description}
                 </p>
               </div>
-              <div className="shrink-0">
+              <div
+                className={
+                  index === 1
+                    ? "shrink-0 md:absolute md:right-[-41px] md:top-4"
+                    : "shrink-0"
+                }
+              >
                 <BannerArtwork index={index as BannerIndex} />
               </div>
             </div>
