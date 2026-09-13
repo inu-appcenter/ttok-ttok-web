@@ -5,7 +5,8 @@ import { useState } from "react";
 
 import { LabCard } from "@/entities/lab";
 import type { LabSummary } from "@/entities/lab";
-import { Button, Textarea } from "@/shared/ui";
+import { AiRecommendationButton } from "@/features/request-ai-recommendation";
+import { Textarea } from "@/shared/ui";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
 import { SiteHeader } from "@/widgets/site-header";
 
@@ -73,15 +74,11 @@ export function AiRecommendationsPage({
               value={prompt}
             />
 
-            <Button
-              className="h-[39px] w-full rounded-[var(--radius-xl)] bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] px-4 text-[length:var(--font-size-body1)] font-semibold hover:opacity-90 md:h-[49px] md:w-auto md:self-start md:text-[length:var(--font-size-heading1)]"
+            <AiRecommendationButton
+              className="h-[39px] w-full text-[length:var(--font-size-body1)] md:h-[49px] md:w-[240px] md:text-[length:var(--font-size-heading1)]"
               disabled={!prompt.trim()}
-              leadingIcon={<Image alt="" height={24} src="/icons/home/ai-button-sparkles.svg" width={24} />}
               onClick={handleRecommend}
-              size="lg"
-            >
-              맞춤 연구실 추천받기
-            </Button>
+            />
           </section>
         ) : (
           <section className="flex flex-col gap-5 md:gap-8">
