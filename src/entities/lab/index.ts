@@ -8,3 +8,11 @@ export type { LabSearchResultItemProps } from "./ui/lab-search-result-item";
 export { SelectedLabCard } from "./ui/selected-lab-card";
 export type { SelectedLabCardProps } from "./ui/selected-lab-card";
 export type { LabDetail, LabPaper, LabSummary } from "./model/lab";
+export type {
+  Laboratory,
+  LaboratoryCapacity,
+  LaboratoryPage,
+  LaboratoryPageParams,
+  LaboratoryProfessor,
+  LaboratorySearchParams,
+} from "./model/laboratory";
