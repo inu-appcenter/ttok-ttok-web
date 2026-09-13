@@ -7,10 +7,12 @@ import {
   useRef,
   useState,
   type FocusEvent,
+  type PointerEvent,
 } from "react";
 
 const AUTO_PLAY_INTERVAL = 5_000;
 const SLIDE_COUNT = 3;
+const SWIPE_THRESHOLD = 40;
 
 type BannerIndex = 0 | 1 | 2;
 
@@ -66,6 +68,7 @@ export function HomeBanner() {
   const [activeIndex, setActiveIndex] = useState<BannerIndex>(0);
   const intervalIdRef = useRef<number | null>(null);
   const isPausedRef = useRef(false);
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const clearAutoplay = useCallback(() => {
     if (intervalIdRef.current !== null) {
@@ -120,14 +123,58 @@ export function HomeBanner() {
     }
   };
 
+  const handlePointerDown = (event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== "touch") {
+      return;
+    }
+
+    swipeStartRef.current = { x: event.clientX, y: event.clientY };
+    pauseAutoplay();
+  };
+
+  const handlePointerEnd = (event: PointerEvent<HTMLElement>) => {
+    const swipeStart = swipeStartRef.current;
+    swipeStartRef.current = null;
+
+    if (!swipeStart || event.pointerType !== "touch") {
+      return;
+    }
+
+    const horizontalDistance = event.clientX - swipeStart.x;
+    const verticalDistance = event.clientY - swipeStart.y;
+    const isHorizontalSwipe =
+      Math.abs(horizontalDistance) >= SWIPE_THRESHOLD &&
+      Math.abs(horizontalDistance) > Math.abs(verticalDistance);
+
+    if (isHorizontalSwipe) {
+      isPausedRef.current = false;
+      handleMove(horizontalDistance > 0 ? -1 : 1);
+      return;
+    }
+
+    resumeAutoplay();
+  };
+
+  const handlePointerCancel = (event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== "touch") {
+      return;
+    }
+
+    swipeStartRef.current = null;
+    resumeAutoplay();
+  };
+
   return (
     <section
       aria-label="서비스 소개 배너"
-      className="relative aspect-[5/2] overflow-hidden rounded-[var(--radius-xl)] text-white md:aspect-[4/1] md:rounded-none"
+      className="relative aspect-[5/2] touch-pan-y overflow-hidden rounded-[var(--radius-xl)] text-white md:aspect-[4/1] md:rounded-none"
       onBlur={handleBlur}
       onFocus={pauseAutoplay}
       onMouseEnter={pauseAutoplay}
       onMouseLeave={resumeAutoplay}
+      onPointerCancel={handlePointerCancel}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerEnd}
     >
       <div
         className="flex h-full transition-transform duration-500 ease-out motion-reduce:transition-none"
