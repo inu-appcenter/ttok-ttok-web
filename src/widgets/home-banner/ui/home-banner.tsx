@@ -157,7 +157,7 @@ export function HomeBanner() {
                 src={banner.desktopImage}
               />
             </span>
-            <div className="relative mx-auto flex h-full max-w-[1184px] items-center md:items-start md:pt-[77px]">
+            <div className="relative mx-auto flex h-full max-w-[1184px] items-center">
               <div className="z-10 flex flex-col gap-5">
                 <h1 className="text-[16px] font-semibold leading-[1.4] tracking-[-0.01em] md:text-[40px] md:font-bold md:leading-[1.3] md:tracking-[-0.025em]">
                   {banner.title}
