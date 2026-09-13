@@ -123,7 +123,7 @@ export function HomeBanner() {
   return (
     <section
       aria-label="서비스 소개 배너"
-      className="relative aspect-[5/2] overflow-hidden rounded-[var(--radius-xl)] text-white md:aspect-auto md:h-[360px] md:rounded-none"
+      className="relative aspect-[5/2] overflow-hidden rounded-[var(--radius-xl)] text-white md:aspect-[4/1] md:rounded-none"
       onBlur={handleBlur}
       onFocus={pauseAutoplay}
       onMouseEnter={pauseAutoplay}
