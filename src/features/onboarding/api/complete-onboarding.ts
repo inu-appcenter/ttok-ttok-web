@@ -39,10 +39,10 @@ function toRequest(answers: OnboardingAnswers): OnboardingRequest {
       : undefined;
 
   return {
+    coffeeChatAllowed: isExplorer ? false : coffeeChatAllowed,
     ...(isExplorer
       ? {}
       : {
-          coffeeChatAllowed,
           ...(coffeeChatAllowed && contactValue
             ? {
                 contactType: contactValue.startsWith("https://open.kakao.com/")
