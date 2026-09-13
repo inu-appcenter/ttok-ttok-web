@@ -36,14 +36,24 @@ const banners = [
 function BannerArtwork({ index }: { index: BannerIndex }) {
   if (index === 0) {
     return (
-      <span className="relative block size-[43px] md:size-[180px]">
-        <Image
-          alt=""
-          fill
-          sizes="(min-width: 768px) 180px, 43px"
-          src="/icons/home/hero-sparkle.svg"
-        />
-      </span>
+      <>
+        <span className="relative block size-[43px] md:hidden">
+          <Image
+            alt=""
+            fill
+            sizes="43px"
+            src="/images/home/banner/sparkle-mobile.png"
+          />
+        </span>
+        <span className="relative hidden size-[180px] md:block">
+          <Image
+            alt=""
+            fill
+            sizes="180px"
+            src="/images/home/banner/sparkle-desktop.png"
+          />
+        </span>
+      </>
     );
   }
 
@@ -55,12 +65,14 @@ function BannerArtwork({ index }: { index: BannerIndex }) {
 
   return (
     <>
-      <span className="relative block h-[57px] w-[84px] md:hidden">
+      <span
+        className={`relative block md:hidden ${index === 1 ? "h-[57px] w-[84px]" : "h-[61px] w-[84px]"}`}
+      >
         <Image
           alt=""
           fill
-          sizes="84px"
-          src={`/images/home/banner/${assetName}-mobile.webp`}
+          sizes="(max-width: 767px) 84px"
+          src={`/images/home/banner/${assetName}-mobile.png`}
         />
       </span>
       <span className={`relative hidden md:block ${desktopArtwork.className}`}>
@@ -68,7 +80,7 @@ function BannerArtwork({ index }: { index: BannerIndex }) {
           alt=""
           fill
           sizes={desktopArtwork.sizes}
-          src={`/images/home/banner/${assetName}-desktop.webp`}
+          src={`/images/home/banner/${assetName}-desktop.png`}
         />
       </span>
     </>
