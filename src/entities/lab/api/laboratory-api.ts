@@ -152,6 +152,14 @@ function getObject<T extends object>(value: unknown, fieldName: string): T {
   return value as T;
 }
 
+function getApiErrorResponse(value: unknown): ApiErrorResponse {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  return value as ApiErrorResponse;
+}
+
 function toLaboratory(value: unknown): Laboratory {
   const laboratory = getObject<ApiLaboratory>(value, "연구실");
   const capacity = getObject<ApiLaboratoryCapacity>(laboratory.capacity, "연구실 수용 인원");
@@ -278,7 +286,7 @@ export async function getLaboratoryPage(
   const body: unknown = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const errorResponse = getObject<ApiErrorResponse>(body, "연구실 API 오류");
+    const errorResponse = getApiErrorResponse(body);
     const message =
       typeof errorResponse.message === "string"
         ? errorResponse.message
