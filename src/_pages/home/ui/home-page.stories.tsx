@@ -21,3 +21,16 @@ export const Default: Story = {
     labs: MOCK_LABS,
   },
 };
+
+export const Empty: Story = {
+  args: {
+    labs: [],
+  },
+};
+
+export const Error: Story = {
+  args: {
+    labs: [],
+    labsError: "연구실 정보를 불러오지 못했습니다.",
+  },
+};

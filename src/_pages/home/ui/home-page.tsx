@@ -13,9 +13,30 @@ const popularCategories = ["AI / ML", "데이터", "보안", "시스템", "비�
 export type HomePageProps = {
   isAuthenticated?: boolean;
   labs: LabSummary[];
+  labsError?: string;
 };
 
-export function HomePage({ isAuthenticated = false, labs }: HomePageProps) {
+function LabLoadError({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 py-10 text-center">
+      <p className="text-[length:var(--font-size-body2)] text-text-subtle">
+        {message}
+      </p>
+      <Link
+        className="text-[length:var(--font-size-body3)] text-text-primary underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
+        href="/"
+      >
+        다시 시도하기
+      </Link>
+    </div>
+  );
+}
+
+export function HomePage({
+  isAuthenticated = false,
+  labs,
+  labsError,
+}: HomePageProps) {
   return (
     <div className="min-h-screen overflow-x-hidden bg-bg-default pb-[calc(111px_+_env(safe-area-inset-bottom))] text-text-default md:pb-0">
       <SiteHeader activeItem="home" isAuthenticated={isAuthenticated} />
@@ -26,7 +47,11 @@ export function HomePage({ isAuthenticated = false, labs }: HomePageProps) {
 
         <div className="px-4 pb-11 md:hidden">
           <div className="mt-5">
-            <MobileLabExplorer labs={labs} />
+            {labsError ? (
+              <LabLoadError message={labsError} />
+            ) : (
+              <MobileLabExplorer labs={labs} />
+            )}
           </div>
         </div>
 
@@ -59,7 +84,11 @@ export function HomePage({ isAuthenticated = false, labs }: HomePageProps) {
             인기 연구실 둘러보기
           </h2>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {labs.length > 0 ? (
+            {labsError ? (
+              <div className="col-span-full">
+                <LabLoadError message={labsError} />
+              </div>
+            ) : labs.length > 0 ? (
               labs.map((lab) => <LabCard key={lab.labId} lab={lab} />)
             ) : (
               <p className="col-span-full py-10 text-center text-[length:var(--font-size-body2)] text-text-subtle">

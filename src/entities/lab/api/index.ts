@@ -3,6 +3,7 @@
  * Client Component에서는 이 진입점을 import하지 않습니다.
  */
 export { getLaboratories } from "./get-laboratories";
+export { getHomeLabs } from "./get-home-labs";
 export {
   LaboratoryApiError,
   type LaboratoryRequestOptions,
