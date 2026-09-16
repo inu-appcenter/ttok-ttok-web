@@ -39,11 +39,14 @@ function toReviewOptions(value: unknown): OnboardingReviewOptions {
   return { coreTime, weeklyMeeting, works };
 }
 
-export async function getOnboardingReviewOptions(): Promise<OnboardingReviewOptions> {
+export async function getOnboardingReviewOptions(
+  accessToken: string,
+): Promise<OnboardingReviewOptions> {
   let response: Response;
 
   try {
     response = await fetch(`${getApiBaseUrl()}/api/lab-review/options`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
       next: { revalidate: 3600 },
     });
   } catch {
