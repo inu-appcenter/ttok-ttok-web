@@ -3,6 +3,7 @@ import type { LabDetail, LabSummary } from "./lab";
 export const MOCK_LABS: LabSummary[] = [
   {
     labId: "intelligent-data-systems",
+    laboratoryId: 1,
     name: "지능형 데이터 시스템 연구실",
     professorName: "김다윤",
     department: "컴퓨터공학부",
@@ -11,6 +12,7 @@ export const MOCK_LABS: LabSummary[] = [
   },
   {
     labId: "applied-ai",
+    laboratoryId: 2,
     name: "인공지능 응용 연구실",
     professorName: "이OO",
     department: "산업공학부",
@@ -19,6 +21,7 @@ export const MOCK_LABS: LabSummary[] = [
   },
   {
     labId: "data-mining",
+    laboratoryId: 3,
     name: "데이터마이닝 연구실",
     professorName: "박OO",
     department: "컴퓨터공학부",
@@ -27,6 +30,7 @@ export const MOCK_LABS: LabSummary[] = [
   },
   {
     labId: "machine-learning-theory",
+    laboratoryId: 4,
     name: "머신러닝 이론 연구실",
     professorName: "최OO",
     department: "산업공학부",
@@ -35,6 +39,7 @@ export const MOCK_LABS: LabSummary[] = [
   },
   {
     labId: "robotics",
+    laboratoryId: 5,
     name: "로보틱스 연구실",
     professorName: "정OO",
     department: "기계공학부",
@@ -45,7 +50,13 @@ export const MOCK_LABS: LabSummary[] = [
 
 const DEFAULT_DETAIL: Omit<
   LabDetail,
-  "department" | "description" | "labId" | "name" | "professorName" | "tags"
+  | "department"
+  | "description"
+  | "labId"
+  | "laboratoryId"
+  | "name"
+  | "professorName"
+  | "tags"
 > = {
   aiSummary: ["연구실 상세 정보와 주요 연구 내용을 준비하고 있습니다."],
   contact: {
