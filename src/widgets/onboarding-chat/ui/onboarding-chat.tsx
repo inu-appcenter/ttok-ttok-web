@@ -5,13 +5,23 @@ import { useRouter } from "next/navigation";
 import {
   completeOnboarding,
   OnboardingFlow,
+  searchOnboardingLaboratories,
   type OnboardingAnswers,
+  type OnboardingReviewOptions,
 } from "@/features/onboarding";
 import { LabSearchCombobox } from "@/features/search-lab";
 
 import { OnboardingHeader } from "./onboarding-header";
 
-export function OnboardingChat() {
+type OnboardingChatProps = {
+  reviewOptions?: OnboardingReviewOptions;
+  reviewOptionsError?: string;
+};
+
+export function OnboardingChat({
+  reviewOptions,
+  reviewOptionsError,
+}: OnboardingChatProps) {
   const router = useRouter();
 
   async function handleComplete(answers: OnboardingAnswers) {
@@ -30,14 +40,21 @@ export function OnboardingChat() {
       <OnboardingHeader />
       <OnboardingFlow
         onComplete={handleComplete}
-        renderLabSearch={({ onSelect, selectedLabId }) => (
+        renderLabSearch={({ onClearSelection, onSelect, selectedLaboratoryId }) => (
           <LabSearchCombobox
-            onClearSelection={() => onSelect("")}
-            onSelect={(lab) => onSelect(lab.labId)}
-            selectedLabId={selectedLabId}
+            onClearSelection={onClearSelection}
+            onSearch={searchOnboardingLaboratories}
+            onSelect={onSelect}
+            selectedLabId={
+              selectedLaboratoryId ? String(selectedLaboratoryId) : undefined
+            }
           />
         )}
+        reviewOptions={reviewOptions}
+        reviewOptionsError={reviewOptionsError}
       />
     </main>
   );
 }
+
+export type { OnboardingChatProps };

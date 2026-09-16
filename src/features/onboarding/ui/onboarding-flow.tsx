@@ -5,13 +5,15 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { MOCK_LABS, SelectedLabCard } from "@/entities/lab";
+import { SelectedLabCard } from "@/entities/lab";
+import type { LabSummary } from "@/entities/lab";
 import { Button, Field } from "@/shared/ui";
 
 import {
   getOnboardingQuestions,
 } from "../model/onboarding-steps";
 import type { OnboardingAnswers } from "../model/onboarding-steps";
+import type { OnboardingReviewOptions } from "../model/review-options";
 import { ChatMessage } from "./chat-message";
 import { OnboardingProgress } from "./onboarding-progress";
 import { OnboardingSubmit } from "./onboarding-submit";
@@ -21,9 +23,12 @@ type OnboardingFlowProps = {
   completionHref?: string;
   onComplete?: (answers: OnboardingAnswers) => Promise<void>;
   renderLabSearch: (props: {
-    onSelect: (labId: string) => void;
-    selectedLabId?: string;
+    onClearSelection: () => void;
+    onSelect: (lab: LabSummary) => void;
+    selectedLaboratoryId?: number;
   }) => ReactNode;
+  reviewOptions?: OnboardingReviewOptions;
+  reviewOptionsError?: string;
 };
 
 function formatAnswer(answer: string | string[] | undefined) {
@@ -34,8 +39,11 @@ export function OnboardingFlow({
   completionHref = "/",
   onComplete,
   renderLabSearch,
+  reviewOptions,
+  reviewOptionsError,
 }: OnboardingFlowProps) {
   const [answers, setAnswers] = useState<OnboardingAnswers>({});
+  const [selectedLaboratory, setSelectedLaboratory] = useState<LabSummary | null>(null);
   const [pendingAnswer, setPendingAnswer] = useState("");
   const [pendingSelections, setPendingSelections] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,7 +53,7 @@ export function OnboardingFlow({
 
   const purpose =
     typeof answers.purpose === "string" ? answers.purpose : undefined;
-  const activeQuestions = getOnboardingQuestions(purpose);
+  const activeQuestions = getOnboardingQuestions(purpose, reviewOptions);
 
   const completedQuestionCount = activeQuestions.filter(
     (question) => {
@@ -80,8 +88,11 @@ export function OnboardingFlow({
       return;
     }
 
-    const nextAnswer =
-      currentQuestion.type === "multi-choice"
+    const nextAnswer = currentQuestion.type === "lab-search"
+      ? selectedLaboratory
+        ? String(selectedLaboratory.laboratoryId)
+        : ""
+      : currentQuestion.type === "multi-choice"
         ? pendingSelections
         : pendingAnswer.trim();
 
@@ -90,6 +101,9 @@ export function OnboardingFlow({
     setAnswers((currentAnswers) => ({
       ...currentAnswers,
       [currentQuestion.id]: nextAnswer,
+      ...(currentQuestion.type === "lab-search" && selectedLaboratory
+        ? { laboratoryId: selectedLaboratory.laboratoryId }
+        : {}),
     }));
     setPendingAnswer("");
     setPendingSelections([]);
@@ -105,8 +119,12 @@ export function OnboardingFlow({
 
     try {
       await onComplete(answers);
-    } catch {
-      setSubmitError("온보딩 저장 중 문제가 발생했습니다. 다시 시도해주세요.");
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "온보딩 저장 중 문제가 발생했습니다. 다시 시도해주세요.",
+      );
       setIsSubmitting(false);
     }
   }
@@ -123,12 +141,8 @@ export function OnboardingFlow({
                 {question.helper}
               </ChatMessage>
             ) : null}
-            {question.id === "lab" ? (
-              <SelectedLabCard
-                lab={
-                  MOCK_LABS.find((lab) => lab.labId === answers.lab) ?? MOCK_LABS[0]
-                }
-              />
+            {question.id === "lab" && selectedLaboratory ? (
+              <SelectedLabCard lab={selectedLaboratory} />
             ) : (
               <ChatMessage sender="user">
                 {formatAnswer(answers[question.id])}
@@ -201,6 +215,14 @@ export function OnboardingFlow({
                 {currentQuestion.helper}
               </ChatMessage>
             ) : null}
+            {reviewOptionsError &&
+            ["coreTime", "meetingFrequency", "activities"].includes(
+              currentQuestion.id,
+            ) ? (
+              <p aria-live="polite" className="text-[length:var(--font-size-label2)] text-text-error">
+                {reviewOptionsError}
+              </p>
+            ) : null}
             {currentQuestion.type === "choice" ? (
               <QuickReplies
                 name={currentQuestion.id}
@@ -218,8 +240,15 @@ export function OnboardingFlow({
               />
             ) : currentQuestion.type === "lab-search" ? (
               renderLabSearch({
-                onSelect: setPendingAnswer,
-                selectedLabId: pendingAnswer,
+                onClearSelection: () => {
+                  setSelectedLaboratory(null);
+                  setPendingAnswer("");
+                },
+                onSelect: (lab) => {
+                  setSelectedLaboratory(lab);
+                  setPendingAnswer(String(lab.laboratoryId));
+                },
+                selectedLaboratoryId: selectedLaboratory?.laboratoryId,
               })
             ) : (
               <div className="ml-auto w-full max-w-[444px]">

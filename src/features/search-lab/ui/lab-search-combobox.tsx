@@ -1,12 +1,10 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 
-import { LabSearchResultItem, MOCK_LABS } from "@/entities/lab";
+import { LabSearchResultItem } from "@/entities/lab";
 import type { LabSummary } from "@/entities/lab";
 import { SearchField } from "@/shared/ui";
-
-import { useLabSearch } from "../model/use-lab-search";
 
 type LabSearchComboboxProps = {
   autoFocus?: boolean;
@@ -15,6 +13,7 @@ type LabSearchComboboxProps = {
   isLoading?: boolean;
   labs?: LabSummary[];
   onClearSelection?: () => void;
+  onSearch?: (keyword: string) => Promise<LabSummary[]>;
   onSelect: (lab: LabSummary) => void;
   selectedLabId?: string;
 };
@@ -24,16 +23,39 @@ export function LabSearchCombobox({
   className,
   errorMessage,
   isLoading = false,
-  labs = MOCK_LABS,
+  labs = [],
   onClearSelection,
+  onSearch,
   onSelect,
   selectedLabId,
 }: LabSearchComboboxProps) {
-  const { query, results, setQuery } = useLabSearch(labs);
+  const [query, setQuery] = useState("");
+  const [remoteResults, setRemoteResults] = useState<LabSummary[]>([]);
+  const [searchError, setSearchError] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const listboxId = useId();
   const shouldShowResults = isOpen && query.trim().length > 0;
+  const results = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase("ko-KR");
+
+    if (!normalizedQuery) {
+      return [];
+    }
+
+    if (onSearch) {
+      return remoteResults;
+    }
+
+    return labs.filter((lab) =>
+      [lab.name, lab.professorName, lab.department, ...lab.tags].some((value) =>
+        value.toLocaleLowerCase("ko-KR").includes(normalizedQuery),
+      ),
+    );
+  }, [labs, onSearch, query, remoteResults]);
+  const resolvedErrorMessage = errorMessage ?? searchError;
+  const resolvedIsLoading = isLoading || isSearching;
   const activeResult = results[activeIndex];
   const activeOptionId = activeResult ? `${listboxId}-option-${activeResult.labId}` : undefined;
 
@@ -42,6 +64,50 @@ export function LabSearchCombobox({
     setIsOpen(false);
     onSelect(lab);
   }
+
+  useEffect(() => {
+    if (!onSearch) {
+      return;
+    }
+
+    const keyword = query.trim();
+
+    if (!keyword) {
+      return;
+    }
+
+    let isCurrentRequest = true;
+    const timeoutId = window.setTimeout(() => {
+      setIsSearching(true);
+      setSearchError("");
+
+      onSearch(keyword)
+        .then((labs) => {
+          if (isCurrentRequest) {
+            setRemoteResults(labs);
+            setActiveIndex(0);
+          }
+        })
+        .catch((error: unknown) => {
+          if (isCurrentRequest) {
+            setRemoteResults([]);
+            setSearchError(
+              error instanceof Error ? error.message : "연구실을 불러오지 못했습니다.",
+            );
+          }
+        })
+        .finally(() => {
+          if (isCurrentRequest) {
+            setIsSearching(false);
+          }
+        });
+    }, 300);
+
+    return () => {
+      isCurrentRequest = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [onSearch, query]);
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (!shouldShowResults || results.length === 0) {
@@ -82,12 +148,16 @@ export function LabSearchCombobox({
           aria-autocomplete="list"
           aria-controls={listboxId}
           aria-expanded={shouldShowResults}
-          aria-invalid={Boolean(errorMessage)}
+          aria-invalid={Boolean(resolvedErrorMessage)}
           autoComplete="off"
           elevated={false}
           id={`${listboxId}-input`}
           onChange={(event) => {
             setQuery(event.target.value);
+            if (onSearch) {
+              setRemoteResults([]);
+              setSearchError("");
+            }
             setActiveIndex(0);
             setIsOpen(true);
             if (selectedLabId) onClearSelection?.();
@@ -111,19 +181,19 @@ export function LabSearchCombobox({
             id={listboxId}
             role="listbox"
           >
-            {isLoading ? (
+            {resolvedIsLoading ? (
               <li
                 className="px-[var(--spacing-spacing-4)] py-[var(--spacing-spacing-6)] text-center text-[length:var(--font-size-body3)] text-text-subtle"
                 role="status"
               >
                 연구실을 찾고 있어요
               </li>
-            ) : errorMessage ? (
+            ) : resolvedErrorMessage ? (
               <li
                 className="px-[var(--spacing-spacing-4)] py-[var(--spacing-spacing-6)] text-center text-[length:var(--font-size-body3)] text-text-error"
                 role="alert"
               >
-                {errorMessage}
+                {resolvedErrorMessage}
               </li>
             ) : results.length > 0 ? (
               results.map((lab, index) => (

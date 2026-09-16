@@ -1,5 +1,19 @@
 import { OnboardingChat } from "@/widgets/onboarding-chat";
+import type { OnboardingReviewOptions } from "@/features/onboarding";
 
-export function OnboardingPage() {
-  return <OnboardingChat />;
+export type OnboardingPageProps = {
+  reviewOptions?: OnboardingReviewOptions;
+  reviewOptionsError?: string;
+};
+
+export function OnboardingPage({
+  reviewOptions,
+  reviewOptionsError,
+}: OnboardingPageProps) {
+  return (
+    <OnboardingChat
+      reviewOptions={reviewOptions}
+      reviewOptionsError={reviewOptionsError}
+    />
+  );
 }

@@ -13,10 +13,12 @@ export type {
   QuickReplyOption,
   QuickRepliesProps,
 } from "./ui";
-export { completeOnboarding } from "./api/complete-onboarding";
+export { completeOnboarding, toOnboardingRequest } from "./api/complete-onboarding";
+export { searchOnboardingLaboratories } from "./api/search-onboarding-laboratories";
 export type { OnboardingRequest } from "./api/complete-onboarding";
 export type {
   OnboardingAnswers,
   OnboardingQuestion,
   OnboardingQuestionId,
 } from "./model/onboarding-steps";
+export type { OnboardingReviewOptions } from "./model/review-options";
