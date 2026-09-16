@@ -2,9 +2,20 @@ export type LabSummary = {
   department: string;
   description: string;
   labId: string;
+  laboratoryId: number;
   name: string;
   professorName: string;
   tags: string[];
+};
+
+export type LabSummaryPage = {
+  content: LabSummary[];
+  hasNext: boolean;
+  isLast: boolean;
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
 };
 
 export type LabPaper = {

@@ -18,5 +18,5 @@ export function searchLaboratories({
 
   return getLaboratoryPage("/api/laboratory/search", params, {
     keyword: normalizedKeyword,
-  });
+  }, { cache: "no-store", revalidate: 0 });
 }
