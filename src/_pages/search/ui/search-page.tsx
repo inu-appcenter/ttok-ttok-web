@@ -144,10 +144,10 @@ export function SearchPage({
                     <Link
                       aria-current={page === result.page ? "page" : undefined}
                       aria-label={`${page + 1}페이지`}
-                      className={`flex size-10 items-center justify-center rounded-md text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary ${
+                      className={`size-10 items-center justify-center rounded-md text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary ${
                         page === result.page
-                          ? "bg-bg-primary font-semibold text-text-inverse"
-                          : "border border-border-subtle text-text-default"
+                          ? "flex bg-bg-primary font-semibold text-text-inverse"
+                          : "hidden border border-border-subtle text-text-default sm:flex"
                       }`}
                       href={createSearchHref(normalizedQuery, page)}
                       key={page}
