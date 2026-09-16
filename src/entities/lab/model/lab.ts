@@ -42,12 +42,11 @@ export type LabDetail = LabSummary & {
     primaryTasks: string;
     weeklyMeeting: string;
   };
-  homepageUrl: string;
-  location: string;
+  homepageUrl: string | null;
+  location: string | null;
   memberCounts: {
-    doctoral: number;
-    masters: number;
-    undergraduate: number;
+    graduate: number | null;
+    undergraduate: number | null;
   };
   papers: LabPaper[];
 };

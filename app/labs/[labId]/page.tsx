@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { LabDetailPage } from "@/_pages/lab-detail";
-import { getLabById } from "@/entities/lab";
+import { getLabById } from "@/entities/lab/api";
 import { getAuthSession } from "@/shared/lib/auth/session";
 
 type LabPageProps = {

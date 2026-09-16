@@ -72,7 +72,7 @@ const DEFAULT_DETAIL: Omit<
   },
   homepageUrl: "https://www.inu.ac.kr/",
   location: "정보 준비 중",
-  memberCounts: { doctoral: 0, masters: 0, undergraduate: 0 },
+  memberCounts: { graduate: 0, undergraduate: 0 },
   papers: [],
 };
 
@@ -105,7 +105,7 @@ export const MOCK_LAB_DETAILS: LabDetail[] = MOCK_LABS.map((lab) => ({
         },
         homepageUrl: "https://lab.inu.ac.kr/",
         location: "7호관 409호",
-        memberCounts: { doctoral: 2, masters: 4, undergraduate: 3 },
+        memberCounts: { graduate: 6, undergraduate: 3 },
         papers: [
           {
             title: "대규모 그래프 스트림에서의 실시간 이상 탐지 기법",
