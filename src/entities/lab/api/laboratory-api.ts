@@ -259,16 +259,12 @@ function createSearchParams(params: LaboratoryPageParams) {
   return searchParams;
 }
 
-export async function getLaboratoryPage(
+async function requestLaboratoryApi(
   path: string,
-  params: LaboratoryPageParams = {},
-  additionalSearchParams?: Record<string, string>,
+  searchParams: URLSearchParams,
   options: LaboratoryRequestOptions = {},
-): Promise<LaboratoryPage> {
-  const searchParams = createSearchParams(params);
-  Object.entries(additionalSearchParams ?? {}).forEach(([key, value]) => {
-    searchParams.set(key, value);
-  });
+  accessToken?: string,
+): Promise<unknown> {
   const requestUrl = new URL(`${getApiBaseUrl()}${path}`);
   requestUrl.search = searchParams.toString();
 
@@ -277,6 +273,7 @@ export async function getLaboratoryPage(
   try {
     response = await fetch(requestUrl, {
       cache: options.cache,
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
       next: { revalidate: options.revalidate ?? 300 },
     });
   } catch {
@@ -298,5 +295,42 @@ export async function getLaboratoryPage(
 
   const apiResponse = getObject<ApiResponse<unknown>>(body, "연구실 API");
 
-  return toLaboratoryPage(apiResponse.data);
+  return apiResponse.data;
+}
+
+export function getLaboratoryRelatedData(
+  path: string,
+  searchParams: Record<string, string>,
+  accessToken: string,
+): Promise<unknown> {
+  return requestLaboratoryApi(
+    path,
+    new URLSearchParams(searchParams),
+    { cache: "no-store", revalidate: 0 },
+    accessToken,
+  );
+}
+
+export async function getLaboratoryItem(
+  path: string,
+  options?: LaboratoryRequestOptions,
+): Promise<Laboratory> {
+  const data = await requestLaboratoryApi(path, new URLSearchParams(), options);
+
+  return toLaboratory(data);
+}
+
+export async function getLaboratoryPage(
+  path: string,
+  params: LaboratoryPageParams = {},
+  additionalSearchParams?: Record<string, string>,
+  options?: LaboratoryRequestOptions,
+): Promise<LaboratoryPage> {
+  const searchParams = createSearchParams(params);
+  Object.entries(additionalSearchParams ?? {}).forEach(([key, value]) => {
+    searchParams.set(key, value);
+  });
+  const data = await requestLaboratoryApi(path, searchParams, options);
+
+  return toLaboratoryPage(data);
 }

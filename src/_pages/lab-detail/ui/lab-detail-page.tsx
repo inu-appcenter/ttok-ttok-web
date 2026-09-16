@@ -25,6 +25,10 @@ function getHomepageLabel(homepageUrl: string) {
   }
 }
 
+function formatMemberCount(count: number | null) {
+  return count === null ? "정보 없음" : `${count}명`;
+}
+
 export function LabDetailPage({
   isAuthenticated = false,
   lab,
@@ -35,7 +39,9 @@ export function LabDetailPage({
     <div className="min-h-screen bg-bg-default text-text-default">
       <SiteHeader activeItem="search" isAuthenticated={isAuthenticated} />
       <main className="flex flex-col gap-5 px-4 pb-[calc(111px_+_env(safe-area-inset-bottom))] pt-[27px] md:hidden">
-        <MobileAiSummary paragraphs={lab.aiSummary} />
+        {lab.aiSummary.length > 0 ? (
+          <MobileAiSummary paragraphs={lab.aiSummary} />
+        ) : null}
 
         <header>
           <h1 className="text-[length:var(--font-size-headline1)] font-semibold leading-[1.4] tracking-[-0.01em] text-text-default">
@@ -57,29 +63,36 @@ export function LabDetailPage({
               </Tag>
             ))}
           </div>
+          <p className="mt-[10px] text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
+            {lab.description}
+          </p>
           <dl className="mt-[10px] flex flex-col gap-[6px] text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
             <div className="flex gap-1">
               <dt>위치 ·</dt>
-              <dd>{lab.location}</dd>
+              <dd>{lab.location ?? "정보 없음"}</dd>
             </div>
             <div className="flex gap-1">
               <dt>홈페이지 ·</dt>
               <dd>
-                <a
-                  className="text-[#2a78d6] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                  href={lab.homepageUrl}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  {getHomepageLabel(lab.homepageUrl)} ↗
-                </a>
+                {lab.homepageUrl ? (
+                  <a
+                    className="text-[#2a78d6] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
+                    href={lab.homepageUrl}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    {getHomepageLabel(lab.homepageUrl)} ↗
+                  </a>
+                ) : (
+                  "정보 없음"
+                )}
               </dd>
             </div>
             <div className="flex gap-1">
               <dt>인원 ·</dt>
               <dd>
-                박사 {memberCounts.doctoral} · 석사 {memberCounts.masters} · 학부{" "}
-                {memberCounts.undergraduate}
+                대학원 {formatMemberCount(memberCounts.graduate)} · 학부{" "}
+                {formatMemberCount(memberCounts.undergraduate)}
               </dd>
             </div>
           </dl>
@@ -167,20 +180,25 @@ export function LabDetailPage({
               </p>
             </div>
             <div className="mt-[6px] flex flex-wrap items-center gap-x-6 gap-y-2 text-[length:var(--font-size-label1)] font-medium leading-[1.5] text-text-subtle">
-              <span>{lab.location}</span>
+              <span>{lab.location ?? "위치 정보 없음"}</span>
               <span>
-                박사 {memberCounts.doctoral} · 석사 {memberCounts.masters} · 학부{" "}
-                {memberCounts.undergraduate}
+                대학원 {formatMemberCount(memberCounts.graduate)} · 학부{" "}
+                {formatMemberCount(memberCounts.undergraduate)}
               </span>
-              <a
-                className="text-[#2a78d6] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                href={lab.homepageUrl}
-                rel="noreferrer"
-                target="_blank"
-              >
-                {getHomepageLabel(lab.homepageUrl)} ↗
-              </a>
+              {lab.homepageUrl ? (
+                <a
+                  className="text-[#2a78d6] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
+                  href={lab.homepageUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {getHomepageLabel(lab.homepageUrl)} ↗
+                </a>
+              ) : null}
             </div>
+            <p className="mt-3 text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle">
+              {lab.description}
+            </p>
           </header>
 
           <section className="rounded-[var(--radius-2xl)] bg-bg-default px-6 py-5 shadow-[0_4px_16px_var(--color-opacity-black-10)]">
@@ -216,25 +234,31 @@ export function LabDetailPage({
             <h2 className="text-[length:var(--font-size-heading1)] font-semibold leading-[1.5]">
               학부연구생이 말하는 이 랩 · {lab.experience.participantCount}명 참여
             </h2>
-            <dl className="mt-5">
-              {[
-                ["코어타임", lab.experience.coreTime],
-                ["주간 미팅", lab.experience.weeklyMeeting],
-                ["하는 일", lab.experience.primaryTasks],
-              ].map(([term, description], index) => (
-                <div
-                  className={`flex items-center justify-between gap-6 py-[6px] ${index < 2 ? "border-b border-border-subtlest" : ""}`}
-                  key={term}
-                >
-                  <dt className="shrink-0 text-[length:var(--font-size-heading2)] font-medium leading-[1.5] text-text-subtle">
-                    {term}
-                  </dt>
-                  <dd className="text-right text-[18px] font-medium leading-[1.5] text-text-primary">
-                    {description}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+            {lab.experience.participantCount > 0 ? (
+              <dl className="mt-5">
+                {[
+                  ["코어타임", lab.experience.coreTime],
+                  ["주간 미팅", lab.experience.weeklyMeeting],
+                  ["하는 일", lab.experience.primaryTasks],
+                ].map(([term, description], index) => (
+                  <div
+                    className={`flex items-center justify-between gap-6 py-[6px] ${index < 2 ? "border-b border-border-subtlest" : ""}`}
+                    key={term}
+                  >
+                    <dt className="shrink-0 text-[length:var(--font-size-heading2)] font-medium leading-[1.5] text-text-subtle">
+                      {term}
+                    </dt>
+                    <dd className="text-right text-[18px] font-medium leading-[1.5] text-text-primary">
+                      {description}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <p className="mt-5 text-[length:var(--font-size-body2)] text-text-subtlest">
+                아직 정보가 없어요.
+              </p>
+            )}
           </section>
 
           <div>
@@ -243,28 +267,32 @@ export function LabDetailPage({
         </div>
 
         <aside className="flex min-w-0 flex-col pb-[51px] pt-[30px]">
-          <section>
-            <div className="flex items-center gap-2">
-              <Image
-                alt=""
-                height={24}
-                src="/icons/header/ai-active.svg"
-                width={24}
-              />
-              <h2 className="bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] bg-clip-text text-[length:var(--font-size-title3)] font-bold leading-[1.3] tracking-[-0.02em] text-transparent">
-                AI 연구실 요약
-              </h2>
-            </div>
-            <div className="mt-2 rounded-[var(--radius-xl)] border border-[#a7c0db] p-4 text-[length:var(--font-size-label2)] leading-[1.5] text-text-subtle">
-              {lab.aiSummary.map((paragraph) => (
-                <p className="not-last:mb-4" key={paragraph}>
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          </section>
+          {lab.aiSummary.length > 0 ? (
+            <section>
+              <div className="flex items-center gap-2">
+                <Image
+                  alt=""
+                  height={24}
+                  src="/icons/header/ai-active.svg"
+                  width={24}
+                />
+                <h2 className="bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] bg-clip-text text-[length:var(--font-size-title3)] font-bold leading-[1.3] tracking-[-0.02em] text-transparent">
+                  AI 연구실 요약
+                </h2>
+              </div>
+              <div className="mt-2 rounded-[var(--radius-xl)] border border-[#a7c0db] p-4 text-[length:var(--font-size-label2)] leading-[1.5] text-text-subtle">
+                {lab.aiSummary.map((paragraph) => (
+                  <p className="not-last:mb-4" key={paragraph}>
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
-          <div className="mt-10 flex flex-col gap-[18px] lg:mt-[296px]">
+          <div
+            className={`mt-10 flex flex-col gap-[18px] ${lab.aiSummary.length > 0 ? "lg:mt-[296px]" : "lg:mt-10"}`}
+          >
             <LabContactCard
               contact={lab.contact}
               isAuthenticated={isAuthenticated}

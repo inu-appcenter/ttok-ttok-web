@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { LabDetailPage } from "@/_pages/lab-detail";
-import { getLabById } from "@/entities/lab";
+import { getLabById } from "@/entities/lab/api";
+import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
 import { getAuthSession } from "@/shared/lib/auth/session";
 
 type LabPageProps = {
@@ -23,10 +25,12 @@ export async function generateMetadata({ params }: LabPageProps): Promise<Metada
 
 export default async function Page({ params }: LabPageProps) {
   const { labId } = await params;
-  const [lab, { isAuthenticated }] = await Promise.all([
-    getLabById(labId),
+  const [{ isAuthenticated }, cookieStore] = await Promise.all([
     getAuthSession(),
+    cookies(),
   ]);
+  const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
+  const lab = await getLabById(labId, accessToken);
 
   if (!lab) notFound();
 

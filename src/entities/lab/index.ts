@@ -1,4 +1,3 @@
-export { getLabById } from "./api/get-lab-by-id";
 export { getPopularLabs } from "./api/get-popular-labs";
 export { MOCK_LAB_DETAILS, MOCK_LABS } from "./model/mock-labs";
 export { toLabSummary, toLabSummaryPage } from "./model/map-laboratory";
