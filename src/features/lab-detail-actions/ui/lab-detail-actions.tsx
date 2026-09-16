@@ -59,7 +59,7 @@ export function LabContactCard({
         ) : isAuthenticated ? (
           <ul className="mt-[10px] flex flex-col text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle md:px-4">
             {contact.members.map((member) => (
-              <li className="flex items-center justify-between gap-4 border-b border-border-subtlest py-1 last:border-0" key={member.name}>
+              <li className="flex items-center justify-between gap-4 border-b border-border-subtlest py-1 last:border-0" key={member.id}>
                 <span>{member.name}</span>
                 {member.url ? (
                   <a className="text-text-primary hover:underline" href={member.url} rel="noreferrer" target="_blank">

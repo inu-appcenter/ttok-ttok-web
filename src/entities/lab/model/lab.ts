@@ -31,6 +31,7 @@ export type LabDetail = LabSummary & {
     email: string;
     members: Array<{
       contact: string;
+      id: string;
       name: string;
       url?: string;
     }>;

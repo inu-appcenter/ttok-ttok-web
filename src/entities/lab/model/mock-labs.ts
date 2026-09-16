@@ -90,10 +90,15 @@ export const MOCK_LAB_DETAILS: LabDetail[] = MOCK_LABS.map((lab) => ({
           members: [
             {
               contact: "오픈채팅 열기 ↗",
+              id: "undergraduate-a",
               name: "학부연구생 A",
               url: "https://open.kakao.com/o/example",
             },
-            { contact: "username@inu.ac.kr", name: "학부연구생 B" },
+            {
+              contact: "username@inu.ac.kr",
+              id: "undergraduate-b",
+              name: "학부연구생 B",
+            },
           ],
           openChatUrl: "https://open.kakao.com/o/example",
         },

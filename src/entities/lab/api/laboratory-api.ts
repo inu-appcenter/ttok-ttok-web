@@ -263,6 +263,7 @@ async function requestLaboratoryApi(
   path: string,
   searchParams: URLSearchParams,
   options: LaboratoryRequestOptions = {},
+  accessToken?: string,
 ): Promise<unknown> {
   const requestUrl = new URL(`${getApiBaseUrl()}${path}`);
   requestUrl.search = searchParams.toString();
@@ -272,6 +273,7 @@ async function requestLaboratoryApi(
   try {
     response = await fetch(requestUrl, {
       cache: options.cache,
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
       next: { revalidate: options.revalidate ?? 300 },
     });
   } catch {
@@ -294,6 +296,19 @@ async function requestLaboratoryApi(
   const apiResponse = getObject<ApiResponse<unknown>>(body, "연구실 API");
 
   return apiResponse.data;
+}
+
+export function getLaboratoryRelatedData(
+  path: string,
+  searchParams: Record<string, string>,
+  accessToken: string,
+): Promise<unknown> {
+  return requestLaboratoryApi(
+    path,
+    new URLSearchParams(searchParams),
+    { cache: "no-store", revalidate: 0 },
+    accessToken,
+  );
 }
 
 export async function getLaboratoryItem(
