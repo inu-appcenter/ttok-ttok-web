@@ -2,7 +2,18 @@ import Link from "next/link";
 
 import { LabCard, type LabSummaryPage } from "@/entities/lab";
 import { LaboratorySearchField } from "@/features/search-lab";
+import { Checkbox, Radio } from "@/shared/ui";
 import { SiteHeader } from "@/widgets/site-header";
+
+const researchFields = ["AI / ML", "데이터", "보안", "시스템", "비전", "NLP"];
+const departments = [
+  "컴퓨터공학부",
+  "임베디드시스템공학과",
+  "정보통신공학과",
+  "전기공학과",
+  "생명공학부",
+  "스포츠과학부",
+];
 
 export type SearchPageStatus = "error" | "loading" | "ready";
 
@@ -80,14 +91,72 @@ export function SearchPage({
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-[1184px] px-4 py-8 md:px-10">
-          <div className="mb-6 flex min-h-6 items-center justify-between gap-4">
+        <div className="mx-auto flex w-full max-w-[1440px] items-start gap-6 px-4 md:px-10">
+          <aside
+            aria-label="연구실 필터"
+            className="hidden w-[208px] shrink-0 md:block"
+          >
+            <section className="flex flex-col items-center gap-[14px] border-b border-border-subtle py-[30px]">
+              <div className="w-full">
+                <h2 className="text-[20px] font-bold leading-[1.5]">연구 분야</h2>
+                <p className="mt-1 text-[length:var(--font-size-caption1)] text-text-subtle">
+                  필터 API 준비 중
+                </p>
+              </div>
+              <div className="flex w-full flex-wrap gap-2">
+                {researchFields.map((field) => (
+                  <Radio
+                    appearance="chip"
+                    disabled
+                    key={field}
+                    name="research-field"
+                    value={field}
+                  >
+                    {field}
+                  </Radio>
+                ))}
+              </div>
+              <button
+                className="text-[length:var(--font-size-body3)] text-text-disabled underline underline-offset-2"
+                disabled
+                type="button"
+              >
+                더보기
+              </button>
+            </section>
+
+            <section className="flex flex-col items-center gap-[14px] border-b border-border-subtle py-[30px]">
+              <div className="w-full">
+                <h2 className="text-[20px] font-bold leading-[1.5]">소속 학과</h2>
+                <p className="mt-1 text-[length:var(--font-size-caption1)] text-text-subtle">
+                  필터 API 준비 중
+                </p>
+              </div>
+              <div className="flex w-full flex-col gap-2">
+                {departments.map((department) => (
+                  <Checkbox disabled key={department}>
+                    {department}
+                  </Checkbox>
+                ))}
+              </div>
+              <button
+                className="text-[length:var(--font-size-body3)] text-text-disabled underline underline-offset-2"
+                disabled
+                type="button"
+              >
+                더보기
+              </button>
+            </section>
+          </aside>
+
+          <section className="min-w-0 flex-1 py-8">
+            <div className="mb-6 flex min-h-6 items-center justify-between gap-4">
             <p className="text-[length:var(--font-size-label1)] text-text-subtle">
               {status === "ready"
                 ? `${normalizedQuery ? `‘${normalizedQuery}’ 검색 결과` : "전체 연구실"} · ${result?.totalElements ?? 0}개 연구실`
                 : "연구실 검색 결과"}
             </p>
-          </div>
+            </div>
 
           {status === "loading" ? <SearchPageSkeleton /> : null}
 
@@ -201,7 +270,8 @@ export function SearchPage({
               ) : null}
             </div>
           ) : null}
-        </section>
+          </section>
+        </div>
       </main>
     </div>
   );
