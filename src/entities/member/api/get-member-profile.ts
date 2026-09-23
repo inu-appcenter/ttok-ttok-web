@@ -2,6 +2,16 @@ import type { MemberProfile } from "../model/member-profile";
 
 const MEMBER_PROFILE_ERROR_MESSAGE = "회원 정보를 불러오지 못했습니다.";
 
+export class MemberProfileApiError extends Error {
+  status: number;
+
+  constructor(status: number) {
+    super(MEMBER_PROFILE_ERROR_MESSAGE);
+    this.name = "MemberProfileApiError";
+    this.status = status;
+  }
+}
+
 type MemberResponse = {
   department?: unknown;
   email?: unknown;
@@ -76,7 +86,7 @@ export async function getMemberProfile(
   const result: ApiResponse = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(MEMBER_PROFILE_ERROR_MESSAGE);
+    throw new MemberProfileApiError(response.status);
   }
 
   return mapMemberProfile(result.data);

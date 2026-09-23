@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { getMemberProfile } from "@/entities/member";
+import { getMemberProfile, MemberProfileApiError } from "@/entities/member";
 import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
 import { getAuthSession } from "@/shared/lib/auth/session";
 
@@ -20,7 +20,20 @@ export default async function MyPageRoute() {
     redirect("/login");
   }
 
-  const profile = await getMemberProfile(memberId, accessToken);
+  let profile;
+
+  try {
+    profile = await getMemberProfile(memberId, accessToken);
+  } catch (error) {
+    if (
+      error instanceof MemberProfileApiError &&
+      (error.status === 401 || error.status === 404)
+    ) {
+      redirect("/login");
+    }
+
+    throw error;
+  }
 
   return <MyPage profile={profile} />;
 }

@@ -39,8 +39,7 @@ function getMemberIdFromAccessToken(accessToken: string) {
     return (
       getPositiveInteger(claims.memberId) ??
       getPositiveInteger(claims.member_id) ??
-      getPositiveInteger(claims.id) ??
-      getPositiveInteger(claims.sub)
+      getPositiveInteger(claims.id)
     );
   } catch {
     return undefined;
