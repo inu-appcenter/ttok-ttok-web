@@ -110,14 +110,21 @@ function DesktopProfileView({
 
       <div className="mt-4 flex w-full max-w-[316px] flex-col items-center">
         <p className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] text-text-default">
-          {profile.email}
+          {profile.displayName ?? profile.email}
         </p>
         <p className="mt-0.5 text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle">
-          {profile.accountLabel}
+          {profile.displayName ? profile.email : profile.accountLabel}
         </p>
-        <Tag className="mt-2" size="sm" tone="primary">
-          {profile.roleLabel}
-        </Tag>
+        {profile.studentNumber || profile.department ? (
+          <p className="mt-1 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
+            {[profile.studentNumber, profile.department].filter(Boolean).join(" · ")}
+          </p>
+        ) : null}
+        {profile.roleLabel ? (
+          <Tag className="mt-2" size="sm" tone="primary">
+            {profile.roleLabel}
+          </Tag>
+        ) : null}
         <Button
           className="mt-5 !h-8 w-full !rounded-[var(--radius-lg)] !px-2 !text-[length:var(--font-size-body2)] !font-semibold"
           isLoading={isLoggingOut}
@@ -138,12 +145,14 @@ function DesktopProfileView({
         ) : null}
       </div>
 
-      <div className="mt-4 w-full">
-        <ResearcherStatus
-          isUndergraduateResearcher={profile.isUndergraduateResearcher}
-          onChange={onChangeResearcherStatus}
-        />
-      </div>
+      {profile.isUndergraduateResearcher !== undefined ? (
+        <div className="mt-4 w-full">
+          <ResearcherStatus
+            isUndergraduateResearcher={profile.isUndergraduateResearcher}
+            onChange={onChangeResearcherStatus}
+          />
+        </div>
+      ) : null}
 
       {researchProfile ? (
         <article className="mt-4 w-full rounded-[var(--radius-md)] border border-border-subtle bg-bg-default px-5 py-2.5">
@@ -199,11 +208,18 @@ function MobileProfileView({
           </div>
           <div>
             <p className="text-[length:var(--font-size-headline1)] font-semibold leading-[1.4] tracking-[-0.01em] text-text-default">
-              {profile.email}
+              {profile.displayName ?? profile.email}
             </p>
             <p className="text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
-              {profile.accountLabel}
+              {profile.displayName ? profile.email : profile.accountLabel}
             </p>
+            {profile.studentNumber || profile.department ? (
+              <p className="text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtlest">
+                {[profile.studentNumber, profile.department]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            ) : null}
           </div>
         </div>
         <Button
@@ -226,10 +242,12 @@ function MobileProfileView({
         ) : null}
       </article>
 
-      <ResearcherStatus
-        isUndergraduateResearcher={profile.isUndergraduateResearcher}
-        onChange={onChangeResearcherStatus}
-      />
+      {profile.isUndergraduateResearcher !== undefined ? (
+        <ResearcherStatus
+          isUndergraduateResearcher={profile.isUndergraduateResearcher}
+          onChange={onChangeResearcherStatus}
+        />
+      ) : null}
 
       {researchProfile ? (
         <MobileResearchProfile

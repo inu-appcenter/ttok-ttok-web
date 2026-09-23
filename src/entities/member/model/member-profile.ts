@@ -9,8 +9,11 @@ export type MemberResearchProfile = {
 
 export type MemberProfile = {
   accountLabel: string;
+  department?: string;
+  displayName?: string;
   email: string;
-  isUndergraduateResearcher: boolean;
+  isUndergraduateResearcher?: boolean;
   researchProfile?: MemberResearchProfile;
-  roleLabel: string;
+  roleLabel?: string;
+  studentNumber?: string;
 };

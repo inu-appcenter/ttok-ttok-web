@@ -1,16 +1,26 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { MOCK_MEMBER_PROFILE } from "@/entities/member";
+import { getMemberProfile } from "@/entities/member";
+import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
 import { getAuthSession } from "@/shared/lib/auth/session";
 
 import { MyPage } from "@/_pages/mypage";
 
 export default async function MyPageRoute() {
-  const { isAuthenticated } = await getAuthSession();
+  const { isAuthenticated, memberId } = await getAuthSession();
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !memberId) {
     redirect("/login");
   }
 
-  return <MyPage profile={MOCK_MEMBER_PROFILE} />;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
+
+  if (!accessToken) {
+    redirect("/login");
+  }
+
+  const profile = await getMemberProfile(memberId, accessToken);
+
+  return <MyPage profile={profile} />;
 }
