@@ -11,7 +11,7 @@ export type MemberProfile = {
   accountLabel: string;
   department?: string;
   displayName?: string;
-  email: string;
+  email?: string;
   isUndergraduateResearcher?: boolean;
   researchProfile?: MemberResearchProfile;
   roleLabel?: string;

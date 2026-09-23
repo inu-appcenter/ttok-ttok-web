@@ -110,12 +110,15 @@ function DesktopProfileView({
 
       <div className="mt-4 flex w-full max-w-[316px] flex-col items-center">
         <p className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] text-text-default">
-          {profile.displayName ?? profile.email}
+          {profile.displayName ?? profile.email ?? profile.studentNumber ?? "회원"}
         </p>
         <p className="mt-0.5 text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle">
-          {profile.displayName ? profile.email : profile.accountLabel}
+          {profile.displayName && profile.email
+            ? profile.email
+            : profile.accountLabel}
         </p>
-        {profile.studentNumber || profile.department ? (
+        {(profile.displayName || profile.email) &&
+        (profile.studentNumber || profile.department) ? (
           <p className="mt-1 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
             {[profile.studentNumber, profile.department].filter(Boolean).join(" · ")}
           </p>
@@ -208,12 +211,18 @@ function MobileProfileView({
           </div>
           <div>
             <p className="text-[length:var(--font-size-headline1)] font-semibold leading-[1.4] tracking-[-0.01em] text-text-default">
-              {profile.displayName ?? profile.email}
+              {profile.displayName ??
+                profile.email ??
+                profile.studentNumber ??
+                "회원"}
             </p>
             <p className="text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
-              {profile.displayName ? profile.email : profile.accountLabel}
+              {profile.displayName && profile.email
+                ? profile.email
+                : profile.accountLabel}
             </p>
-            {profile.studentNumber || profile.department ? (
+            {(profile.displayName || profile.email) &&
+            (profile.studentNumber || profile.department) ? (
               <p className="text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtlest">
                 {[profile.studentNumber, profile.department]
                   .filter(Boolean)

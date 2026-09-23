@@ -1,38 +1,26 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { getMemberProfile, MemberProfileApiError } from "@/entities/member";
-import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
+import type { MemberProfile } from "@/entities/member";
 import { getAuthSession } from "@/shared/lib/auth/session";
 
 import { MyPage } from "@/_pages/mypage";
 
 export default async function MyPageRoute() {
-  const { isAuthenticated, memberId } = await getAuthSession();
+  const { isAuthenticated, memberId, role, studentNumber } =
+    await getAuthSession();
 
-  if (!isAuthenticated || !memberId) {
+  if (!isAuthenticated) {
     redirect("/login");
   }
 
-  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
+  const profile: MemberProfile = {
+    accountLabel: "인천대 SSO 계정",
+    roleLabel: role?.includes("ADMIN") ? "관리자" : "회원",
+    studentNumber,
+  };
 
-  if (!accessToken) {
-    redirect("/login");
-  }
-
-  let profile;
-
-  try {
-    profile = await getMemberProfile(memberId, accessToken);
-  } catch (error) {
-    if (
-      error instanceof MemberProfileApiError &&
-      (error.status === 401 || error.status === 404)
-    ) {
-      redirect("/login");
-    }
-
-    throw error;
+  if (!studentNumber && memberId) {
+    profile.displayName = `회원 #${memberId}`;
   }
 
   return <MyPage profile={profile} />;

@@ -5,6 +5,8 @@ import { ACCESS_TOKEN_COOKIE, MEMBER_ID_COOKIE } from "./cookies";
 export type AuthSession = {
   isAuthenticated: boolean;
   memberId?: number;
+  role?: string;
+  studentNumber?: string;
 };
 
 function getPositiveInteger(value: unknown) {
@@ -15,10 +17,16 @@ function getPositiveInteger(value: unknown) {
     : undefined;
 }
 
-function getMemberIdFromAccessToken(accessToken: string) {
+type AccessTokenClaims = {
+  memberId?: number;
+  role?: string;
+  studentNumber?: string;
+};
+
+function getAccessTokenClaims(accessToken: string): AccessTokenClaims {
   const payload = accessToken.split(".")[1];
 
-  if (!payload) return undefined;
+  if (!payload) return {};
 
   try {
     const decodedPayload: unknown = JSON.parse(
@@ -31,30 +39,40 @@ function getMemberIdFromAccessToken(accessToken: string) {
     );
 
     if (!decodedPayload || typeof decodedPayload !== "object") {
-      return undefined;
+      return {};
     }
 
     const claims = decodedPayload as Record<string, unknown>;
 
-    return (
-      getPositiveInteger(claims.memberId) ??
-      getPositiveInteger(claims.member_id) ??
-      getPositiveInteger(claims.id)
-    );
+    return {
+      memberId:
+        getPositiveInteger(claims.memberId) ??
+        getPositiveInteger(claims.member_id) ??
+        getPositiveInteger(claims.id) ??
+        getPositiveInteger(claims.sub),
+      role: typeof claims.role === "string" ? claims.role : undefined,
+      studentNumber:
+        typeof claims.studentNumber === "string"
+          ? claims.studentNumber
+          : undefined,
+    };
   } catch {
-    return undefined;
+    return {};
   }
 }
 
 export async function getAuthSession(): Promise<AuthSession> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
+  const claims = accessToken ? getAccessTokenClaims(accessToken) : {};
   const memberId =
     getPositiveInteger(cookieStore.get(MEMBER_ID_COOKIE)?.value) ??
-    (accessToken ? getMemberIdFromAccessToken(accessToken) : undefined);
+    claims.memberId;
 
   return {
     isAuthenticated: Boolean(accessToken),
     memberId,
+    role: claims.role,
+    studentNumber: claims.studentNumber,
   };
 }
