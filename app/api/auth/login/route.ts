@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import {
   ACCESS_TOKEN_COOKIE,
   ACCESS_TOKEN_COOKIE_PATH,
+  MEMBER_ID_COOKIE,
+  MEMBER_ID_COOKIE_PATH,
   REFRESH_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE_PATH,
 } from "@/shared/lib/auth/cookies";
@@ -218,6 +220,11 @@ export async function POST(request: Request) {
       ...cookieOptions,
       expires: refreshTokenExpiresAt,
       path: REFRESH_TOKEN_COOKIE_PATH,
+    });
+    nextResponse.cookies.set(MEMBER_ID_COOKIE, String(response.data.memberId), {
+      ...cookieOptions,
+      expires: refreshTokenExpiresAt,
+      path: MEMBER_ID_COOKIE_PATH,
     });
 
     return nextResponse;
