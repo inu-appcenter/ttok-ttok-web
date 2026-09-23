@@ -1,2 +1,5 @@
 export const ACCESS_TOKEN_COOKIE = "ttok_access_token";
 export const REFRESH_TOKEN_COOKIE = "ttok_refresh_token";
+
+export const ACCESS_TOKEN_COOKIE_PATH = "/";
+export const REFRESH_TOKEN_COOKIE_PATH = "/api/auth";

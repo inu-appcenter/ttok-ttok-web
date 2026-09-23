@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 
 import {
   ACCESS_TOKEN_COOKIE,
+  ACCESS_TOKEN_COOKIE_PATH,
   REFRESH_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE_PATH,
 } from "@/shared/lib/auth/cookies";
 const INVALID_CREDENTIALS_MESSAGE =
   "학번 또는 비밀번호가 일치하지 않습니다.";
@@ -210,12 +212,12 @@ export async function POST(request: Request) {
     nextResponse.cookies.set(ACCESS_TOKEN_COOKIE, response.data.accessToken, {
       ...cookieOptions,
       expires: accessTokenExpiresAt,
-      path: "/",
+      path: ACCESS_TOKEN_COOKIE_PATH,
     });
     nextResponse.cookies.set(REFRESH_TOKEN_COOKIE, response.data.refreshToken, {
       ...cookieOptions,
       expires: refreshTokenExpiresAt,
-      path: "/api/auth",
+      path: REFRESH_TOKEN_COOKIE_PATH,
     });
 
     return nextResponse;
