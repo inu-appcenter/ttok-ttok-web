@@ -1,16 +1,27 @@
 import { redirect } from "next/navigation";
 
-import { MOCK_MEMBER_PROFILE } from "@/entities/member";
+import type { MemberProfile } from "@/entities/member";
 import { getAuthSession } from "@/shared/lib/auth/session";
 
 import { MyPage } from "@/_pages/mypage";
 
 export default async function MyPageRoute() {
-  const { isAuthenticated } = await getAuthSession();
+  const { isAuthenticated, memberId, role, studentNumber } =
+    await getAuthSession();
 
   if (!isAuthenticated) {
     redirect("/login");
   }
 
-  return <MyPage profile={MOCK_MEMBER_PROFILE} />;
+  const profile: MemberProfile = {
+    accountLabel: "인천대 SSO 계정",
+    roleLabel: role?.includes("ADMIN") ? "관리자" : "회원",
+    studentNumber,
+  };
+
+  if (!studentNumber && memberId) {
+    profile.displayName = `회원 #${memberId}`;
+  }
+
+  return <MyPage profile={profile} />;
 }
