@@ -14,6 +14,8 @@ export type HomePageProps = {
   isAuthenticated?: boolean;
   labs: LabSummary[];
   labsError?: string;
+  categories?: string[];
+  categoriesError?: string;
 };
 
 function LabLoadError({ message }: { message: string }) {
@@ -36,6 +38,8 @@ export function HomePage({
   isAuthenticated = false,
   labs,
   labsError,
+  categories,
+  categoriesError,
 }: HomePageProps) {
   return (
     <div className="min-h-screen overflow-x-hidden bg-bg-default pb-[calc(111px_+_env(safe-area-inset-bottom))] text-text-default md:pb-0">
@@ -61,9 +65,7 @@ export function HomePage({
               <h1 className="bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] bg-clip-text text-center text-[length:var(--font-size-display2)] font-bold leading-[1.3] tracking-[-0.025em] text-transparent" id="home-search-heading">
                 어떤 연구를 하고 싶으세요?
               </h1>
-              <div className="w-full rounded-[var(--radius-xl)] bg-bg-default p-3 shadow-[0_2px_8px_var(--color-opacity-black-10)]">
-                <HomeSearchField />
-              </div>
+              <HomeSearchField categories={categories} categoriesError={categoriesError} />
             </div>
           </section>
           <div className="mx-auto w-full max-w-[1440px] px-[clamp(24px,8.89vw,128px)]">
