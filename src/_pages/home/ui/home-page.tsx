@@ -8,6 +8,7 @@ import { HomeBanner } from "@/widgets/home-banner";
 import { SiteFooter } from "@/widgets/site-footer";
 import { SiteHeader } from "@/widgets/site-header";
 
+import { HomeDepartmentPreview } from "./home-department-preview";
 import { HomeServiceGuide } from "./home-service-guide";
 
 export type HomePageProps = {
@@ -86,6 +87,7 @@ export function HomePage({
                 )}
               </div>
             </section>
+            <HomeDepartmentPreview />
           </div>
         </div>
       </main>
