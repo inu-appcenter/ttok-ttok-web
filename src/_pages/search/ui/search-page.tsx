@@ -19,6 +19,7 @@ export type SearchPageStatus = "error" | "loading" | "ready";
 
 export type SearchPageProps = {
   errorMessage?: string;
+  category?: string;
   initialQuery?: string;
   isAuthenticated?: boolean;
   page?: number;
@@ -26,12 +27,14 @@ export type SearchPageProps = {
   status?: SearchPageStatus;
 };
 
-function createSearchHref(query: string, page: number) {
+function createSearchHref(query: string, page: number, category = "") {
   const searchParams = new URLSearchParams({ page: String(page) });
 
   if (query) {
     searchParams.set("q", query);
   }
+
+  if (category) searchParams.set("category", category);
 
   return `/search?${searchParams.toString()}`;
 }
@@ -65,6 +68,7 @@ function SearchPageSkeleton() {
 
 export function SearchPage({
   errorMessage,
+  category = "",
   initialQuery = "",
   isAuthenticated = false,
   page = 0,
@@ -153,11 +157,12 @@ export function SearchPage({
             <div className="mb-6 flex min-h-6 items-center justify-between gap-4">
             <p className="text-[length:var(--font-size-label1)] text-text-subtle">
               {status === "ready"
-                ? `${normalizedQuery ? `‘${normalizedQuery}’ 검색 결과` : "전체 연구실"} · ${result?.totalElements ?? 0}개 연구실`
+                ? `${category ? `‘${category}’ 분야 검색 결과` : normalizedQuery ? `‘${normalizedQuery}’ 검색 결과` : "전체 연구실"} · ${result?.totalElements ?? 0}개 연구실`
                 : "연구실 검색 결과"}
             </p>
             </div>
 
+          {category ? <p className="mb-4 text-sm text-text-subtle">선택한 분야: {category} · <Link className="underline" href="/search">조건 초기화</Link></p> : null}
           {status === "loading" ? <SearchPageSkeleton /> : null}
 
           {status === "error" ? (
@@ -172,7 +177,7 @@ export function SearchPage({
               </div>
               <Link
                 className="rounded-[var(--radius-lg)] border border-border-primary px-5 py-2.5 text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                href={createSearchHref(normalizedQuery, page)}
+                href={createSearchHref(normalizedQuery, page, category)}
               >
                 다시 시도
               </Link>
@@ -196,7 +201,7 @@ export function SearchPage({
                     <Link
                       aria-label="이전 페이지"
                       className="rounded-md border border-border-subtle px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                      href={createSearchHref(normalizedQuery, result.page - 1)}
+                      href={createSearchHref(normalizedQuery, result.page - 1, category)}
                     >
                       이전
                     </Link>
@@ -218,7 +223,7 @@ export function SearchPage({
                           ? "flex bg-bg-primary font-semibold text-text-inverse"
                           : "hidden border border-border-subtle text-text-default sm:flex"
                       }`}
-                      href={createSearchHref(normalizedQuery, page)}
+                      href={createSearchHref(normalizedQuery, page, category)}
                       key={page}
                     >
                       {page + 1}
@@ -229,7 +234,7 @@ export function SearchPage({
                     <Link
                       aria-label="다음 페이지"
                       className="rounded-md border border-border-subtle px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                      href={createSearchHref(normalizedQuery, result.page + 1)}
+                      href={createSearchHref(normalizedQuery, result.page + 1, category)}
                     >
                       다음
                     </Link>
@@ -250,9 +255,11 @@ export function SearchPage({
             <div className="flex flex-col items-center gap-6 py-24 text-center">
               <div>
                 <h1 className="text-[length:var(--font-size-display2)] font-bold leading-[1.5] tracking-[-0.01em]">
-                  {normalizedQuery
-                    ? `‘${normalizedQuery}’ 검색 결과가 없어요`
-                    : "등록된 연구실이 없어요"}
+                  {category
+                    ? `‘${category}’ 분야의 연구실이 없어요`
+                    : normalizedQuery
+                      ? `‘${normalizedQuery}’ 검색 결과가 없어요`
+                      : "등록된 연구실이 없어요"}
                 </h1>
                 <p className="mt-1 text-[length:var(--font-size-heading1)] text-text-subtle">
                   {normalizedQuery
