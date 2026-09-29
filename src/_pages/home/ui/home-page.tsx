@@ -8,7 +8,7 @@ import { HomeBanner } from "@/widgets/home-banner";
 import { SiteFooter } from "@/widgets/site-footer";
 import { SiteHeader } from "@/widgets/site-header";
 
-const popularCategories = ["AI / ML", "데이터", "보안", "시스템", "비전", "NLP"];
+import { HomeServiceGuide } from "./home-service-guide";
 
 export type HomePageProps = {
   isAuthenticated?: boolean;
@@ -41,7 +41,7 @@ export function HomePage({
     <div className="min-h-screen overflow-x-hidden bg-bg-default pb-[calc(111px_+_env(safe-area-inset-bottom))] text-text-default md:pb-0">
       <SiteHeader activeItem="home" isAuthenticated={isAuthenticated} />
       <main>
-        <div className="px-4 pt-[27px] md:px-0 md:pt-0">
+        <div className="px-4 pt-[27px] md:hidden">
           <HomeBanner />
         </div>
 
@@ -56,47 +56,35 @@ export function HomePage({
         </div>
 
         <div className="hidden md:block">
-        <section className="mx-auto flex w-full max-w-[1440px] flex-col gap-[var(--spacing-spacing-4)] px-6 py-10 sm:flex-row sm:items-center md:px-[clamp(24px,8.89vw,128px)]">
-          <div className="w-full flex-1">
-            <HomeSearchField />
-          </div>
-        </section>
-
-        <section className="mx-auto flex w-full max-w-[1440px] flex-col gap-[var(--spacing-spacing-4)] px-6 py-[var(--spacing-spacing-2)] md:px-[clamp(24px,8.89vw,128px)]">
-          <h2 className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] tracking-[-0.01em] text-text-default">
-            인기 분야로 둘러보기
-          </h2>
-          <div className="flex max-w-full flex-wrap gap-x-2 gap-y-3 sm:gap-3">
-            {popularCategories.map((category) => (
-              <Link
-                className="rounded-full border border-border-subtle bg-bg-default px-[14px] py-1 text-[length:var(--font-size-body2)] font-normal leading-[1.5] text-text-subtle transition-colors hover:border-border-primary hover:bg-bg-primary-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                href={`/search?category=${encodeURIComponent(category)}`}
-                key={category}
-              >
-                {category}
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section className="mx-auto flex w-full max-w-[1440px] flex-col gap-5 px-6 pb-12 pt-6 md:px-[clamp(24px,8.89vw,128px)]">
-          <h2 className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] tracking-[-0.01em] text-text-default">
-            인기 연구실 둘러보기
-          </h2>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {labsError ? (
-              <div className="col-span-full">
-                <LabLoadError message={labsError} />
+          <section aria-labelledby="home-search-heading" className="flex min-h-[600px] items-center bg-bg-primary-subtle">
+            <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center gap-8 px-[clamp(24px,8.89vw,128px)] py-12">
+              <h1 className="bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] bg-clip-text text-center text-[length:var(--font-size-display2)] font-bold leading-[1.3] tracking-[-0.025em] text-transparent" id="home-search-heading">
+                어떤 연구를 하고 싶으세요?
+              </h1>
+              <div className="w-full rounded-[var(--radius-xl)] bg-bg-default p-3 shadow-[0_2px_8px_var(--color-opacity-black-10)]">
+                <HomeSearchField />
               </div>
-            ) : labs.length > 0 ? (
-              labs.map((lab) => <LabCard key={lab.labId} lab={lab} />)
-            ) : (
-              <p className="col-span-full py-10 text-center text-[length:var(--font-size-body2)] text-text-subtle">
-                표시할 연구실이 아직 없어요.
-              </p>
-            )}
+            </div>
+          </section>
+          <div className="mx-auto w-full max-w-[1440px] px-[clamp(24px,8.89vw,128px)]">
+            <HomeServiceGuide />
+            <section aria-labelledby="home-labs-heading" className="flex flex-col gap-5 pb-12 pt-6">
+              <h2 className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] tracking-[-0.01em]" id="home-labs-heading">
+                연구실 둘러보기
+              </h2>
+              <div className="grid grid-cols-2 gap-6 xl:grid-cols-3">
+                {labsError ? (
+                  <div className="col-span-full"><LabLoadError message={labsError} /></div>
+                ) : labs.length > 0 ? (
+                  labs.map((lab) => <LabCard key={lab.labId} lab={lab} />)
+                ) : (
+                  <p className="col-span-full py-10 text-center text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle">
+                    표시할 연구실이 아직 없어요.
+                  </p>
+                )}
+              </div>
+            </section>
           </div>
-        </section>
         </div>
       </main>
       <MobileBottomNav />
