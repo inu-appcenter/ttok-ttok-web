@@ -1,6 +1,6 @@
 import { SearchPage } from "@/_pages/search";
 import { toLabSummaryPage, type LabSummaryPage } from "@/entities/lab";
-import { getLaboratories, searchLaboratories } from "@/entities/lab/api";
+import { getLaboratories, searchLaboratories, searchLaboratoriesByCategory } from "@/entities/lab/api";
 import { getAuthSession } from "@/shared/lib/auth/session";
 
 const PAGE_SIZE = 20;
@@ -9,6 +9,7 @@ type SearchRouteProps = {
   searchParams: Promise<{
     page?: string | string[];
     q?: string | string[];
+    category?: string | string[];
   }>;
 };
 
@@ -29,12 +30,27 @@ function getPage(value: string | undefined) {
 export default async function Page({ searchParams }: SearchRouteProps) {
   const params = await searchParams;
   const query = getSingleSearchParam(params.q)?.trim() ?? "";
+  const category = getSingleSearchParam(params.category)?.trim() ?? "";
   const page = getPage(getSingleSearchParam(params.page));
   const { isAuthenticated } = await getAuthSession();
   let result: LabSummaryPage;
 
+  if (query && category) {
+    return (
+      <SearchPage
+        initialQuery={query}
+        category={category}
+        status="error"
+        errorMessage="분야와 검색어는 각각 검색할 수 있어요. 조건을 초기화한 뒤 다시 검색해주세요."
+        isAuthenticated={isAuthenticated}
+      />
+    );
+  }
+
   try {
-    const laboratoryPage = query
+    const laboratoryPage = category
+      ? await searchLaboratoriesByCategory(category, page)
+      : query
       ? await searchLaboratories({ keyword: query, page, size: PAGE_SIZE })
       : await getLaboratories(
           { page, size: PAGE_SIZE },
@@ -45,6 +61,7 @@ export default async function Page({ searchParams }: SearchRouteProps) {
     return (
       <SearchPage
         errorMessage="잠시 후 다시 시도해주세요."
+        category={category}
         initialQuery={query}
         isAuthenticated={isAuthenticated}
         page={page}
@@ -55,6 +72,7 @@ export default async function Page({ searchParams }: SearchRouteProps) {
 
   return (
     <SearchPage
+      category={category}
       initialQuery={query}
       isAuthenticated={isAuthenticated}
       result={result}

@@ -6,13 +6,11 @@ export function SiteFooter() {
   return (
     <footer className="hidden bg-bg-subtle md:block">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-6 pb-8 pt-14 md:px-[clamp(24px,8.89vw,128px)]">
+        <Logo variant="wordmark" />
         <div className="flex flex-col justify-between gap-10 sm:flex-row">
-          <div className="flex flex-col gap-2">
-            <Logo variant="wordmark" />
-            <p className="text-[13px] text-text-subtle">
-              인천대 학생을 위한 연구실 매칭 서비스
-            </p>
-          </div>
+          <p className="text-[length:var(--font-size-label2)] text-text-subtle">
+            인천대 학생을 위한 연구실 매칭 서비스
+          </p>
           <div className="flex gap-16 text-[13px] leading-normal">
             <div className="flex flex-col gap-3">
               <strong className="text-[14px] font-medium text-text-default">
