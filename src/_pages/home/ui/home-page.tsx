@@ -6,13 +6,11 @@ import { HomeSearchField, MobileLabExplorer } from "@/features/search-lab";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
 import { HomeBanner } from "@/widgets/home-banner";
 import { SiteFooter } from "@/widgets/site-footer";
-import { SiteHeader } from "@/widgets/site-header";
 
 import { HomeDepartmentPreview } from "./home-department-preview";
 import { HomeServiceGuide } from "./home-service-guide";
 
 export type HomePageProps = {
-  isAuthenticated?: boolean;
   labs: LabSummary[];
   labsError?: string;
   categories?: string[];
@@ -36,7 +34,6 @@ function LabLoadError({ message }: { message: string }) {
 }
 
 export function HomePage({
-  isAuthenticated = false,
   labs,
   labsError,
   categories,
@@ -44,7 +41,6 @@ export function HomePage({
 }: HomePageProps) {
   return (
     <div className="min-h-screen overflow-x-hidden bg-bg-default pb-[calc(111px_+_env(safe-area-inset-bottom))] text-text-default md:pb-0">
-      <SiteHeader activeItem="home" isAuthenticated={isAuthenticated} />
       <main>
         <div className="px-4 pt-[27px] md:hidden">
           <HomeBanner />

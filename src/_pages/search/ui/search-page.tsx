@@ -3,7 +3,6 @@ import Link from "next/link";
 import { LabCard, type LabSummaryPage } from "@/entities/lab";
 import { LaboratorySearchField } from "@/features/search-lab";
 import { Checkbox, Radio } from "@/shared/ui";
-import { SiteHeader } from "@/widgets/site-header";
 
 const researchFields = ["AI / ML", "데이터", "보안", "시스템", "비전", "NLP"];
 const departments = [
@@ -21,7 +20,6 @@ export type SearchPageProps = {
   errorMessage?: string;
   category?: string;
   initialQuery?: string;
-  isAuthenticated?: boolean;
   page?: number;
   result?: LabSummaryPage;
   status?: SearchPageStatus;
@@ -70,7 +68,6 @@ export function SearchPage({
   errorMessage,
   category = "",
   initialQuery = "",
-  isAuthenticated = false,
   page = 0,
   result,
   status = "ready",
@@ -83,7 +80,6 @@ export function SearchPage({
 
   return (
     <div className="min-h-screen bg-bg-default text-text-default">
-      <SiteHeader activeItem="search" isAuthenticated={isAuthenticated} />
       <main>
         <section className="border-b border-border-disabled px-4 py-6 md:p-10">
           <div className="mx-auto w-full max-w-[1014px]">

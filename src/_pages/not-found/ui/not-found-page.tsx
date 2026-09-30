@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 
 import { Button, Logo } from "@/shared/ui";
-import { SiteHeader } from "@/widgets/site-header";
 
 export function NotFoundPage() {
   const router = useRouter();
@@ -15,7 +14,6 @@ export function NotFoundPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-default text-text-default">
-      <SiteHeader />
       <main className="flex flex-1 flex-col items-center justify-center gap-5 px-4 pb-12 md:gap-6 md:pb-20">
         <Logo alt="똑똑" className="h-[120px] w-[83px] md:h-[173px] md:w-[120px]" priority variant="stacked" />
         <div className="flex flex-col items-center gap-2 text-center">

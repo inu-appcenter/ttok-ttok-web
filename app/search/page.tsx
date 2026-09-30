@@ -1,7 +1,6 @@
 import { SearchPage } from "@/_pages/search";
 import { toLabSummaryPage, type LabSummaryPage } from "@/entities/lab";
 import { getLaboratories, searchLaboratories, searchLaboratoriesByCategory } from "@/entities/lab/api";
-import { getAuthSession } from "@/shared/lib/auth/session";
 
 const PAGE_SIZE = 20;
 
@@ -32,7 +31,6 @@ export default async function Page({ searchParams }: SearchRouteProps) {
   const query = getSingleSearchParam(params.q)?.trim() ?? "";
   const category = getSingleSearchParam(params.category)?.trim() ?? "";
   const page = getPage(getSingleSearchParam(params.page));
-  const { isAuthenticated } = await getAuthSession();
   let result: LabSummaryPage;
 
   if (query && category) {
@@ -42,7 +40,6 @@ export default async function Page({ searchParams }: SearchRouteProps) {
         category={category}
         status="error"
         errorMessage="분야와 검색어는 각각 검색할 수 있어요. 조건을 초기화한 뒤 다시 검색해주세요."
-        isAuthenticated={isAuthenticated}
       />
     );
   }
@@ -63,19 +60,11 @@ export default async function Page({ searchParams }: SearchRouteProps) {
         errorMessage="잠시 후 다시 시도해주세요."
         category={category}
         initialQuery={query}
-        isAuthenticated={isAuthenticated}
         page={page}
         status="error"
       />
     );
   }
 
-  return (
-    <SearchPage
-      category={category}
-      initialQuery={query}
-      isAuthenticated={isAuthenticated}
-      result={result}
-    />
-  );
+  return <SearchPage category={category} initialQuery={query} result={result} />;
 }
