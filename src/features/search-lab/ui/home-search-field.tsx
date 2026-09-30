@@ -60,7 +60,7 @@ export function HomeSearchField({ categories = [], categoriesError }: HomeSearch
         <div className="relative flex min-w-0 items-center pl-2 pr-4 xl:h-full xl:w-[253px] xl:shrink-0 xl:border-r xl:border-border-subtle">
           <label className="flex min-w-0 flex-1 flex-col text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle">
             학과
-            <select aria-label="학과 (준비 중)" className="w-full cursor-not-allowed appearance-none bg-transparent pr-6 text-[length:var(--font-size-heading2)] font-semibold tracking-[-0.01em] text-text-default" disabled title="학과 검색은 준비 중입니다" value="" >
+            <select aria-label="학과" className="w-full cursor-not-allowed appearance-none bg-transparent pr-6 text-[length:var(--font-size-heading2)] font-semibold tracking-[-0.01em] text-text-default" disabled value="">
               <option value="">전체</option>
             </select>
           </label>
@@ -71,15 +71,17 @@ export function HomeSearchField({ categories = [], categoriesError }: HomeSearch
           <Button disabled={isPending} leadingIcon={<Image alt="" height={18} src="/icons/home/search/search.svg" width={18} />} size="lg" type="submit">검색</Button>
         </div>
       </form>
-      <div aria-label="추천 검색어 (준비 중)" className="flex max-w-full flex-wrap items-center justify-center gap-2">
+      <div aria-label="추천 검색어" className="flex max-w-full flex-wrap items-center justify-center gap-2">
         <span className="text-[length:var(--font-size-label1)] font-semibold text-text-subtle">추천 검색어</span>
         {RECOMMENDED_KEYWORDS.map((keyword) => (
-          <button disabled className="rounded-full border border-border-subtle bg-bg-default px-3.5 py-1 text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary" key={keyword} title="추천 검색어 검색 준비 중" type="button">{keyword}</button>
+          <button disabled className="rounded-full border border-border-subtle bg-bg-default px-3.5 py-1 text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary" key={keyword} type="button">{keyword}</button>
         ))}
       </div>
-      <p className="-mt-6 text-center text-[length:var(--font-size-caption1)] text-text-subtle" id="home-category-error">
-        {categoriesError ?? (categories.length === 0 ? "분야 목록을 준비 중입니다. " : "분야 또는 검색어로 검색할 수 있어요. ")}학과·추천 검색어 검색은 준비 중입니다.
-      </p>
+      {categoriesError ? (
+        <p className="-mt-6 text-center text-[length:var(--font-size-caption1)] text-text-subtle" id="home-category-error">
+          {categoriesError}
+        </p>
+      ) : null}
     </div>
   );
 }

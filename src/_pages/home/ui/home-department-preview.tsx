@@ -16,14 +16,9 @@ const COLLEGE_PREVIEW = [
 export function HomeDepartmentPreview() {
   return (
     <section aria-labelledby="home-departments-heading" className="flex flex-col gap-5 pb-12 pt-6">
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <h2 className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] tracking-[-0.01em]" id="home-departments-heading">
-          단과대학 · 학과별 연구실
-        </h2>
-        <p className="text-[length:var(--font-size-caption1)] text-text-subtle">
-          화면 예시 · 연구실 수와 학과별 검색은 준비 중입니다.
-        </p>
-      </div>
+      <h2 className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] tracking-[-0.01em]" id="home-departments-heading">
+        단과대학 · 학과별 연구실
+      </h2>
       <div className="grid grid-cols-2 gap-6 xl:grid-cols-4">
         {COLLEGE_PREVIEW.map((college) => (
           <div className="flex min-w-0 flex-col gap-3 rounded-[var(--radius-xl)] bg-bg-default p-4 shadow-[0_4px_16px_var(--color-opacity-black-10)]" key={college.name}>

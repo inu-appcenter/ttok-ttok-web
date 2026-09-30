@@ -61,7 +61,6 @@ function ServiceCard({ title, description, children }: {
       <div className="flex flex-1 flex-col items-start gap-2.5 p-6">
         <h3 className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] tracking-[-0.01em]">{title}</h3>
         <p className="text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle">{description}</p>
-        <span className="mt-auto text-[length:var(--font-size-label1)] text-text-subtle">준비 중</span>
       </div>
     </article>
   );
