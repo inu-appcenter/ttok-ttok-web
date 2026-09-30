@@ -16,6 +16,9 @@ type Story = StoryObj<typeof meta>;
 const icon = (
   <Image alt="" height={18} src="/icons/check.svg" width={18} />
 );
+const outlineIcon = (
+  <Image alt="" height={18} src="/icons/check-outline.svg" width={18} />
+);
 
 export const Primary: Story = {};
 export const Secondary: Story = { args: { variant: "secondary" } };
@@ -44,7 +47,7 @@ export const IconVariants: Story = {
       <Button {...args} leadingIcon={icon} />
       <Button {...args} trailingIcon={icon} />
       <Button {...args} leadingIcon={icon} trailingIcon={icon} />
-      <Button {...args} variant="outline" leadingIcon={icon} />
+      <Button {...args} variant="outline" leadingIcon={outlineIcon} />
     </div>
   ),
 };
@@ -55,6 +58,16 @@ export const IconSizes: Story = {
       <Button {...args} leadingIcon={icon} size="lg" />
       <Button {...args} leadingIcon={icon} size="md" />
       <Button {...args} leadingIcon={icon} size="sm" />
+    </div>
+  ),
+};
+
+export const OutlineSizes: Story = {
+  render: (args) => (
+    <div className="flex items-center gap-4">
+      <Button {...args} leadingIcon={outlineIcon} size="lg" variant="outline" />
+      <Button {...args} leadingIcon={outlineIcon} size="md" variant="outline" />
+      <Button {...args} leadingIcon={outlineIcon} size="sm" variant="outline" />
     </div>
   ),
 };

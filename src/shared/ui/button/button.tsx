@@ -45,6 +45,8 @@ const sizeClasses: Record<ButtonSize, string> = {
   lg: "h-[51px] rounded-[var(--radius-xl)] px-[var(--spacing-spacing-6)] text-[length:var(--font-size-body1)]",
 };
 
+const outlineLargeWithoutIconClasses = "h-[45px] rounded-[var(--radius-xl)] px-[var(--spacing-spacing-6)] text-[length:var(--font-size-body1)]";
+
 const iconSizeClasses: Record<ButtonSize, string> = {
   sm: "size-[14px]",
   md: "size-4",
@@ -63,12 +65,16 @@ export function Button({
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || isLoading;
-  const isSizeAwareVariant = variant !== "outline" && variant !== "text";
-  const iconSize = isSizeAwareVariant ? size : "lg";
+  const iconSize = variant === "text" ? "lg" : size;
+  const buttonSizeClasses = variant === "text"
+    ? ""
+    : variant === "outline" && size === "lg" && !leadingIcon && !trailingIcon
+      ? outlineLargeWithoutIconClasses
+      : sizeClasses[size];
 
   return (
     <button
-      className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-[var(--spacing-spacing-1)] font-normal leading-[1.5] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary ${variantClasses[variant]} ${disabledClasses[variant]} ${isSizeAwareVariant ? sizeClasses[size] : variant === "outline" ? "rounded-[var(--radius-xl)]" : ""} ${className ?? ""}`}
+      className={`inline-flex shrink-0 cursor-pointer items-center justify-center gap-[var(--spacing-spacing-1)] font-normal leading-[1.5] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary ${variantClasses[variant]} ${disabledClasses[variant]} ${buttonSizeClasses} ${className ?? ""}`}
       disabled={isDisabled}
       aria-busy={isLoading || undefined}
       {...props}
