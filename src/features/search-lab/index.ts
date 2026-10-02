@@ -1,6 +1,9 @@
 export { LabSearchCombobox } from "./ui/lab-search-combobox";
 export type { LabSearchComboboxProps } from "./ui/lab-search-combobox";
 export { HomeSearchField } from "./ui/home-search-field";
+export { createSearchHref, getSearchRequest, parseSearchConditions } from "./model/search-conditions";
+export type { SearchConditions, SearchRouteParams } from "./model/search-conditions";
+export { ResearchCategoryFilter } from "./ui/research-category-filter";
 export { LaboratorySearchField } from "./ui/laboratory-search-field";
 export type { LaboratorySearchFieldProps } from "./ui/laboratory-search-field";
 export { MobileLabExplorer } from "./ui/mobile-lab-explorer";

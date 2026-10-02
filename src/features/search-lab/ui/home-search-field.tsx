@@ -6,81 +6,168 @@ import { useRef, useState, useTransition, type FormEvent } from "react";
 
 import { Button, Toast } from "@/shared/ui";
 
+import { FIELD_PREVIEW } from "../model/search-options";
+import { SearchConditionDropdown } from "./search-condition-dropdown";
+
+import {
+  createSearchHref,
+  parseSearchConditions,
+} from "../model/search-conditions";
+
 // 현재 Figma의 표시 예시입니다. 서버의 인기순 추천이나 검색 결과로 사용하지 않습니다.
 const RECOMMENDED_KEYWORDS = ["LLM", "컴퓨터비전", "강화학습", "IoT", "반도체"];
 
 export type HomeSearchFieldProps = {
   categories?: string[];
   categoriesError?: string;
+  initialQuery?: string;
+  initialCategory?: string;
+  isDisabled?: boolean;
+  showRecommendations?: boolean;
 };
 
-export function HomeSearchField({ categories = [], categoriesError }: HomeSearchFieldProps) {
+export function HomeSearchField({
+  categories = [],
+  initialQuery = "",
+  initialCategory = "",
+  isDisabled = false,
+  showRecommendations = true,
+}: HomeSearchFieldProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("");
+  const [query, setQuery] = useState(initialQuery);
+  const [category, setCategory] = useState(initialCategory);
+  const [department, setDepartment] = useState("");
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const normalizedQuery = query.trim();
-    if (!normalizedQuery && !category) {
+    if (department) {
+      setMessage(
+        "학과별 검색은 아직 지원하지 않아요. 학과를 전체로 변경해주세요.",
+      );
+      return;
+    }
+    if (
+      category &&
+      category !== initialCategory &&
+      !categories.includes(category)
+    ) {
+      setMessage(
+        "선택한 분야의 검색은 아직 지원하지 않아요. 분야를 전체로 변경해주세요.",
+      );
+      return;
+    }
+    if (showRecommendations && !normalizedQuery && !category) {
       setMessage("검색어를 입력해주세요");
       inputRef.current?.focus();
       return;
     }
-    if (normalizedQuery && category) {
-      setMessage("분야와 검색어는 각각 검색할 수 있어요. 하나의 조건만 선택해주세요.");
+    const conditions = parseSearchConditions({ q: normalizedQuery, category });
+    if (conditions.error) {
+      setMessage(conditions.error);
       return;
     }
     setMessage("");
-    const params = new URLSearchParams(category ? { category } : { q: normalizedQuery });
-    startTransition(() => router.push(`/search?${params.toString()}`));
+    startTransition(() => router.push(createSearchHref(conditions)));
   }
 
   return (
     <div className="flex w-full flex-col items-center gap-8">
       {message ? (
         <div className="fixed inset-x-4 top-20 z-50 flex justify-center">
-          <Toast className="[&>span>span]:whitespace-normal" state="error" title={message} />
+          <Toast
+            className="[&>span>span]:whitespace-normal"
+            state="error"
+            title={message}
+          />
         </div>
       ) : null}
-      <form aria-label="연구실 검색 조건" aria-busy={isPending} className="grid w-full grid-cols-2 items-center gap-3 rounded-[var(--radius-xl)] bg-bg-default p-3 shadow-[0_2px_8px_var(--color-opacity-black-10)] xl:flex xl:h-20" onSubmit={handleSubmit}>
-        <div className="relative flex min-w-0 items-center border-r border-border-subtle pl-2 pr-4 xl:h-full xl:w-[253px] xl:shrink-0">
-          <label className="flex min-w-0 flex-1 flex-col text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle">
-            분야
-            <select aria-label="분야" aria-describedby={categoriesError ? "home-category-error" : undefined} className="w-full appearance-none rounded-sm bg-transparent pr-6 text-[length:var(--font-size-heading2)] font-semibold tracking-[-0.01em] text-text-default focus-visible:outline-2 focus-visible:outline-border-primary disabled:cursor-not-allowed" disabled={isPending || categories.length === 0} onChange={(event) => { setCategory(event.target.value); setMessage(""); }} value={category}>
-              <option value="">전체</option>
-              {categories.map((name) => <option key={name} value={name}>{name}</option>)}
-            </select>
-          </label>
-          <Image alt="" className="pointer-events-none absolute right-4" height={18} src="/icons/home/search/chevron-down.svg" width={18} />
-        </div>
-        <div className="relative flex min-w-0 items-center pl-2 pr-4 xl:h-full xl:w-[253px] xl:shrink-0 xl:border-r xl:border-border-subtle">
-          <label className="flex min-w-0 flex-1 flex-col text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle">
-            학과
-            <select aria-label="학과" className="w-full cursor-not-allowed appearance-none bg-transparent pr-6 text-[length:var(--font-size-heading2)] font-semibold tracking-[-0.01em] text-text-default" disabled value="">
-              <option value="">전체</option>
-            </select>
-          </label>
-          <Image alt="" className="pointer-events-none absolute right-4" height={18} src="/icons/home/search/chevron-down.svg" width={18} />
-        </div>
+      <form
+        aria-label="연구실 검색 조건"
+        aria-busy={isPending}
+        className="group/search grid w-full grid-cols-2 items-center gap-3 rounded-[var(--radius-xl)] bg-bg-default p-3 shadow-[0_2px_8px_var(--color-opacity-black-10)] xl:flex xl:h-20"
+        onSubmit={handleSubmit}
+      >
+        <SearchConditionDropdown
+          disabled={isPending || isDisabled}
+          kind="category"
+          onChange={(value) => {
+            setCategory(value);
+            setMessage("");
+          }}
+          options={categories.length ? categories : FIELD_PREVIEW}
+          value={category}
+        />
+        <div
+          aria-hidden="true"
+          className="hidden h-[54px] w-px shrink-0 bg-border-subtle xl:block group-has-[[data-condition=category]:is(:hover,[data-open=true])]/search:invisible group-has-[[data-condition=department]:is(:hover,[data-open=true])]/search:invisible"
+        />
+        <SearchConditionDropdown
+          disabled={isPending || isDisabled}
+          kind="department"
+          onChange={(value) => {
+            setDepartment(value);
+            setMessage("");
+          }}
+          value={department}
+        />
+        <div
+          aria-hidden="true"
+          className="hidden h-[54px] w-px shrink-0 bg-border-subtle xl:block group-has-[[data-condition=department]:is(:hover,[data-open=true])]/search:invisible"
+        />
         <div className="col-span-2 flex min-w-0 items-center gap-3 xl:flex-1">
-          <input aria-label="연구실 검색" className="h-[54px] min-w-0 flex-1 rounded-sm bg-bg-default px-2 text-[length:var(--font-size-body2)] leading-[1.5] text-text-default outline-none placeholder:text-text-subtle focus-visible:ring-2 focus-visible:ring-border-primary" disabled={isPending} onChange={(event) => { setQuery(event.target.value); setMessage(""); }} placeholder="연구실명 · 교수명 검색" ref={inputRef} type="search" value={query} />
-          <Button disabled={isPending} leadingIcon={<Image alt="" height={18} src="/icons/home/search/search.svg" width={18} />} size="lg" type="submit">검색</Button>
+          <input
+            aria-label="연구실 검색"
+            className="h-[54px] min-w-0 flex-1 rounded-sm bg-bg-default px-2 text-[length:var(--font-size-body2)] leading-[1.5] text-text-default outline-none placeholder:text-text-subtle focus-visible:ring-2 focus-visible:ring-border-primary"
+            disabled={isPending || isDisabled}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setMessage("");
+            }}
+            placeholder="연구실명 · 교수명 검색"
+            ref={inputRef}
+            type="search"
+            value={query}
+          />
+          <Button
+            disabled={isPending || isDisabled}
+            leadingIcon={
+              <Image
+                alt=""
+                height={18}
+                src="/icons/home/search/search.svg"
+                width={18}
+              />
+            }
+            size="lg"
+            type="submit"
+          >
+            검색
+          </Button>
         </div>
       </form>
-      <div aria-label="추천 검색어" className="flex max-w-full flex-wrap items-center justify-center gap-2">
-        <span className="text-[length:var(--font-size-label1)] font-semibold text-text-subtle">추천 검색어</span>
-        {RECOMMENDED_KEYWORDS.map((keyword) => (
-          <button disabled className="rounded-full border border-border-subtle bg-bg-default px-3.5 py-1 text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary" key={keyword} type="button">{keyword}</button>
-        ))}
-      </div>
-      {categoriesError ? (
-        <p className="-mt-6 text-center text-[length:var(--font-size-caption1)] text-text-subtle" id="home-category-error">
-          {categoriesError}
-        </p>
+      {showRecommendations ? (
+        <div
+          aria-label="추천 검색어"
+          className="flex max-w-full flex-wrap items-center justify-center gap-2"
+        >
+          <span className="text-[length:var(--font-size-label1)] font-semibold text-text-subtle">
+            추천 검색어
+          </span>
+          {RECOMMENDED_KEYWORDS.map((keyword) => (
+            <button
+              disabled
+              className="rounded-full border border-border-subtle bg-bg-default px-3.5 py-1 text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
+              key={keyword}
+              type="button"
+            >
+              {keyword}
+            </button>
+          ))}
+        </div>
       ) : null}
     </div>
   );
