@@ -10,9 +10,9 @@ export type TagProps = HTMLAttributes<HTMLSpanElement> & {
 };
 
 const toneClasses: Record<TagTone, string> = {
-  default: "bg-text-default text-text-inverse text-[length:var(--font-size-label1)] font-semibold",
-  subtle: "bg-text-subtlest text-text-inverse text-[length:var(--font-size-label1)] font-semibold",
-  secondary: "bg-[var(--color-secondary-secondary-500)] text-text-inverse text-[length:var(--font-size-label1)] font-semibold",
+  default: "bg-text-default text-text-inverse text-[length:var(--font-size-label2)] font-normal",
+  subtle: "bg-text-subtlest text-text-inverse text-[length:var(--font-size-label2)] font-normal",
+  secondary: "bg-[var(--color-secondary-secondary-500)] text-text-inverse text-[length:var(--font-size-label2)] font-normal",
   primary: "bg-bg-primary text-text-inverse text-[length:var(--font-size-label2)] font-normal",
   neutral: "bg-bg-neutral text-text-subtle text-[length:var(--font-size-label2)] font-semibold",
   success: "bg-bg-success text-text-success text-[length:var(--font-size-label2)] font-semibold",
@@ -25,7 +25,7 @@ const sizeClasses: Record<TagSize, string> = {
   md: "py-[var(--spacing-spacing-0-5)]",
 };
 
-export function Tag({ children, className, size = "md", tone = "default", ...props }: TagProps) {
+export function Tag({ children, className, size = "sm", tone = "default", ...props }: TagProps) {
   return (
     <span
       className={`inline-flex items-center rounded-full px-[var(--spacing-spacing-2-5)] leading-[1.5] ${sizeClasses[size]} ${toneClasses[tone]} ${className ?? ""}`}
