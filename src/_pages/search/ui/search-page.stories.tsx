@@ -18,6 +18,7 @@ const meta = {
   title: "Pages/SearchPage",
   component: SearchPage,
   args: {
+    categories: ["AI", "데이터", "보안"],
     result: firstPage,
   },
   parameters: {
@@ -29,6 +30,21 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const CategoryResults: Story = { args: { category: "AI" } };
+export const CategoryUnavailable: Story = {
+  args: { categories: [], categoriesError: "분야 목록을 불러오지 못했어요." },
+};
+export const InvalidConditions: Story = {
+  args: {
+    category: "AI",
+    initialQuery: "교수명",
+    invalidConditions: true,
+    status: "error",
+    result: undefined,
+    errorMessage: "분야와 검색어는 각각 검색할 수 있어요. 하나의 조건만 선택해주세요.",
+  },
+};
 
 export const SearchResults: Story = {
   args: {

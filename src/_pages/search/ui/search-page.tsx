@@ -1,10 +1,9 @@
 import Link from "next/link";
 
 import { LabCard, type LabSummaryPage } from "@/entities/lab";
-import { LaboratorySearchField } from "@/features/search-lab";
-import { Checkbox, Radio } from "@/shared/ui";
+import { createSearchHref, LaboratorySearchField, ResearchCategoryFilter } from "@/features/search-lab";
+import { Checkbox } from "@/shared/ui";
 
-const researchFields = ["AI / ML", "데이터", "보안", "시스템", "비전", "NLP"];
 const departments = [
   "컴퓨터공학부",
   "임베디드시스템공학과",
@@ -17,6 +16,9 @@ const departments = [
 export type SearchPageStatus = "error" | "loading" | "ready";
 
 export type SearchPageProps = {
+  categories?: string[];
+  categoriesError?: string;
+  invalidConditions?: boolean;
   errorMessage?: string;
   category?: string;
   initialQuery?: string;
@@ -24,18 +26,6 @@ export type SearchPageProps = {
   result?: LabSummaryPage;
   status?: SearchPageStatus;
 };
-
-function createSearchHref(query: string, page: number, category = "") {
-  const searchParams = new URLSearchParams({ page: String(page) });
-
-  if (query) {
-    searchParams.set("q", query);
-  }
-
-  if (category) searchParams.set("category", category);
-
-  return `/search?${searchParams.toString()}`;
-}
 
 function getVisiblePages(currentPage: number, totalPages: number) {
   const firstPage = Math.max(0, Math.min(currentPage - 2, totalPages - 5));
@@ -65,6 +55,9 @@ function SearchPageSkeleton() {
 }
 
 export function SearchPage({
+  categories = [],
+  categoriesError,
+  invalidConditions = false,
   errorMessage,
   category = "",
   initialQuery = "",
@@ -86,7 +79,7 @@ export function SearchPage({
             <LaboratorySearchField
               initialQuery={initialQuery}
               isDisabled={status === "loading"}
-              key={initialQuery}
+              key={`${initialQuery}:${category}`}
             />
           </div>
         </section>
@@ -99,38 +92,14 @@ export function SearchPage({
             <section className="flex flex-col items-center gap-[14px] border-b border-border-subtle py-[30px]">
               <div className="w-full">
                 <h2 className="text-[20px] font-bold leading-[1.5]">연구 분야</h2>
-                <p className="mt-1 text-[length:var(--font-size-caption1)] text-text-subtle">
-                  필터 API 준비 중
-                </p>
               </div>
-              <div className="flex w-full flex-wrap gap-2">
-                {researchFields.map((field) => (
-                  <Radio
-                    appearance="chip"
-                    disabled
-                    key={field}
-                    name="research-field"
-                    value={field}
-                  >
-                    {field}
-                  </Radio>
-                ))}
-              </div>
-              <button
-                className="text-[length:var(--font-size-body3)] text-text-disabled underline underline-offset-2"
-                disabled
-                type="button"
-              >
-                더보기
-              </button>
+              <ResearchCategoryFilter categories={categories} category={category} />
+              {categoriesError ? <p className="text-[length:var(--font-size-caption1)] text-text-subtle">{categoriesError}</p> : null}
             </section>
 
             <section className="flex flex-col items-center gap-[14px] border-b border-border-subtle py-[30px]">
               <div className="w-full">
                 <h2 className="text-[20px] font-bold leading-[1.5]">소속 학과</h2>
-                <p className="mt-1 text-[length:var(--font-size-caption1)] text-text-subtle">
-                  필터 API 준비 중
-                </p>
               </div>
               <div className="flex w-full flex-col gap-2">
                 {departments.map((department) => (
@@ -158,14 +127,14 @@ export function SearchPage({
             </p>
             </div>
 
-          {category ? <p className="mb-4 text-sm text-text-subtle">선택한 분야: {category} · <Link className="underline" href="/search">조건 초기화</Link></p> : null}
+          {category || normalizedQuery ? <p className="mb-4 text-sm text-text-subtle">선택한 조건: {category || normalizedQuery} · <Link className="underline" href="/search">조건 초기화</Link></p> : null}
           {status === "loading" ? <SearchPageSkeleton /> : null}
 
           {status === "error" ? (
             <div className="flex flex-col items-center gap-5 py-24 text-center">
               <div>
                 <h1 className="text-[length:var(--font-size-heading1)] font-bold">
-                  연구실을 불러오지 못했어요
+                  {invalidConditions ? "검색 조건을 확인해주세요" : "연구실을 불러오지 못했어요"}
                 </h1>
                 <p className="mt-2 text-[length:var(--font-size-body2)] text-text-subtle">
                   {errorMessage ?? "잠시 후 다시 시도해주세요."}
@@ -173,9 +142,9 @@ export function SearchPage({
               </div>
               <Link
                 className="rounded-[var(--radius-lg)] border border-border-primary px-5 py-2.5 text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                href={createSearchHref(normalizedQuery, page, category)}
+                href={invalidConditions ? createSearchHref() : createSearchHref({ query: normalizedQuery, page, category })}
               >
-                다시 시도
+                {invalidConditions ? "조건 초기화" : "다시 시도"}
               </Link>
             </div>
           ) : null}
@@ -197,7 +166,7 @@ export function SearchPage({
                     <Link
                       aria-label="이전 페이지"
                       className="rounded-md border border-border-subtle px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                      href={createSearchHref(normalizedQuery, result.page - 1, category)}
+                      href={createSearchHref({ query: normalizedQuery, page: result.page - 1, category })}
                     >
                       이전
                     </Link>
@@ -219,7 +188,7 @@ export function SearchPage({
                           ? "flex bg-bg-primary font-semibold text-text-inverse"
                           : "hidden border border-border-subtle text-text-default sm:flex"
                       }`}
-                      href={createSearchHref(normalizedQuery, page, category)}
+                      href={createSearchHref({ query: normalizedQuery, page, category })}
                       key={page}
                     >
                       {page + 1}
@@ -230,7 +199,7 @@ export function SearchPage({
                     <Link
                       aria-label="다음 페이지"
                       className="rounded-md border border-border-subtle px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                      href={createSearchHref(normalizedQuery, result.page + 1, category)}
+                      href={createSearchHref({ query: normalizedQuery, page: result.page + 1, category })}
                     >
                       다음
                     </Link>
@@ -263,10 +232,10 @@ export function SearchPage({
                     : "연구실 정보가 등록되면 이곳에 표시됩니다"}
                 </p>
               </div>
-              {normalizedQuery ? (
+              {normalizedQuery || category ? (
                 <Link
                   className="rounded-[var(--radius-lg)] border border-border-primary bg-bg-default px-5 py-2.5 text-[length:var(--font-size-body2)] text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                  href={createSearchHref("", 0)}
+                  href={createSearchHref()}
                 >
                   검색 초기화
                 </Link>

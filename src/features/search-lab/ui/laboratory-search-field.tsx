@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 
 import { SearchField } from "@/shared/ui";
 
+import { createSearchHref } from "../model/search-conditions";
+
 export type LaboratorySearchFieldProps = {
   initialQuery?: string;
   isDisabled?: boolean;
@@ -20,14 +22,8 @@ export function LaboratorySearchField({
 
   function handleSearch(value: string) {
     const normalizedQuery = value.trim();
-    const searchParams = new URLSearchParams({ page: "0" });
-
-    if (normalizedQuery) {
-      searchParams.set("q", normalizedQuery);
-    }
-
     startTransition(() => {
-      router.push(`/search?${searchParams.toString()}`);
+      router.push(createSearchHref({ query: normalizedQuery }));
     });
   }
 

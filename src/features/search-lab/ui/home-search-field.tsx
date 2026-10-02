@@ -6,6 +6,8 @@ import { useRef, useState, useTransition, type FormEvent } from "react";
 
 import { Button, Toast } from "@/shared/ui";
 
+import { createSearchHref, parseSearchConditions } from "../model/search-conditions";
+
 // 현재 Figma의 표시 예시입니다. 서버의 인기순 추천이나 검색 결과로 사용하지 않습니다.
 const RECOMMENDED_KEYWORDS = ["LLM", "컴퓨터비전", "강화학습", "IoT", "반도체"];
 
@@ -30,13 +32,13 @@ export function HomeSearchField({ categories = [], categoriesError }: HomeSearch
       inputRef.current?.focus();
       return;
     }
-    if (normalizedQuery && category) {
-      setMessage("분야와 검색어는 각각 검색할 수 있어요. 하나의 조건만 선택해주세요.");
+    const conditions = parseSearchConditions({ q: normalizedQuery, category });
+    if (conditions.error) {
+      setMessage(conditions.error);
       return;
     }
     setMessage("");
-    const params = new URLSearchParams(category ? { category } : { q: normalizedQuery });
-    startTransition(() => router.push(`/search?${params.toString()}`));
+    startTransition(() => router.push(createSearchHref(conditions)));
   }
 
   return (
