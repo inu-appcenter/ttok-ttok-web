@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { expect, userEvent, within } from "storybook/test";
 
 import { FIELD_PREVIEW } from "../model/search-options";
 import { HomeSearchField } from "./home-search-field";
@@ -20,3 +21,23 @@ export const SelectedField: Story = {
 };
 export const CategoriesUnavailable: Story = { args: { categories: [] } };
 export const Disabled: Story = { args: { isDisabled: true } };
+
+export const KeyboardSelection: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    canvas.getByRole("button", { name: "분야: 전체" }).focus();
+    await userEvent.keyboard("{ArrowDown}");
+    const input = canvas.getByRole("textbox", { name: "분야 검색" });
+    await expect(input).toHaveFocus();
+    await userEvent.type(input, "데이터");
+    await userEvent.keyboard("{ArrowDown}{ArrowRight}{Enter}");
+    await expect(canvas.getByRole("button", { name: "분야: 데이터베이스" })).toHaveFocus();
+    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
+    await userEvent.keyboard("{ArrowDown}{Escape}");
+    await expect(canvas.getByRole("button", { name: "분야: 데이터베이스" })).toHaveFocus();
+    canvas.getByRole("button", { name: "학과: 전체" }).focus();
+    await userEvent.keyboard("{ArrowDown}{ArrowLeft}{ArrowDown}{ArrowRight}{ArrowDown}{Enter}");
+    await expect(canvas.getByRole("button", { name: "학과: 컴퓨터공학부" })).toHaveFocus();
+    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
+  },
+};
