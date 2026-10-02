@@ -5,6 +5,7 @@ export { createSearchHref, getSearchRequest, parseSearchConditions } from "./mod
 export type { SearchConditions, SearchRouteParams } from "./model/search-conditions";
 export { ResearchCategoryFilter } from "./ui/research-category-filter";
 export { LaboratorySearchField } from "./ui/laboratory-search-field";
+export { RetryLabSearch } from "./ui/retry-lab-search";
 export type { LaboratorySearchFieldProps } from "./ui/laboratory-search-field";
 export { MobileLabExplorer } from "./ui/mobile-lab-explorer";
 export type { MobileLabExplorerProps } from "./ui/mobile-lab-explorer";

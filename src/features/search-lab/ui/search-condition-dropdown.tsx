@@ -59,6 +59,16 @@ export function SearchConditionDropdown({
   const [activeCollege, setActiveCollege] = useState(COLLEGE_PREVIEW[0].name);
   useEffect(() => {
     if (!isOpen) return;
+    const firstControl =
+      kind === "category"
+        ? rootRef.current?.querySelector<HTMLElement>("input")
+        : (rootRef.current?.querySelector<HTMLElement>(
+            '[data-option-group="department"][aria-pressed="true"]',
+          ) ??
+          rootRef.current?.querySelector<HTMLElement>(
+            '[data-option-group="department"]',
+          ));
+    firstControl?.focus({ preventScroll: true });
     function handleOutsidePointer(event: PointerEvent) {
       if (
         event.target instanceof Node &&
@@ -69,7 +79,7 @@ export function SearchConditionDropdown({
     document.addEventListener("pointerdown", handleOutsidePointer);
     return () =>
       document.removeEventListener("pointerdown", handleOutsidePointer);
-  }, [isOpen]);
+  }, [isOpen, kind]);
   const label = kind === "category" ? "분야" : "학과";
   const fields = [...new Set([...options, ...(value ? [value] : [])])].sort(
     (left, right) => left.localeCompare(right, "ko"),
@@ -107,7 +117,61 @@ export function SearchConditionDropdown({
           event.preventDefault();
           setIsOpen(false);
           triggerRef.current?.focus();
+          return;
         }
+        if (!isOpen && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+          event.preventDefault();
+          setQuery("");
+          setActiveIndex("");
+          setIsOpen(true);
+          return;
+        }
+        const target = event.target;
+        if (!isOpen || !(target instanceof HTMLElement)) return;
+        if (target instanceof HTMLInputElement && event.key === "ArrowDown") {
+          event.preventDefault();
+          rootRef.current
+            ?.querySelector<HTMLButtonElement>('[data-option-group="category"]')
+            ?.focus();
+          return;
+        }
+        const group = target.dataset.optionGroup;
+        if (!group) return;
+        if (
+          (group === "college" && event.key === "ArrowRight") ||
+          (group === "department" && event.key === "ArrowLeft")
+        ) {
+          event.preventDefault();
+          const nextGroup = group === "college" ? "department" : "college";
+          const selected = rootRef.current?.querySelector<HTMLButtonElement>(
+            `[data-option-group="${nextGroup}"][aria-pressed="true"]`,
+          );
+          (
+            selected ??
+            rootRef.current?.querySelector<HTMLButtonElement>(
+              `[data-option-group="${nextGroup}"]`,
+            )
+          )?.focus();
+          return;
+        }
+        const controls = [
+          ...(rootRef.current?.querySelectorAll<HTMLButtonElement>(
+            `[data-option-group="${group}"]:not(:disabled)`,
+          ) ?? []),
+        ];
+        const current = controls.findIndex((control) => control === target);
+        const columns = group === "category" ? 3 : 1;
+        const hasReset = controls[0]?.hasAttribute("data-reset");
+        let next = current;
+        if (event.key === "ArrowDown") next = hasReset && current === 0 ? 1 : current + columns;
+        else if (event.key === "ArrowUp") next = hasReset && current <= columns ? 0 : current - columns;
+        else if (group === "category" && event.key === "ArrowRight") next += 1;
+        else if (group === "category" && event.key === "ArrowLeft") next -= 1;
+        else if (event.key === "Home") next = 0;
+        else if (event.key === "End") next = controls.length - 1;
+        else return;
+        event.preventDefault();
+        controls[Math.max(0, Math.min(next, controls.length - 1))]?.focus();
       }}
     >
       <div
@@ -240,6 +304,8 @@ export function SearchConditionDropdown({
               >
                 {!query ? (
                   <button
+                    data-option-group="category"
+                    data-reset=""
                     className="mb-1 w-full rounded-md px-2 py-1 text-left text-[14px] hover:bg-bg-primary-subtle focus-visible:outline-2 focus-visible:outline-border-primary"
                     onClick={() => handleSelect("")}
                     type="button"
@@ -265,6 +331,7 @@ export function SearchConditionDropdown({
                       <div className="grid grid-cols-3 gap-x-1 px-1 pb-1.5">
                         {group.fields.map((field) => (
                           <button
+                            data-option-group="category"
                             aria-pressed={value === field}
                             className="truncate rounded-md px-2 py-1 text-left text-[14px] leading-[1.5] text-text-default hover:bg-bg-primary-subtle aria-pressed:bg-bg-primary-subtle aria-pressed:font-semibold aria-pressed:text-text-primary focus-visible:outline-2 focus-visible:outline-border-primary"
                             key={field}
@@ -296,10 +363,12 @@ export function SearchConditionDropdown({
                   ...COLLEGE_PREVIEW.map((college) => college.name),
                 ].map((college) => (
                   <button
+                    data-option-group="college"
                     aria-pressed={activeCollege === college}
                     className="flex min-h-[37px] w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[14px] text-text-subtle aria-pressed:bg-bg-default aria-pressed:font-semibold aria-pressed:text-text-primary aria-pressed:shadow-sm focus-visible:outline-2 focus-visible:outline-border-primary"
                     key={college}
                     onClick={() => setActiveCollege(college)}
+                    onFocus={() => setActiveCollege(college)}
                     onMouseEnter={() => setActiveCollege(college)}
                     type="button"
                   >
@@ -322,6 +391,7 @@ export function SearchConditionDropdown({
               >
                 {["", ...departments].map((department) => (
                   <button
+                    data-option-group="department"
                     aria-pressed={department === value}
                     className="block min-h-[37px] w-full rounded-lg px-3 py-2 text-left text-[14px] leading-[1.5] text-text-default hover:bg-bg-primary-subtle aria-pressed:bg-bg-primary-subtle aria-pressed:font-semibold aria-pressed:text-text-primary focus-visible:outline-2 focus-visible:outline-border-primary"
                     key={department}
