@@ -20,9 +20,9 @@ export type LabSummaryPage = {
 
 export type LabPaper = {
   title: string;
-  url: string;
+  url: string | null;
   venue: string;
-  year: number;
+  year: number | null;
 };
 
 export type LabDetail = LabSummary & {
@@ -50,4 +50,45 @@ export type LabDetail = LabSummary & {
     undergraduate: number | null;
   };
   papers: LabPaper[];
+  publicationState?: LabDetailListState;
+  projects?: LabResearchProject[];
+  projectState?: LabDetailListState;
+  professor?: {
+    name: string;
+    position: string | null;
+    email: string | null;
+    phone: string | null;
+  };
+  news?: Array<{
+    id: string;
+    title: string;
+    date: string;
+    source: string;
+    url: string | null;
+  }>;
+  metrics?: LabResearchMetrics;
+};
+
+export type LabResearchProject = {
+  id: string;
+  title: string;
+  isOngoing: boolean;
+  period: string;
+  agency: string;
+  summary: string;
+  url: string | null;
+};
+
+export type LabDetailListState = {
+  page: number;
+  totalPages: number;
+  status: "success" | "error";
+};
+
+export type LabResearchMetrics = {
+  hIndex: number;
+  citations: number;
+  fiveYearPapers: number;
+  hIndexPercentile?: number;
+  citationPercentile?: number;
 };
