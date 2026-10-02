@@ -336,6 +336,6 @@ export async function getLaboratoryPage(
 }
 
 /** 카테고리 참조 데이터도 공통 응답·오류 처리를 사용합니다. */
-export function getLaboratoryReferenceData(path: string): Promise<unknown> {
-  return requestLaboratoryApi(path, new URLSearchParams());
+export function getLaboratoryReferenceData(path: string, params: Record<string, string> = {}): Promise<unknown> {
+  return requestLaboratoryApi(path, new URLSearchParams(params));
 }

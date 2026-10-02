@@ -7,7 +7,15 @@ export { LabSearchResultItem } from "./ui/lab-search-result-item";
 export type { LabSearchResultItemProps } from "./ui/lab-search-result-item";
 export { SelectedLabCard } from "./ui/selected-lab-card";
 export type { SelectedLabCardProps } from "./ui/selected-lab-card";
-export type { LabDetail, LabPaper, LabSummary, LabSummaryPage } from "./model/lab";
+export type {
+  LabDetail,
+  LabPaper,
+  LabSummary,
+  LabSummaryPage,
+  LabResearchMetrics,
+  LabResearchProject,
+  LabDetailListState,
+} from "./model/lab";
 export type {
   Laboratory,
   LaboratoryCapacity,

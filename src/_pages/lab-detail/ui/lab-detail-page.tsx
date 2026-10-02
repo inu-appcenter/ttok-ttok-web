@@ -9,6 +9,8 @@ import {
 import { Tag } from "@/shared/ui";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
 
+import { LabNews, ProfessorCard, ResearchProjects } from "./detail-content";
+import { ResearchMetrics } from "./research-metrics";
 import { MobileAiSummary } from "./mobile-ai-summary";
 
 export type LabDetailPageProps = {
@@ -96,34 +98,7 @@ export function LabDetailPage({
           </dl>
         </section>
 
-        <section className="rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)]">
-          <h2 className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5]">
-            최근 논문
-          </h2>
-          {lab.papers.length > 0 ? (
-            <ul className="mt-[6px] flex flex-col">
-              {lab.papers.map((paper) => (
-                <li className="py-[2px]" key={`${paper.year}-${paper.title}`}>
-                  <a
-                    className="block text-[length:var(--font-size-caption1)] font-semibold leading-[1.5] text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                    href={paper.url}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    {paper.title} <span className="font-normal">↗</span>
-                  </a>
-                  <p className="text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtlest">
-                    {paper.year} · {paper.venue}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-[6px] text-[length:var(--font-size-caption1)] text-text-subtle">
-              등록된 논문 정보가 아직 없어요.
-            </p>
-          )}
-        </section>
+        <ProfessorCard isMobile lab={lab} />
 
         <section className="rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)]">
           <h2 className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5]">
@@ -136,9 +111,14 @@ export function LabDetailPage({
                 ["주간 미팅", lab.experience.weeklyMeeting],
                 ["하는 일", lab.experience.primaryTasks],
               ].map(([term, description]) => (
-                <div className="flex justify-between gap-4 border-b border-border-subtlest py-1 last:border-0" key={term}>
+                <div
+                  className="flex justify-between gap-4 border-b border-border-subtlest py-1 last:border-0"
+                  key={term}
+                >
                   <dt className="shrink-0 text-text-subtle">{term}</dt>
-                  <dd className="text-right text-text-primary">{description}</dd>
+                  <dd className="text-right text-text-primary">
+                    {description}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -149,6 +129,7 @@ export function LabDetailPage({
           )}
         </section>
 
+        <ResearchProjects isMobile lab={lab} />
         <LabContactCard
           contact={lab.contact}
           isAuthenticated={isAuthenticated}
@@ -159,18 +140,18 @@ export function LabDetailPage({
         </div>
       </main>
 
-      <main className="mx-auto hidden w-full max-w-[1440px] gap-6 px-10 pb-20 md:grid md:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+      <main className="mx-auto hidden w-full max-w-[1264px] gap-6 px-10 pb-20 md:grid md:grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-[30px]">
           <header className="border-b border-border-subtle py-[30px]">
             <div className="flex flex-wrap gap-[14px]">
               {lab.tags.map((tag) => (
-                <Tag className="!bg-[#bfd5f3]" key={tag} size="sm" tone="primary">
+                <Tag key={tag} size="sm" tone="primary">
                   {tag}
                 </Tag>
               ))}
             </div>
             <div className="mt-[6px]">
-              <h1 className="text-[length:var(--font-size-title1)] font-bold leading-[1.5] text-text-default">
+              <h1 className="break-words text-[length:var(--font-size-title1)] font-bold leading-[1.5]">
                 {lab.name}
               </h1>
               <p className="text-[length:var(--font-size-heading2)] font-medium leading-[1.5] text-text-subtle">
@@ -178,14 +159,17 @@ export function LabDetailPage({
               </p>
             </div>
             <div className="mt-[6px] flex flex-wrap items-center gap-x-6 gap-y-2 text-[length:var(--font-size-label1)] font-medium leading-[1.5] text-text-subtle">
-              <span>{lab.location ?? "위치 정보 없음"}</span>
-              <span>
-                대학원 {formatMemberCount(memberCounts.graduate)} · 학부{" "}
-                {formatMemberCount(memberCounts.undergraduate)}
-              </span>
+              {lab.location ? <span>{lab.location}</span> : null}
+              {memberCounts.graduate !== null ||
+              memberCounts.undergraduate !== null ? (
+                <span>
+                  대학원 {formatMemberCount(memberCounts.graduate)} · 학부{" "}
+                  {formatMemberCount(memberCounts.undergraduate)}
+                </span>
+              ) : null}
               {lab.homepageUrl ? (
                 <a
-                  className="text-[#2a78d6] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
+                  className="break-all text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
                   href={lab.homepageUrl}
                   rel="noreferrer"
                   target="_blank"
@@ -194,43 +178,18 @@ export function LabDetailPage({
                 </a>
               ) : null}
             </div>
-            <p className="mt-3 text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle">
-              {lab.description}
-            </p>
-          </header>
-
-          <section className="rounded-[var(--radius-2xl)] bg-bg-default px-6 py-5 shadow-[0_4px_16px_var(--color-opacity-black-10)]">
-            <h2 className="text-[length:var(--font-size-heading1)] font-semibold leading-[1.5]">
-              최근 논문
-            </h2>
-            {lab.papers.length > 0 ? (
-              <ul className="mt-5 flex flex-col gap-4">
-                {lab.papers.map((paper) => (
-                  <li key={`${paper.year}-${paper.title}`}>
-                    <a
-                      className="inline-block max-w-full text-[length:var(--font-size-heading2)] font-bold leading-normal text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                      href={paper.url}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      {paper.title} <span className="font-normal">↗</span>
-                    </a>
-                    <p className="text-[length:var(--font-size-body2)] leading-normal text-text-subtlest">
-                      {paper.year} · {paper.venue}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-5 text-[length:var(--font-size-body2)] text-text-subtlest">
-                등록된 논문 정보가 아직 없어요.
+            {lab.description && !lab.aiSummary.length ? (
+              <p className="mt-3 whitespace-pre-line text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle">
+                {lab.description}
               </p>
-            )}
-          </section>
-
-          <section className="rounded-[var(--radius-2xl)] bg-bg-default px-6 py-5 shadow-[0_4px_16px_var(--color-opacity-black-10)]">
+            ) : null}
+          </header>
+          <ResearchProjects lab={lab} />
+          <LabNews lab={lab} />
+          <section className="rounded-[var(--radius-2xl)] bg-bg-primary-subtle px-6 py-5 shadow-[0_4px_16px_var(--color-opacity-black-10)]">
             <h2 className="text-[length:var(--font-size-heading1)] font-semibold leading-[1.5]">
-              학부연구생이 말하는 이 랩 · {lab.experience.participantCount}명 참여
+              학부연구생이 말하는 이 랩 · {lab.experience.participantCount}명
+              참여
             </h2>
             {lab.experience.participantCount > 0 ? (
               <dl className="mt-5">
@@ -238,65 +197,63 @@ export function LabDetailPage({
                   ["코어타임", lab.experience.coreTime],
                   ["주간 미팅", lab.experience.weeklyMeeting],
                   ["하는 일", lab.experience.primaryTasks],
-                ].map(([term, description], index) => (
+                ].map(([term, description]) => (
                   <div
-                    className={`flex items-center justify-between gap-6 py-[6px] ${index < 2 ? "border-b border-border-subtlest" : ""}`}
+                    className="flex items-start justify-between gap-6 py-[6px]"
                     key={term}
                   >
                     <dt className="shrink-0 text-[length:var(--font-size-heading2)] font-medium leading-[1.5] text-text-subtle">
                       {term}
                     </dt>
-                    <dd className="text-right text-[18px] font-medium leading-[1.5] text-text-primary">
-                      {description}
+                    <dd className="min-w-0 text-right text-[18px] font-medium leading-[1.5] text-text-primary">
+                      {description || "응답 없음"}
                     </dd>
                   </div>
                 ))}
               </dl>
             ) : (
-              <p className="mt-5 text-[length:var(--font-size-body2)] text-text-subtlest">
-                아직 정보가 없어요.
+              <p className="mt-5 text-[length:var(--font-size-body2)] text-text-subtle">
+                등록된 후기가 없어요.
               </p>
             )}
           </section>
-
-          <div>
+          <div className="self-start">
             <ReportLabButton />
           </div>
         </div>
-
-        <aside className="flex min-w-0 flex-col pb-[51px] pt-[30px]">
+        <aside className="flex min-w-0 flex-col gap-6 pt-[30px]">
           {lab.aiSummary.length > 0 ? (
             <section>
               <div className="flex items-center gap-2">
                 <Image
                   alt=""
                   height={24}
-                  src="/icons/header/ai-active.svg"
+                  src="/icons/search-empty-sparkles.svg"
                   width={24}
                 />
                 <h2 className="bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] bg-clip-text text-[length:var(--font-size-title3)] font-bold leading-[1.3] tracking-[-0.02em] text-transparent">
                   AI 연구실 요약
                 </h2>
               </div>
-              <div className="mt-2 rounded-[var(--radius-xl)] border border-[#a7c0db] p-4 text-[length:var(--font-size-label2)] leading-[1.5] text-text-subtle">
+              <div className="mt-[6px] rounded-[var(--radius-xl)] border border-[#a7c0db] p-4 text-[length:var(--font-size-label2)] leading-[1.5] text-text-subtle">
                 {lab.aiSummary.map((paragraph) => (
                   <p className="not-last:mb-4" key={paragraph}>
                     {paragraph}
                   </p>
                 ))}
               </div>
+              <p className="mt-[6px] text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtlest">
+                AI가 생성한 요약이에요. 실제 연구실 정보와 다를 수 있어요.
+              </p>
             </section>
           ) : null}
-
-          <div
-            className={`mt-10 flex flex-col gap-[18px] ${lab.aiSummary.length > 0 ? "lg:mt-[296px]" : "lg:mt-10"}`}
-          >
-            <LabContactCard
-              contact={lab.contact}
-              isAuthenticated={isAuthenticated}
-            />
-            <ProvideLabInfoCard />
-          </div>
+          {lab.metrics ? <ResearchMetrics metrics={lab.metrics} /> : null}
+          <ProfessorCard lab={lab} />
+          <LabContactCard
+            contact={lab.contact}
+            isAuthenticated={isAuthenticated}
+          />
+          <ProvideLabInfoCard />
         </aside>
       </main>
       <MobileBottomNav />

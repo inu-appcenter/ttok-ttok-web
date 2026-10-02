@@ -48,16 +48,16 @@ export function LabContactCard({
 
   return (
     <>
-      <section className="w-full rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)] md:px-0 md:py-2">
-        <h2 className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-default md:px-[15px] md:text-[length:var(--font-size-heading2)] md:font-bold md:text-text-subtle">
+      <section className="w-full rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)] md:p-4">
+        <h2 className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-default md:text-[length:var(--font-size-headline2)] md:leading-[1.4]">
           커피챗
         </h2>
-        {!hasContact ? (
-          <p className="mt-[10px] py-1 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle md:px-4">
+        {isAuthenticated && !hasContact ? (
+          <p className="mt-[10px] py-1 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
             공개된 연락처가 아직 없어요.
           </p>
         ) : isAuthenticated ? (
-          <ul className="mt-[10px] flex flex-col text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle md:px-4">
+          <ul className="mt-[10px] flex flex-col text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
             {contact.members.map((member) => (
               <li className="flex items-center justify-between gap-4 border-b border-border-subtlest py-1 last:border-0" key={member.id}>
                 <span>{member.name}</span>
@@ -72,20 +72,20 @@ export function LabContactCard({
             ))}
           </ul>
         ) : (
-          <div className="relative mt-[10px] flex min-h-[62px] items-center justify-center overflow-hidden py-[10px] md:mx-4">
+          <div className="relative mt-[10px] flex min-h-[62px] items-center justify-center overflow-hidden py-[10px]">
             <div
               aria-hidden="true"
               className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-subtle blur-[2px]"
             >
-              <p>오픈채팅 · {contact.openChatUrl}</p>
-              <p>이메일 · {contact.email}</p>
+              <p>오픈채팅 · 연락처</p>
+              <p>이메일 · 연락처</p>
             </div>
             <Button
               className="absolute !h-8 !rounded-[var(--radius-md)] !px-4 !text-[length:var(--font-size-body3)]"
               onClick={() => setIsDialogOpen(true)}
               size="sm"
             >
-              로그인하고 연락처 보기
+              로그인하고 커피챗 확인하기
             </Button>
           </div>
         )}
