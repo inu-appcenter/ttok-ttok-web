@@ -39,8 +39,8 @@ export const Error: Story = {
 export const Authenticated: Story = {
   args: {
     labs: MOCK_LABS,
-    isAuthenticated: true,
   },
+  parameters: { siteHeaderAuthenticated: true },
 };
 
 export const LongContent: Story = {

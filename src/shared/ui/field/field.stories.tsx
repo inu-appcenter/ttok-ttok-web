@@ -26,6 +26,21 @@ export const Error: Story = { args: { error: "입력 내용을 확인해 주세�
 export const Invalid: Story = { args: { invalid: true } };
 export const Disabled: Story = { args: { disabled: true } };
 
+export const TextareaDefault: Story = {
+  render: (args) => <Textarea label={args.label} placeholder={args.placeholder} />,
+};
+export const TextareaFocus: Story = {
+  render: (args) => <Textarea autoFocus label={args.label} placeholder={args.placeholder} />,
+};
+export const TextareaError: Story = {
+  render: (args) => (
+    <Textarea error="입력 내용을 확인해 주세요." label={args.label} placeholder={args.placeholder} />
+  ),
+};
+export const TextareaDisabled: Story = {
+  render: (args) => <Textarea disabled label={args.label} placeholder={args.placeholder} />,
+};
+
 export const InputStates: Story = {
   render: (args) => (
     <div className="flex w-[280px] flex-col gap-5">

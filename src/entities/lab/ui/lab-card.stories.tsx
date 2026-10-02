@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { MOCK_LABS } from "../model/mock-labs";
 
-import { LabCard } from "./lab-card";
+import { LabCard, LabCardSkeleton } from "./lab-card";
 
 const meta = {
   title: "Entities/Lab/LabCard",
   component: LabCard,
   args: { lab: MOCK_LABS[0] },
-  decorators: [(Story) => <div className="w-[343px] bg-bg-default p-4 md:w-[361px]"><Story /></div>],
+  decorators: [(Story) => <div className="w-[343px] bg-bg-default md:w-[361px]"><Story /></div>],
 } satisfies Meta<typeof LabCard>;
 
 export default meta;
@@ -26,4 +26,16 @@ export const LongContent: Story = {
       tags: ["데이터베이스", "빅데이터", "ML시스템", "분산시스템"],
     },
   },
+};
+
+export const NoTags: Story = {
+  args: { lab: { ...MOCK_LABS[0], tags: [] } },
+};
+
+export const ManyTags: Story = {
+  args: { lab: { ...MOCK_LABS[0], tags: ["데이터베이스", "빅데이터", "딥러닝", "머신러닝", "AI"] } },
+};
+
+export const Skeleton: Story = {
+  render: () => <LabCardSkeleton />,
 };

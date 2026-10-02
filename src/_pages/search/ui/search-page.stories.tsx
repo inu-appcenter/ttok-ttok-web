@@ -18,7 +18,6 @@ const meta = {
   title: "Pages/SearchPage",
   component: SearchPage,
   args: {
-    isAuthenticated: false,
     result: firstPage,
   },
   parameters: {

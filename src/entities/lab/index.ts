@@ -1,7 +1,7 @@
 export { getPopularLabs } from "./api/get-popular-labs";
 export { MOCK_LAB_DETAILS, MOCK_LABS } from "./model/mock-labs";
 export { toLabSummary, toLabSummaryPage } from "./model/map-laboratory";
-export { LabCard } from "./ui/lab-card";
+export { LabCard, LabCardSkeleton } from "./ui/lab-card";
 export type { LabCardProps } from "./ui/lab-card";
 export { LabSearchResultItem } from "./ui/lab-search-result-item";
 export type { LabSearchResultItemProps } from "./ui/lab-search-result-item";

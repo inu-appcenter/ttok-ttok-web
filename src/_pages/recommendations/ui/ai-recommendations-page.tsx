@@ -7,14 +7,12 @@ import type { LabSummary } from "@/entities/lab";
 import { AiRecommendationButton } from "@/features/request-ai-recommendation";
 import { Textarea } from "@/shared/ui";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
-import { SiteHeader } from "@/widgets/site-header";
 
 type RecommendationView = "form" | "results";
 
 export type AiRecommendationsPageProps = {
   initialPrompt?: string;
   initialView?: RecommendationView;
-  isAuthenticated?: boolean;
   labs: LabSummary[];
 };
 
@@ -33,7 +31,6 @@ function AiSparklesIcon() {
 export function AiRecommendationsPage({
   initialPrompt = "",
   initialView = "form",
-  isAuthenticated = false,
   labs,
 }: AiRecommendationsPageProps) {
   const [prompt, setPrompt] = useState(initialPrompt);
@@ -50,7 +47,6 @@ export function AiRecommendationsPage({
 
   return (
     <div className="min-h-screen bg-bg-default pb-[calc(111px_+_env(safe-area-inset-bottom))] text-text-default md:pb-0">
-      <SiteHeader activeItem="ai" isAuthenticated={isAuthenticated} />
       <main className="mx-auto w-full max-w-[1440px] px-4 pt-7 md:px-10 md:pt-10">
         {view === "form" ? (
           <section className="flex flex-col gap-[10px] md:gap-9">

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type { InputHTMLAttributes, KeyboardEvent } from "react";
-import { forwardRef } from "react";
+import { forwardRef, useRef } from "react";
 
 type SearchFieldSize = "default" | "lg" | "sm";
 type SearchFieldRounded = "all" | "top";
@@ -42,7 +42,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
       className,
       disabled,
       elevated = true,
-      hoverBackground = false,
+      hoverBackground = true,
       onKeyDown,
       onSearch,
       rounded = "all",
@@ -52,6 +52,14 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
     },
     ref,
   ) {
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    function setInputRef(node: HTMLInputElement | null) {
+      inputRef.current = node;
+      if (typeof ref === "function") ref(node);
+      else if (ref) ref.current = node;
+    }
+
     function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
       onKeyDown?.(event);
 
@@ -62,14 +70,14 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
 
     return (
       <div
-        className={`flex items-center border border-border-subtle bg-[#ffffff] transition-colors focus-within:border-border-primary focus-within:bg-[#ffffff] ${disabled ? "border-border-disabled bg-bg-disabled" : ""} ${hoverBackground ? "hover:bg-bg-subtle" : ""} ${elevated ? (size === "sm" ? "shadow-[0_2px_8px_var(--color-opacity-black-10)]" : "shadow-[0_4px_16px_var(--color-opacity-black-10)]") : "shadow-none"} ${sizeClasses[size]} ${roundedClasses[size][rounded]}`}
+        className={`flex items-center border border-border-subtle bg-bg-default transition-colors focus-within:border-border-primary focus-within:bg-bg-default focus-within:hover:bg-bg-default ${disabled ? "border-border-disabled bg-bg-disabled" : ""} ${hoverBackground && !disabled ? "hover:bg-bg-subtle" : ""} ${elevated ? (size === "sm" ? "shadow-[0_2px_8px_var(--color-opacity-black-10)]" : "shadow-[0_4px_16px_var(--color-opacity-black-10)]") : "shadow-none"} ${sizeClasses[size]} ${roundedClasses[size][rounded]}`}
       >
         <input
           {...props}
-          className={`min-w-0 flex-1 appearance-none bg-[#ffffff] font-normal leading-[1.5] text-text-default outline-none placeholder:text-text-subtle disabled:cursor-not-allowed disabled:bg-[#ffffff] disabled:text-text-disabled disabled:placeholder:text-text-disabled ${className ?? ""}`}
+          className={`min-w-0 flex-1 appearance-none bg-transparent font-normal leading-[1.5] text-text-default outline-none placeholder:text-text-subtle disabled:cursor-not-allowed disabled:text-text-disabled disabled:placeholder:text-text-disabled ${className ?? ""}`}
           disabled={disabled}
           onKeyDown={handleKeyDown}
-          ref={ref}
+          ref={setInputRef}
           type="search"
           value={value}
         />
@@ -77,7 +85,7 @@ export const SearchField = forwardRef<HTMLInputElement, SearchFieldProps>(
           aria-label="검색"
           className="ml-[var(--spacing-spacing-2)] flex shrink-0 cursor-pointer items-center justify-center rounded-full text-icon-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary disabled:cursor-default"
           disabled={disabled}
-          onClick={() => onSearch?.(String(value ?? ""))}
+          onClick={() => onSearch?.(inputRef.current?.value ?? "")}
           type="button"
         >
           <Image

@@ -1,10 +1,8 @@
 import { HomePage } from "@/_pages/home";
 import { getHomeLabs, getResearchCategories } from "@/entities/lab/api";
-import { getAuthSession } from "@/shared/lib/auth/session";
 
 export default async function Page() {
-  const [{ isAuthenticated }, labsResult, categoriesResult] = await Promise.all([
-    getAuthSession(),
+  const [labsResult, categoriesResult] = await Promise.all([
     getHomeLabs().then(
       (labs) => ({ labs, labsError: undefined }),
       () => ({ labs: [], labsError: "연구실 정보를 불러오지 못했습니다." }),
@@ -18,11 +16,5 @@ export default async function Page() {
     ),
   ]);
 
-  return (
-    <HomePage
-      isAuthenticated={isAuthenticated}
-      {...labsResult}
-      {...categoriesResult}
-    />
-  );
+  return <HomePage {...labsResult} {...categoriesResult} />;
 }

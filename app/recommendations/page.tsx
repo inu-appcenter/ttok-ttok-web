@@ -13,5 +13,5 @@ export default async function Page() {
 
   const labs = await getPopularLabs();
 
-  return <AiRecommendationsPage isAuthenticated={isAuthenticated} labs={labs} />;
+  return <AiRecommendationsPage labs={labs} />;
 }

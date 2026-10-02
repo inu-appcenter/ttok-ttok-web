@@ -16,6 +16,16 @@ export const Subtle: Story = { args: { tone: "subtle" } };
 export const Secondary: Story = { args: { tone: "secondary" } };
 export const Primary: Story = { args: { tone: "primary" } };
 export const Neutral: Story = { args: { tone: "neutral" } };
+export const FigmaTones: Story = {
+  render: () => (
+    <div className="flex items-center gap-2">
+      <Tag>칩내용</Tag>
+      <Tag tone="subtle">칩내용</Tag>
+      <Tag tone="secondary">칩내용</Tag>
+      <Tag tone="primary">칩내용</Tag>
+    </div>
+  ),
+};
 export const Sizes: Story = {
   render: (args) => (
     <div className="flex items-center gap-2">
