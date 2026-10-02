@@ -8,7 +8,7 @@ export type LabCardProps = {
   lab: LabSummary;
 };
 
-const cardClasses = "flex min-h-[131px] min-w-0 flex-col justify-between rounded-[var(--radius-xl)] border border-bg-default bg-bg-default p-3 shadow-[0_2px_4px_var(--color-opacity-black-10)] md:min-h-[140px] md:shadow-[0_4px_8px_var(--color-opacity-black-10)]";
+const cardClasses = "flex h-full min-h-[131px] min-w-0 flex-col justify-between rounded-[var(--radius-xl)] border border-bg-default bg-bg-default p-3 shadow-[0_2px_4px_var(--color-opacity-black-10)] md:min-h-[140px] md:shadow-[0_4px_8px_var(--color-opacity-black-10)]";
 
 export function LabCardSkeleton() {
   return (
@@ -56,7 +56,6 @@ export function LabCard({ lab }: LabCardProps) {
             </Tag>
           ))}
           {hiddenTagCount > 0 ? <Tag size="sm" tone="primary">외 {hiddenTagCount}개</Tag> : null}
-          {lab.tags.length === 0 ? <Tag className="!bg-text-subtlest" size="sm" tone="primary">태그 없음</Tag> : null}
         </div>
       </article>
     </Link>

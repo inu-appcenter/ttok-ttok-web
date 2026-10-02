@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { getRouter } from "@storybook/nextjs-vite/navigation.mock";
+import { expect, userEvent, within } from "storybook/test";
 
 import { MOCK_LABS, type LabSummaryPage } from "@/entities/lab";
 
@@ -42,7 +44,8 @@ export const InvalidConditions: Story = {
     invalidConditions: true,
     status: "error",
     result: undefined,
-    errorMessage: "분야와 검색어는 각각 검색할 수 있어요. 하나의 조건만 선택해주세요.",
+    errorMessage:
+      "분야와 검색어는 각각 검색할 수 있어요. 하나의 조건만 선택해주세요.",
   },
 };
 
@@ -62,6 +65,7 @@ export const SearchResults: Story = {
 
 export const EmptySearch: Story = {
   args: {
+    alternativeLabs: MOCK_LABS.slice(0, 3),
     initialQuery: "양자컴퓨팅",
     result: {
       content: [],
@@ -71,6 +75,40 @@ export const EmptySearch: Story = {
       size: 20,
       totalElements: 0,
       totalPages: 0,
+    },
+  },
+};
+
+export const EmptyWithoutAlternatives: Story = {
+  args: { ...EmptySearch.args, alternativeLabs: [] },
+};
+
+export const LongContent: Story = {
+  args: {
+    initialQuery: "매우긴검색어".repeat(12),
+    result: {
+      ...firstPage,
+      content: MOCK_LABS.slice(0, 3).map((lab, index) => ({
+        ...lab,
+        name:
+          index === 0
+            ? "인공지능 기반 지능형 데이터 분석 및 차세대 정보 시스템 연구실"
+            : lab.name,
+        tags: index === 1 ? [] : lab.tags,
+      })),
+    },
+  },
+};
+
+export const EmptyPage: Story = {
+  args: {
+    category: "AI",
+    result: {
+      ...firstPage,
+      content: [],
+      page: 99,
+      hasNext: false,
+      isLast: true,
     },
   },
 };
@@ -99,5 +137,12 @@ export const Error: Story = {
     errorMessage: "API 서버와 연결할 수 없습니다.",
     result: undefined,
     status: "error",
+  },
+  play: async ({ canvasElement }) => {
+    getRouter().refresh.mockClear();
+    await userEvent.click(
+      within(canvasElement).getByRole("button", { name: "다시 시도" }),
+    );
+    await expect(getRouter().refresh).toHaveBeenCalledOnce();
   },
 };
