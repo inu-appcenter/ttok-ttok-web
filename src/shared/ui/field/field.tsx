@@ -21,8 +21,12 @@ export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> &
 const labelClassName =
   "text-[length:var(--font-size-label1)] font-[600] leading-[1.5]";
 
-const fieldStateClassName =
-  "border-border-subtle bg-bg-default hover:bg-bg-subtle focus-within:border-border-primary";
+function getFieldStateClassName(disabled: boolean | undefined, hasError: boolean) {
+  if (disabled) return "border-border-disabled bg-bg-disabled";
+  if (hasError) return "border-border-error bg-bg-default";
+
+  return "border-border-subtle bg-bg-default hover:bg-bg-subtle focus-within:border-border-primary focus-within:bg-bg-default focus-within:hover:bg-bg-default";
+}
 
 function ErrorMessage({ error, id }: { error?: string; id: string }) {
   return error ? (
@@ -57,7 +61,7 @@ export function Field({
     >
       {label ? <span className={labelClassName}>{label}</span> : null}
       <span
-        className={`flex h-[44px] items-center overflow-hidden rounded-[var(--radius-xl)] border py-[var(--spacing-spacing-3)] pl-[var(--spacing-spacing-4)] pr-[var(--spacing-spacing-3)] transition-colors ${fieldStateClassName} ${hasError ? "border-border-error focus-within:border-border-error" : ""} ${disabled ? "border-border-disabled bg-bg-disabled" : ""}`}
+        className={`flex h-[44px] items-center overflow-hidden rounded-[var(--radius-xl)] border py-[var(--spacing-spacing-3)] pl-[var(--spacing-spacing-4)] pr-[var(--spacing-spacing-3)] transition-colors ${getFieldStateClassName(disabled, hasError)}`}
       >
         <input
           aria-describedby={error ? errorId : undefined}
@@ -101,7 +105,7 @@ export function Textarea({
       <textarea
         aria-describedby={error ? errorId : undefined}
         aria-invalid={hasError}
-        className={`h-[96px] w-full resize-none rounded-[var(--radius-xl)] border p-[var(--spacing-spacing-3)] text-[length:var(--font-size-caption1)] font-normal leading-[1.5] text-text-default outline-none transition-colors placeholder:text-text-subtle hover:bg-bg-subtle focus:border-border-primary disabled:cursor-not-allowed disabled:border-border-disabled disabled:bg-bg-disabled disabled:text-text-disabled disabled:placeholder:text-text-disabled ${hasError ? "border-border-error focus:border-border-error" : "border-border-subtle"} ${className ?? ""}`}
+        className={`h-[96px] w-full resize-none rounded-[var(--radius-xl)] border p-[var(--spacing-spacing-3)] text-[length:var(--font-size-label2)] font-normal leading-[1.5] text-text-default outline-none transition-colors placeholder:text-text-subtle disabled:cursor-not-allowed disabled:text-text-disabled disabled:placeholder:text-text-disabled ${getFieldStateClassName(disabled, hasError)} ${className ?? ""}`}
         disabled={disabled}
         id={textareaId}
         {...props}
