@@ -5,6 +5,7 @@ import {
   parseDetailPage,
   toPublication,
   toResearchProject,
+  toResearchMetrics,
 } from "../model/map-detail-content";
 import { toLabSummary } from "../model/map-laboratory";
 
@@ -187,26 +188,39 @@ export async function getLabById(
         revalidate: 300,
       },
     );
-    const [{ coffeeChats, reviews }, projectsResult, publicationsResult] =
-      await Promise.all([
-        getAuthenticatedDetailData(laboratoryId, accessToken),
-        getLaboratoryReferenceData(
-          `/api/laboratory/${laboratoryId}/research-projects`,
-          { page: String(pages.projects ?? 0) },
-        )
-          .then((data) => parseDetailPage(data, toResearchProject))
-          .catch(() => null),
-        getLaboratoryReferenceData(
-          `/api/laboratory/${laboratoryId}/publications`,
-          { page: String(pages.publications ?? 0) },
-        )
-          .then((data) => parseDetailPage(data, toPublication))
-          .catch(() => null),
-      ]);
+    const [
+      { coffeeChats, reviews },
+      projectsResult,
+      publicationsResult,
+      metricsResult,
+    ] = await Promise.all([
+      getAuthenticatedDetailData(laboratoryId, accessToken),
+      getLaboratoryReferenceData(
+        `/api/laboratory/${laboratoryId}/research-projects`,
+        { page: String(pages.projects ?? 0) },
+      )
+        .then((data) => parseDetailPage(data, toResearchProject))
+        .catch(() => null),
+      getLaboratoryReferenceData(
+        `/api/laboratory/${laboratoryId}/publications`,
+        { page: String(pages.publications ?? 0) },
+      )
+        .then((data) => parseDetailPage(data, toPublication))
+        .catch(() => null),
+      getLaboratoryReferenceData(
+        `/api/research-metric/laboratory/${laboratoryId}/metrics`,
+      )
+        .then(toResearchMetrics)
+        .catch(() => toResearchMetrics(null)),
+    ]);
 
     return {
       ...toLabSummary(laboratory),
-      aiSummary: [],
+      aiSummary: (laboratory.introduction ?? "")
+        .split(/\n\s*\n/)
+        .map((paragraph) => paragraph.trim())
+        .filter(Boolean),
+      metrics: metricsResult,
       contact: toContact(coffeeChats),
       experience: toExperience(reviews),
       homepageUrl: laboratory.labUrl,

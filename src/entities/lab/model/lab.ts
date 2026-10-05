@@ -86,9 +86,10 @@ export type LabDetailListState = {
 };
 
 export type LabResearchMetrics = {
-  hIndex: number;
-  citations: number;
-  fiveYearPapers: number;
+  hIndex: number | null;
+  citations: number | null;
+  fiveYearPapers: number | null;
+  syncedAt?: string | null;
   hIndexPercentile?: number;
   citationPercentile?: number;
 };

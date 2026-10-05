@@ -97,3 +97,19 @@ export function toPublication(value: unknown): LabPaper {
         : null),
   };
 }
+
+/** 교수 매칭 전의 null과 실제 0을 구분합니다. */
+export function toResearchMetrics(value: unknown) {
+  const item = value === null ? {} : getObject(value);
+  function getCount(value: unknown): number | null {
+    return typeof value === "number" && Number.isInteger(value) && value >= 0
+      ? value
+      : null;
+  }
+  return {
+    hIndex: getCount(item.hIndex),
+    citations: getCount(item.citationCount),
+    fiveYearPapers: getCount(item.recentPublicationCount),
+    syncedAt: typeof item.syncedAt === "string" ? item.syncedAt : null,
+  };
+}

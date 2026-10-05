@@ -4,6 +4,7 @@ import {
   getExternalUrl,
   parseDetailPage,
   toPublication,
+  toResearchMetrics,
   toResearchProject,
 } from "../src/entities/lab/model/map-detail-content.ts";
 
@@ -64,6 +65,27 @@ test("빈 응답과 잘못된 페이지 응답을 구분한다", () => {
     parseDetailPage(
       { content: [{ title: null }], page: 0, totalPages: 1 },
       toPublication,
+      toResearchMetrics,
     ),
   );
+});
+
+test("연구 지표는 최신 응답 필드를 연결하고 0과 매칭 전 null을 구분한다", () => {
+  assert.deepEqual(
+    toResearchMetrics({
+      hIndex: 3,
+      citationCount: 25,
+      recentPublicationCount: 5,
+      syncedAt: "2026-10-05T04:30:19",
+    }),
+    {
+      hIndex: 3,
+      citations: 25,
+      fiveYearPapers: 5,
+      syncedAt: "2026-10-05T04:30:19",
+    },
+  );
+  assert.equal(toResearchMetrics({ hIndex: 0 }).hIndex, 0);
+  assert.equal(toResearchMetrics(null).hIndex, null);
+  assert.equal(toResearchMetrics({ citationCount: -1 }).citations, null);
 });
