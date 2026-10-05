@@ -24,3 +24,5 @@ export type {
   LaboratoryProfessor,
   LaboratorySearchParams,
 } from "./model/laboratory";
+
+export type { CollegeLabCount, DepartmentLabCount } from "./model/department-directory";
