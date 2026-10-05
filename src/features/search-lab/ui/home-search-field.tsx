@@ -22,6 +22,7 @@ export type HomeSearchFieldProps = {
   categoriesError?: string;
   initialQuery?: string;
   initialCategory?: string;
+  initialDepartment?: string;
   isDisabled?: boolean;
   showRecommendations?: boolean;
 };
@@ -30,6 +31,7 @@ export function HomeSearchField({
   categories = [],
   initialQuery = "",
   initialCategory = "",
+  initialDepartment = "",
   isDisabled = false,
   showRecommendations = true,
 }: HomeSearchFieldProps) {
@@ -37,19 +39,13 @@ export function HomeSearchField({
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState(initialCategory);
-  const [department, setDepartment] = useState("");
+  const [department, setDepartment] = useState(initialDepartment);
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const normalizedQuery = query.trim();
-    if (department) {
-      setMessage(
-        "학과별 검색은 아직 지원하지 않아요. 학과를 전체로 변경해주세요.",
-      );
-      return;
-    }
     if (
       category &&
       category !== initialCategory &&
@@ -60,12 +56,16 @@ export function HomeSearchField({
       );
       return;
     }
-    if (showRecommendations && !normalizedQuery && !category) {
+    if (showRecommendations && !normalizedQuery && !category && !department) {
       setMessage("검색어를 입력해주세요");
       inputRef.current?.focus();
       return;
     }
-    const conditions = parseSearchConditions({ q: normalizedQuery, category });
+    const conditions = parseSearchConditions({
+      q: normalizedQuery,
+      category,
+      department,
+    });
     if (conditions.error) {
       setMessage(conditions.error);
       return;

@@ -2,12 +2,20 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { MOCK_LABS } from "@/entities/lab";
 
+import { MOCK_DEPARTMENT_DIRECTORY } from "../model/mock-department-directory";
+import { HomeDepartmentDirectory } from "./home-department-directory";
+
 import { HomePage } from "./home-page";
 
 const meta = {
   title: "Pages/Home",
   component: HomePage,
-  args: { categories: ["AI", "로보틱스"] },
+  args: {
+    categories: ["AI", "로보틱스"],
+    departmentSection: (
+      <HomeDepartmentDirectory colleges={MOCK_DEPARTMENT_DIRECTORY} />
+    ),
+  },
   parameters: {
     layout: "fullscreen",
   },
@@ -48,7 +56,10 @@ export const LongContent: Story = {
     labs: MOCK_LABS.slice(0, 6).map((lab) => ({
       ...lab,
       name: "인공지능 기반 지능형 데이터 분석 및 차세대 정보 시스템 연구실",
-      description: "긴 연구실 소개가 카드 너비를 넘지 않고 표시되는지 확인합니다. ".repeat(5),
+      description:
+        "긴 연구실 소개가 카드 너비를 넘지 않고 표시되는지 확인합니다. ".repeat(
+          5,
+        ),
       tags: [],
     })),
   },

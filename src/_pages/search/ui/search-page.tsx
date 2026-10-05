@@ -22,6 +22,7 @@ export type SearchPageProps = {
   invalidConditions?: boolean;
   errorMessage?: string;
   category?: string;
+  department?: string;
   initialQuery?: string;
   page?: number;
   result?: LabSummaryPage;
@@ -59,19 +60,21 @@ export function SearchPage({
   invalidConditions = false,
   errorMessage,
   category = "",
+  department = "",
   initialQuery = "",
   result,
   status = "ready",
 }: SearchPageProps) {
   const normalizedQuery = initialQuery.trim();
-  const conditionLabel = category || normalizedQuery;
+  const conditionLabel =
+    category || [department, normalizedQuery].filter(Boolean).join(" · ");
   const labs = result?.content ?? [];
   const visiblePages = result
     ? getVisiblePages(result.page, result.totalPages)
     : [];
   const isEmptyPage = !labs.length && (result?.totalElements ?? 0) > 0;
   const resetHref = isEmptyPage
-    ? createSearchHref({ query: normalizedQuery, category })
+    ? createSearchHref({ query: normalizedQuery, category, department })
     : createSearchHref();
 
   return (
@@ -81,9 +84,10 @@ export function SearchPage({
           <LaboratorySearchField
             categories={categories}
             category={category}
+            department={department}
             initialQuery={initialQuery}
             isDisabled={status === "loading"}
-            key={`${initialQuery}:${category}`}
+            key={`${initialQuery}:${category}:${department}`}
           />
         </div>
       </section>
@@ -154,6 +158,7 @@ export function SearchPage({
                       query: normalizedQuery,
                       page: result.page - 1,
                       category,
+                      department,
                     })}
                   >
                     이전
@@ -180,6 +185,7 @@ export function SearchPage({
                       query: normalizedQuery,
                       page,
                       category,
+                      department,
                     })}
                     key={page}
                   >
@@ -195,6 +201,7 @@ export function SearchPage({
                       query: normalizedQuery,
                       page: result.page + 1,
                       category,
+                      department,
                     })}
                   >
                     다음
