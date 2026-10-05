@@ -9,9 +9,15 @@ import { getAuthSession } from "@/shared/lib/auth/session";
 
 type LabPageProps = {
   params: Promise<{ labId: string }>;
+  searchParams: Promise<{
+    projects?: string | string[];
+    publications?: string | string[];
+  }>;
 };
 
-export async function generateMetadata({ params }: LabPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: LabPageProps): Promise<Metadata> {
   const { labId } = await params;
   const lab = await getLabById(labId);
 
@@ -23,14 +29,24 @@ export async function generateMetadata({ params }: LabPageProps): Promise<Metada
   };
 }
 
-export default async function Page({ params }: LabPageProps) {
+function getPage(value?: string | string[]) {
+  if (typeof value !== "string") return 0;
+  const page = Number(value);
+  return value && /^\d+$/.test(value) && Number.isSafeInteger(page) ? page : 0;
+}
+
+export default async function Page({ params, searchParams }: LabPageProps) {
   const { labId } = await params;
   const [{ isAuthenticated }, cookieStore] = await Promise.all([
     getAuthSession(),
     cookies(),
   ]);
   const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
-  const lab = await getLabById(labId, accessToken);
+  const query = await searchParams;
+  const lab = await getLabById(labId, accessToken, {
+    projects: getPage(query.projects),
+    publications: getPage(query.publications),
+  });
 
   if (!lab) notFound();
 

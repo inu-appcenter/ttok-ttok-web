@@ -1,11 +1,18 @@
 import "server-only";
 
 import type { LabDetail } from "../model/lab";
+import {
+  parseDetailPage,
+  toPublication,
+  toResearchProject,
+  toResearchMetrics,
+} from "../model/map-detail-content";
 import { toLabSummary } from "../model/map-laboratory";
 
 import {
   LaboratoryApiError,
   getLaboratoryItem,
+  getLaboratoryReferenceData,
   getLaboratoryRelatedData,
 } from "./laboratory-api";
 
@@ -23,12 +30,18 @@ type ApiCoffeeChat = {
 
 function getObjects(value: unknown): Array<Record<string, unknown>> {
   if (!Array.isArray(value)) {
-    throw new LaboratoryApiError("연구실 부가 정보 응답이 올바르지 않습니다.", 502);
+    throw new LaboratoryApiError(
+      "연구실 부가 정보 응답이 올바르지 않습니다.",
+      502,
+    );
   }
 
   return value.map((item) => {
     if (!item || typeof item !== "object" || Array.isArray(item)) {
-      throw new LaboratoryApiError("연구실 부가 정보 응답이 올바르지 않습니다.", 502);
+      throw new LaboratoryApiError(
+        "연구실 부가 정보 응답이 올바르지 않습니다.",
+        502,
+      );
     }
 
     return item as Record<string, unknown>;
@@ -71,7 +84,9 @@ function toExperience(reviews: ApiLabReview[]): LabDetail["experience"] {
   );
   const doings = reviews.flatMap((review) =>
     Array.isArray(review.doings)
-      ? review.doings.filter((doing): doing is string => typeof doing === "string")
+      ? review.doings.filter(
+          (doing): doing is string => typeof doing === "string",
+        )
       : [],
   );
 
@@ -88,23 +103,27 @@ function toContact(coffeeChats: ApiCoffeeChat[]): LabDetail["contact"] {
     if (
       typeof coffeeChat.id !== "number" ||
       typeof coffeeChat.contactValue !== "string" ||
-      (coffeeChat.contactType !== "EMAIL" && coffeeChat.contactType !== "KAKAO_TALK")
+      (coffeeChat.contactType !== "EMAIL" &&
+        coffeeChat.contactType !== "KAKAO_TALK")
     ) {
       return [];
     }
 
     const isKakaoTalk = coffeeChat.contactType === "KAKAO_TALK";
 
-    return [{
-      contact: isKakaoTalk ? "오픈채팅 열기 ↗" : coffeeChat.contactValue,
-      id: String(coffeeChat.id),
-      name: "연구실 구성원",
-      ...(isKakaoTalk ? { url: coffeeChat.contactValue } : {}),
-    }];
+    return [
+      {
+        contact: isKakaoTalk ? "오픈채팅 열기 ↗" : coffeeChat.contactValue,
+        id: String(coffeeChat.id),
+        name: "연구실 구성원",
+        ...(isKakaoTalk ? { url: coffeeChat.contactValue } : {}),
+      },
+    ];
   });
   const email = coffeeChats.find(
     (coffeeChat) =>
-      coffeeChat.contactType === "EMAIL" && typeof coffeeChat.contactValue === "string",
+      coffeeChat.contactType === "EMAIL" &&
+      typeof coffeeChat.contactValue === "string",
   )?.contactValue;
   const openChatUrl = coffeeChats.find(
     (coffeeChat) =>
@@ -154,6 +173,7 @@ async function getAuthenticatedDetailData(
 export async function getLabById(
   labId: string,
   accessToken?: string,
+  pages: { projects?: number; publications?: number } = {},
 ): Promise<LabDetail | undefined> {
   const laboratoryId = Number(labId);
 
@@ -162,17 +182,45 @@ export async function getLabById(
   }
 
   try {
-    const laboratory = await getLaboratoryItem(`/api/laboratory/${laboratoryId}`, {
-      revalidate: 300,
-    });
-    const { coffeeChats, reviews } = await getAuthenticatedDetailData(
-      laboratoryId,
-      accessToken,
+    const laboratory = await getLaboratoryItem(
+      `/api/laboratory/${laboratoryId}`,
+      {
+        revalidate: 300,
+      },
     );
+    const [
+      { coffeeChats, reviews },
+      projectsResult,
+      publicationsResult,
+      metricsResult,
+    ] = await Promise.all([
+      getAuthenticatedDetailData(laboratoryId, accessToken),
+      getLaboratoryReferenceData(
+        `/api/laboratory/${laboratoryId}/research-projects`,
+        { page: String(pages.projects ?? 0) },
+      )
+        .then((data) => parseDetailPage(data, toResearchProject))
+        .catch(() => null),
+      getLaboratoryReferenceData(
+        `/api/laboratory/${laboratoryId}/publications`,
+        { page: String(pages.publications ?? 0) },
+      )
+        .then((data) => parseDetailPage(data, toPublication))
+        .catch(() => null),
+      getLaboratoryReferenceData(
+        `/api/research-metric/laboratory/${laboratoryId}/metrics`,
+      )
+        .then(toResearchMetrics)
+        .catch(() => toResearchMetrics(null)),
+    ]);
 
     return {
       ...toLabSummary(laboratory),
-      aiSummary: [],
+      aiSummary: (laboratory.introduction ?? "")
+        .split(/\n\s*\n/)
+        .map((paragraph) => paragraph.trim())
+        .filter(Boolean),
+      metrics: metricsResult,
       contact: toContact(coffeeChats),
       experience: toExperience(reviews),
       homepageUrl: laboratory.labUrl,
@@ -181,7 +229,24 @@ export async function getLabById(
         graduate: laboratory.capacity.graduateStudentCount,
         undergraduate: laboratory.capacity.undergraduateStudentCount,
       },
-      papers: [],
+      professor: {
+        name: laboratory.professor.name,
+        position: laboratory.professor.position,
+        email: laboratory.professor.email,
+        phone: laboratory.professor.phoneNumber,
+      },
+      projects: projectsResult?.content ?? [],
+      projectState: projectsResult?.state ?? {
+        page: pages.projects ?? 0,
+        totalPages: 0,
+        status: "error",
+      },
+      papers: publicationsResult?.content ?? [],
+      publicationState: publicationsResult?.state ?? {
+        page: pages.publications ?? 0,
+        totalPages: 0,
+        status: "error",
+      },
     };
   } catch (error) {
     if (error instanceof LaboratoryApiError && error.status === 404) {
