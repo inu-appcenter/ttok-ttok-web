@@ -11,6 +11,7 @@ import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
 
 import { LabNews, ProfessorCard, ResearchProjects } from "./detail-content";
 import { ResearchMetrics } from "./research-metrics";
+import { DETAIL_NEWS_PREVIEW } from "../model/detail-preview";
 import { MobileAiSummary } from "./mobile-ai-summary";
 
 export type LabDetailPageProps = {
@@ -35,12 +36,19 @@ export function LabDetailPage({
   lab,
 }: LabDetailPageProps) {
   const { memberCounts } = lab;
+  const aiSummary = lab.description.trim()
+    ? lab.description
+        .split(/\n\s*\n/)
+        .map((paragraph) => paragraph.trim())
+        .filter(Boolean)
+    : lab.aiSummary;
+  const displayLab = { ...lab, news: lab.news ?? DETAIL_NEWS_PREVIEW };
 
   return (
     <div className="min-h-screen bg-bg-default text-text-default">
       <main className="flex flex-col gap-5 px-4 pb-[calc(111px_+_env(safe-area-inset-bottom))] pt-[27px] md:hidden">
-        {lab.aiSummary.length > 0 ? (
-          <MobileAiSummary paragraphs={lab.aiSummary} />
+        {aiSummary.length > 0 ? (
+          <MobileAiSummary paragraphs={aiSummary} />
         ) : null}
 
         <header>
@@ -63,9 +71,6 @@ export function LabDetailPage({
               </Tag>
             ))}
           </div>
-          <p className="mt-[10px] text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
-            {lab.description}
-          </p>
           <dl className="mt-[10px] flex flex-col gap-[6px] text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
             <div className="flex gap-1">
               <dt>위치 ·</dt>
@@ -178,14 +183,9 @@ export function LabDetailPage({
                 </a>
               ) : null}
             </div>
-            {lab.description && !lab.aiSummary.length ? (
-              <p className="mt-3 whitespace-pre-line text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle">
-                {lab.description}
-              </p>
-            ) : null}
           </header>
           <ResearchProjects lab={lab} />
-          <LabNews lab={lab} />
+          <LabNews lab={displayLab} />
           <section className="rounded-[var(--radius-2xl)] bg-bg-primary-subtle px-6 py-5 shadow-[0_4px_16px_var(--color-opacity-black-10)]">
             <h2 className="text-[length:var(--font-size-heading1)] font-semibold leading-[1.5]">
               학부연구생이 말하는 이 랩 · {lab.experience.participantCount}명
@@ -222,7 +222,7 @@ export function LabDetailPage({
           </div>
         </div>
         <aside className="flex min-w-0 flex-col gap-6 pt-[30px]">
-          {lab.aiSummary.length > 0 ? (
+          {aiSummary.length > 0 ? (
             <section>
               <div className="flex items-center gap-2">
                 <Image
@@ -236,7 +236,7 @@ export function LabDetailPage({
                 </h2>
               </div>
               <div className="mt-[6px] rounded-[var(--radius-xl)] border border-[#a7c0db] p-4 text-[length:var(--font-size-label2)] leading-[1.5] text-text-subtle">
-                {lab.aiSummary.map((paragraph) => (
+                {aiSummary.map((paragraph) => (
                   <p className="not-last:mb-4" key={paragraph}>
                     {paragraph}
                   </p>

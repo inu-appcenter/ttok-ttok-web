@@ -187,7 +187,8 @@ export function LabNews({ lab }: { lab: LabDetail }) {
 export function PaperTitle({ paper }: { paper: LabPaper }) {
   return paper.url ? (
     <a
-      className="hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
+      className="block truncate hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
+      title={paper.title}
       href={paper.url}
       rel="noreferrer"
       target="_blank"
@@ -195,7 +196,9 @@ export function PaperTitle({ paper }: { paper: LabPaper }) {
       {paper.title} ↗
     </a>
   ) : (
-    <span>{paper.title}</span>
+    <span className="block truncate" title={paper.title}>
+      {paper.title}
+    </span>
   );
 }
 
@@ -264,10 +267,10 @@ export function ProfessorCard({
                 className="flex items-start justify-between gap-2 border-b border-border-subtlest py-1 last:border-0"
                 key={`${paper.year}-${paper.title}`}
               >
-                <div className="min-w-0 flex-1 break-words text-[length:var(--font-size-caption1)] font-semibold leading-[1.5] text-text-primary">
+                <div className="min-w-0 flex-1 text-[length:var(--font-size-caption1)] font-semibold leading-[1.5] text-text-primary">
                   <PaperTitle paper={paper} />
                 </div>
-                <span className="max-w-[40%] text-right text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtlest">
+                <span className="max-w-[35%] shrink-0 truncate text-right text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtlest">
                   {[paper.venue, paper.year]
                     .filter((value) => value !== null && value !== "")
                     .join(" · ")}

@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useEffect, useId, useState } from "react";
 
 import type { LabResearchMetrics } from "@/entities/lab";
-import { Tag } from "@/shared/ui";
 
 export function ResearchMetrics({ metrics }: { metrics: LabResearchMetrics }) {
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
@@ -30,7 +29,7 @@ export function ResearchMetrics({ metrics }: { metrics: LabResearchMetrics }) {
       value: metrics.citations,
       percentile: metrics.citationPercentile,
     },
-    { key: "papers", label: "5년 논문", value: metrics.fiveYearPapers },
+    { key: "papers", label: "최근 5년 논문", value: metrics.fiveYearPapers },
   ];
 
   return (
@@ -79,17 +78,7 @@ export function ResearchMetrics({ metrics }: { metrics: LabResearchMetrics }) {
               ) : null}
             </dt>
             <dd className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] text-text-primary">
-              {item.value.toLocaleString("ko-KR")}
-            </dd>
-            <dd className="min-h-[15px]">
-              {item.percentile !== undefined ? (
-                <Tag
-                  className="!px-[6px] !text-[10px]"
-                  tone={item.key === "h-index" ? "primary" : "secondary"}
-                >
-                  상위 {item.percentile}%
-                </Tag>
-              ) : null}
+              {item.value?.toLocaleString("ko-KR") ?? "—"}
             </dd>
           </div>
         ))}
@@ -114,6 +103,11 @@ export function ResearchMetrics({ metrics }: { metrics: LabResearchMetrics }) {
           <h3 className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5]">
             {activeMetric === "citations" ? "피인용지수" : "h-index"}
           </h3>
+          {metrics.syncedAt ? (
+            <p className="mt-1 text-[length:var(--font-size-caption1)] text-text-subtle">
+              기준일 {metrics.syncedAt.slice(0, 10)}
+            </p>
+          ) : null}
           {activeMetric === "citations" ? (
             <>
               <div className="mt-3 rounded-[var(--radius-2xl)] border border-icon-disabled p-3">

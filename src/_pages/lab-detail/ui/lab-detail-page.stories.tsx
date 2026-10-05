@@ -9,6 +9,7 @@ import { LabDetailPage } from "./lab-detail-page";
 
 const DESIGN_LAB = {
   ...MOCK_LAB_DETAILS[0],
+  description: MOCK_LAB_DETAILS[0].aiSummary.join("\n\n"),
   professor: {
     name: "김OO",
     position: "교수",

@@ -11,6 +11,7 @@
 - 기본 상세: GET /api/laboratory/{id}
 - 연구과제: GET /api/laboratory/{id}/research-projects?page=N
 - 논문: GET /api/laboratory/{id}/publications?page=N
+- 연구 지표: GET /api/research-metric/laboratory/{id}/metrics (2026-10-05 명세 확인)
 - 0부터 시작하는 페이지, 각 5건. 서버의 정렬을 유지한다.
 - URL의 projects/publications를 별도로 보존하며 새로고침·뒤로 가기에서도 같은 페이지를 표시한다.
 - 목록 조회/검증 실패는 빈 목록과 구분해 오류와 재시도를 제공한다. 기본 상세는 계속 표시한다.
@@ -18,7 +19,13 @@
 
 ## 미지원 데이터 및 범위
 
-랩 소식·연구 지표·AI 요약의 응답 계약은 현재 Swagger에서 확인되지 않았다. 선택 데이터가 없으면 해당 영역을 숨긴다. Storybook fixture로 디자인 및 지표 설명 팝오버를 검증하며 실제 화면에는 더미 데이터를 넣지 않는다. introduction은 AI 생성 여부가 명시되지 않아 일반 소개로 유지한다.
+사용자 확인에 따라 introduction/Description을 AI 연구실 요약으로 표시한다. 문단을 유지하며 기본 정보에 중복 표시하지 않는다.
+
+연구 지표는 최신 공개 API의 hIndex/citationCount/recentPublicationCount를 연결한다. 교수 매칭 전 null 및 조회 실패는 —로 표시하며 카드 자체는 유지한다. 실제 0은 0으로 표시한다. 최신 디자인에는 백분위 배지가 없어 표시하지 않는다. 지표 설명에 syncedAt 기준일을 표시한다.
+
+랩 소식 API는 현재 명세에 없어 사용자 요청대로 detail-preview.ts의 디자인 목데이터를 실제 상세에도 표시한다. 목데이터에는 실제 뉴스로 이동하는 URL을 넣지 않는다. API 도입 시 이 fallback을 교체한다.
+
+논문 제목과 학술지/연도는 한 줄 말줄임으로 표시하며 제목 원문은 title 속성과 접근 가능한 텍스트로 유지한다.
 
 서버는 석사/박사별 인원을 구분하지 않으므로 대학원 합계로 표시한다. 교수 경력·지표 백분위도 추정하지 않는다. 북마크 및 AI 메일 첨삭 동작은 이번 PR에서 제공하지 않는다.
 
