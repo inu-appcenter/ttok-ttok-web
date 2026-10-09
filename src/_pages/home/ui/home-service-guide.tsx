@@ -58,7 +58,7 @@ function ServiceCard({ title, description, children, href }: {
   href?: string;
 }) {
   return (
-    <article className="flex min-h-[116px] min-w-0 overflow-hidden rounded-[var(--radius-xl)] bg-bg-default shadow-[0_2px_8px_var(--color-opacity-black-10)] md:flex-col md:rounded-[var(--radius-2xl)] md:shadow-[0_4px_16px_var(--color-opacity-black-10)]">
+    <article className={`flex ${href ? "min-h-[121px]" : "min-h-[116px]"} min-w-0 overflow-hidden rounded-[var(--radius-xl)] bg-bg-default shadow-[0_2px_8px_var(--color-opacity-black-10)] md:flex-col md:rounded-[var(--radius-2xl)] md:shadow-[0_4px_16px_var(--color-opacity-black-10)]`}>
       <div aria-hidden="true" className="relative flex w-[min(160px,46.65%)] shrink-0 items-center justify-center overflow-hidden bg-[var(--color-primary-primary-100)] md:h-[218px] md:w-full md:px-6 md:py-4"><div className="absolute top-1/2 w-[333.333px] shrink-0 -translate-y-1/2 scale-[0.4] md:static md:w-full md:shrink md:translate-y-0 md:scale-100">{children}</div></div>
       <div className="flex min-w-0 flex-1 flex-col items-start justify-center gap-1 py-3 pl-4 pr-3 md:justify-start md:gap-2.5 md:p-6">
         <h3 className="text-[length:var(--font-size-headline2)] font-semibold leading-[1.4] tracking-[-0.01em] md:text-[length:var(--font-size-heading2)] md:leading-[1.5]">{title}</h3>

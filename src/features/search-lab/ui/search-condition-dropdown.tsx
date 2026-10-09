@@ -61,6 +61,7 @@ export function SearchConditionDropdown({
   const listRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobileSheet, setIsMobileSheet] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState("");
   const [activeCollege, setActiveCollege] = useState(college || colleges.find((group) => group.departments.some((department) => department.departmentName === value))?.collegeName || "전체");
@@ -153,6 +154,7 @@ export function SearchConditionDropdown({
           event.preventDefault();
           setQuery("");
           setActiveIndex("");
+          setIsMobileSheet(window.matchMedia("(max-width: 767px)").matches);
           setIsOpen(true);
           return;
         }
@@ -215,6 +217,7 @@ export function SearchConditionDropdown({
           className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-1 rounded-lg pl-2 pr-4 text-left focus-visible:outline-2 focus-visible:outline-border-primary"
           disabled={disabled}
           onClick={() => {
+            setIsMobileSheet(window.matchMedia("(max-width: 767px)").matches);
             setIsOpen(!isOpen);
             setQuery("");
             setActiveIndex("");
@@ -269,6 +272,7 @@ export function SearchConditionDropdown({
           className={`relative flex max-h-[calc(100dvh-60px)] w-full flex-col overflow-hidden rounded-t-[var(--radius-2xl)] bg-bg-default pb-[env(safe-area-inset-bottom)] shadow-[0_2px_8px_var(--color-opacity-black-10)] md:absolute md:left-0 md:top-[calc(100%+20px)] md:z-30 md:block md:rounded-[var(--radius-xl)] md:pb-0 md:shadow-[0_8px_24px_var(--color-opacity-black-10)] ${kind === "category" ? "md:w-[min(502px,calc(100vw-56px))]" : "md:w-[min(400px,calc(100vw-56px))] md:max-xl:left-auto md:max-xl:right-0"}`}
           id={id}
           ref={dialogRef}
+          aria-modal={isMobileSheet || undefined}
           role="dialog"
         >
           <header className="flex shrink-0 items-center justify-between px-5 pb-4 pt-4 md:hidden">
@@ -282,6 +286,7 @@ export function SearchConditionDropdown({
               <label className="mx-5 flex h-9 shrink-0 items-center gap-2 rounded-[var(--radius-xl)] border border-border-disabled px-3 shadow-[0_2px_8px_var(--color-opacity-black-10)] md:mx-0 md:h-[42px] md:rounded-none md:border-x-0 md:border-t-0 md:shadow-none">
                 <Image
                   alt=""
+                  className="order-2 md:order-none"
                   height={16}
                   src="/icons/home/search/field-search.svg"
                   width={16}
