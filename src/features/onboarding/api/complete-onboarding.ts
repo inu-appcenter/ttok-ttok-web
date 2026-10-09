@@ -7,7 +7,7 @@ export type OnboardingRequest = {
   coreTime?: string;
   doings?: string[];
   laboratoryId?: number;
-  purpose: "EXPLORER" | "RESEARCHER";
+  purpose: "FINDER" | "RESEARCHER";
   weeklyMeeting?: string;
 };
 
@@ -61,12 +61,12 @@ export function toOnboardingRequest(answers: OnboardingAnswers): OnboardingReque
           laboratoryId,
           weeklyMeeting,
         }),
-    purpose: isExplorer ? "EXPLORER" : "RESEARCHER",
+    purpose: isExplorer ? "FINDER" : "RESEARCHER",
   };
 }
 
 function getRequestValidationError(request: OnboardingRequest) {
-  if (request.purpose === "EXPLORER") {
+  if (request.purpose === "FINDER") {
     return null;
   }
 

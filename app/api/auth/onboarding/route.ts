@@ -15,8 +15,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = await request.json().catch(() => null);
-  if (!body || typeof body !== "object") {
+  const body: unknown = await request.json().catch(() => null);
+  if (
+    !body || typeof body !== "object" || Array.isArray(body) ||
+    !("purpose" in body) || typeof body.purpose !== "string" ||
+    !["FINDER", "RESEARCHER", "PROFESSOR"].includes(body.purpose)
+  ) {
     return NextResponse.json(
       { code: "INVALID_INPUT", message: "온보딩 정보를 확인해주세요." },
       { status: 400 },
