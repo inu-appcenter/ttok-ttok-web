@@ -67,9 +67,10 @@ export function SearchConditionDropdown({
   const [activeCollege, setActiveCollege] = useState(college || colleges.find((group) => group.departments.some((department) => department.departmentName === value))?.collegeName || "전체");
   useEffect(() => {
     if (!isOpen) return;
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
     const firstControl =
       kind === "category"
-        ? rootRef.current?.querySelector<HTMLElement>("input")
+        ? (isMobile ? dialogRef.current?.querySelector<HTMLElement>('button[aria-label="닫기"]') : rootRef.current?.querySelector<HTMLElement>("input"))
         : (rootRef.current?.querySelector<HTMLElement>(
             '[data-option-group="department"][aria-pressed="true"]',
           ) ??
@@ -84,7 +85,6 @@ export function SearchConditionDropdown({
       )
         setIsOpen(false);
     }
-    const isMobile = window.matchMedia("(max-width: 767px)").matches;
     const previousOverflow = document.body.style.overflow;
     if (isMobile) document.body.style.overflow = "hidden";
     function handleModalKeyboard(event: KeyboardEvent) {
