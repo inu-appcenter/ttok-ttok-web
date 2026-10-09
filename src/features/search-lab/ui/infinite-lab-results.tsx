@@ -81,7 +81,8 @@ export function InfiniteLabResults({ conditions, initialResult, loadPage = fetch
   function handleSavePosition() {
     savedResults.delete(searchKey);
     savedResults.set(searchKey, { result: resultRef.current, scrollY: window.scrollY, savedAt: Date.now() });
-    if (savedResults.size > 5) savedResults.delete(savedResults.keys().next().value!);
+    const oldestKey = savedResults.keys().next().value;
+    if (savedResults.size > 5 && oldestKey) savedResults.delete(oldestKey);
   }
 
   return (

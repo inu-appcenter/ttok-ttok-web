@@ -13,11 +13,13 @@ import {
   LaboratorySearchField,
   RetryLabSearch,
   InfiniteLabResults,
+  type SearchPageLoader,
 } from "@/features/search-lab";
 
 export type SearchPageStatus = "error" | "loading" | "ready";
 
 export type SearchPageProps = {
+  loadPage?: SearchPageLoader;
   alternativeLabs?: LabSummary[];
   categories?: string[];
   categoriesError?: string;
@@ -51,6 +53,7 @@ function SearchPageSkeleton() {
 }
 
 export function SearchPage({
+  loadPage,
   alternativeLabs = [],
   categories = [],
   categoriesError,
@@ -143,6 +146,7 @@ export function SearchPage({
           <InfiniteLabResults
             conditions={{ query: normalizedQuery, category, college, department, page: result.page }}
             initialResult={result}
+            loadPage={loadPage}
             key={createSearchHref({ query: normalizedQuery, category, college, department, page: result.page })}
           />
         ) : null}
