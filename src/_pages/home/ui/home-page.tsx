@@ -6,7 +6,6 @@ import { LabCard } from "@/entities/lab";
 import type { LabSummary } from "@/entities/lab";
 import { HomeSearchField, MobileLabExplorer } from "@/features/search-lab";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
-import { HomeBanner } from "@/widgets/home-banner";
 import { SiteFooter } from "@/widgets/site-footer";
 
 import { HomeDepartmentDirectory } from "./home-department-directory";
@@ -50,20 +49,17 @@ export function HomePage({
   return (
     <div className="min-h-screen overflow-x-hidden bg-bg-default pb-[calc(111px_+_env(safe-area-inset-bottom))] text-text-default md:pb-0">
       <main>
-        <div className="px-4 pt-[27px] md:hidden">
-          <HomeBanner />
-        </div>
-
-        <div className="px-4 pb-11 md:hidden">
-          <div className="mt-5">
+        <div className="md:hidden">
+          <section aria-labelledby="mobile-home-search-heading" className="flex flex-col items-center gap-5 bg-bg-primary-subtle px-4 py-20">
+            <h1 id="mobile-home-search-heading" className="bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] bg-clip-text text-center text-[length:var(--font-size-title3)] font-bold leading-[1.3] tracking-[-0.02em] text-transparent">어떤 연구를 하고 싶으세요?</h1>
             <MobileLabExplorer categories={categories} categoriesError={categoriesError} colleges={colleges} collegesError={collegesError} />
-            <section aria-label="홈 연구실 목록" className="mt-8 flex flex-col gap-3">
-              <h2 className="text-[length:var(--font-size-heading2)] font-semibold">인기 연구실 둘러보기</h2>
-              {labsError ? <LabLoadError message={labsError} /> : labs.length ? (
-                <div className="flex flex-col gap-2">{labs.map((lab) => <LabCard key={lab.labId} lab={lab} />)}</div>
-              ) : <p className="py-10 text-center text-text-subtle">표시할 연구실이 아직 없어요.</p>}
-            </section>
-          </div>
+          </section>
+          <section aria-labelledby="mobile-home-labs-heading" className="flex flex-col gap-3 px-4 py-8">
+            <h2 id="mobile-home-labs-heading" className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] tracking-[-0.01em]">인기 연구실 둘러보기</h2>
+            {labsError ? <LabLoadError message={labsError} /> : labs.length ? (
+              <div className="flex flex-col gap-2">{labs.map((lab) => <LabCard key={lab.labId} lab={lab} />)}</div>
+            ) : <p className="py-10 text-center text-text-subtle">표시할 연구실이 아직 없어요.</p>}
+          </section>
         </div>
 
         <div className="hidden md:block">
