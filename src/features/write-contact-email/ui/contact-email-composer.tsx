@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
-import { Button, Dialog, Field, Radio, Textarea } from "@/shared/ui";
+import { Button, Dialog, Field, Radio, Textarea, Toast } from "@/shared/ui";
 
 import {
   createMockEmailDraft,
@@ -79,6 +79,11 @@ export function ContactEmailComposer({
       previousFocus?.focus();
     };
   }, [isOpen]);
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(""), 3500);
+    return () => clearTimeout(timer);
+  }, [notice]);
   const close = useCallback(() => {
     if (timeout.current) clearTimeout(timeout.current);
     timeout.current = null;
@@ -149,6 +154,14 @@ export function ContactEmailComposer({
         closeIconSrc="/icons/email-editor/close.svg"
         className={`relative !rounded-[24px] !border-0 !bg-[#f5f5f5] [&>header]:px-6 [&>header]:pt-6 md:[&>header]:px-9 md:[&>header]:pt-9 [&_h2]:!text-[22px] [&_h2]:!font-semibold [&_header_button]:!size-6 [&_header_button]:relative [&_header_button]:z-10 ${expanded ? "max-w-[824px]" : "max-w-[460px]"}`}
       >
+        {notice && (
+          <div className="pointer-events-none fixed top-3 left-1/2 z-[120] w-[calc(100%_-_32px)] max-w-[420px] -translate-x-1/2 text-center">
+            <Toast
+              title={notice}
+              state={notice.includes("못") ? "error" : "success"}
+            />
+          </div>
+        )}
         <div
           className={`flex flex-col gap-3 p-3 pt-0 ${expanded ? "md:flex-row" : ""}`}
         >
@@ -249,11 +262,6 @@ export function ContactEmailComposer({
                   ? "메일 수정하기"
                   : "AI로 메일 초안 만들기"}
             </Button>
-            {notice && (
-              <p role="status" className="text-[13px] text-text-primary">
-                {notice}
-              </p>
-            )}
           </form>
           {expanded && (
             <section
@@ -359,8 +367,15 @@ export function ContactEmailButton({
   recipient: EmailRecipient;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const trigger = useRef<HTMLDivElement>(null);
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+    requestAnimationFrame(() =>
+      trigger.current?.querySelector("button")?.focus(),
+    );
+  }, []);
   return (
-    <>
+    <div ref={trigger}>
       <Button
         variant="outline"
         className="mt-3 w-full"
@@ -371,8 +386,8 @@ export function ContactEmailButton({
       <ContactEmailComposer
         recipient={recipient}
         isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
+        onClose={handleClose}
       />
-    </>
+    </div>
   );
 }
