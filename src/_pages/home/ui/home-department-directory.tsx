@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
@@ -74,6 +75,47 @@ function CollegeCard({ college }: { college: CollegeLabCount }) {
   );
 }
 
+function MobileCollegeAccordion({ colleges }: { colleges: CollegeLabCount[] }) {
+  const defaultCollege = colleges.find((college) => college.collegeName === "공과대학") ?? colleges[0];
+  const [expandedCollege, setExpandedCollege] = useState<string | null>(defaultCollege?.college ?? null);
+  const id = useId();
+
+  return (
+    <div className="flex flex-col gap-2 md:hidden">
+      {colleges.map((college) => {
+        const isExpanded = expandedCollege === college.college;
+        const panelId = `${id}-${college.college}`;
+        return (
+          <article className="min-w-0 overflow-hidden rounded-[var(--radius-2xl)] bg-bg-default shadow-[0_2px_8px_var(--color-opacity-black-10)]" key={college.college}>
+            <h3>
+              <button aria-controls={panelId} aria-expanded={isExpanded} aria-label={`${college.collegeName} 학과 ${isExpanded ? "접기" : "펼치기"}`} className="flex w-full items-center gap-3 px-4 py-3.5 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-border-primary" onClick={() => setExpandedCollege(isExpanded ? null : college.college)} type="button">
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="text-[length:var(--font-size-headline2)] font-semibold leading-[1.4] tracking-[-0.01em]">{college.collegeName}</span>
+                  <span className="truncate text-[12px] leading-[1.5] text-text-subtle">{college.departments.slice(0, 3).map((department) => department.departmentName).join(" · ")}</span>
+                </span>
+                <Image alt="" className={isExpanded ? "rotate-180" : ""} height={18} src="/icons/home/mobile/chevron-down.svg" width={18} />
+              </button>
+            </h3>
+            <ul className="grid grid-cols-2 gap-2 px-3 pb-3.5" hidden={!isExpanded} id={panelId}>
+              {college.departments.map((department) => (
+                <li className="min-w-0" key={department.department}>
+                  <Link className="flex h-full min-h-16 flex-col justify-between gap-1 rounded-[var(--radius-xl)] bg-bg-primary-subtle px-3 py-2.5 focus-visible:outline-2 focus-visible:outline-border-primary" href={createSearchHref({ department: department.departmentName })}>
+                    <span className="break-words text-[length:var(--font-size-label1)] font-semibold leading-[1.5]">{department.departmentName}</span>
+                    <span className="flex items-center justify-between gap-1 text-[12px] leading-[1.5] text-text-primary">
+                      <span>연구실 {department.count.toLocaleString("ko-KR")}개</span>
+                      <Image alt="" className="-rotate-90" height={16} src="/icons/home/search/chevron-down.svg" width={16} />
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
 export function HomeDepartmentDirectory({
   colleges = [],
   status = "ready",
@@ -84,7 +126,7 @@ export function HomeDepartmentDirectory({
     <section
       aria-labelledby="home-departments-heading"
       aria-busy={status === "loading" || pending}
-      className="flex flex-col gap-5 pb-12 pt-6"
+      className="flex flex-col gap-3 py-8 md:gap-5 md:pb-12 md:pt-6"
     >
       <h2
         className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] tracking-[-0.01em]"
@@ -97,7 +139,7 @@ export function HomeDepartmentDirectory({
           <span className="sr-only">학과별 연구실을 불러오는 중</span>
           <div
             aria-hidden="true"
-            className="grid grid-cols-2 gap-6 xl:grid-cols-4"
+            className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-6 xl:grid-cols-4"
           >
             {Array.from({ length: 4 }, (_, index) => (
               <div
@@ -121,11 +163,14 @@ export function HomeDepartmentDirectory({
           </Button>
         </div>
       ) : colleges.length ? (
-        <div className="grid grid-cols-2 gap-6 xl:grid-cols-4">
+        <>
+        <MobileCollegeAccordion colleges={colleges} />
+        <div className="hidden grid-cols-2 gap-6 md:grid xl:grid-cols-4">
           {colleges.map((college) => (
             <CollegeCard college={college} key={college.college} />
           ))}
         </div>
+        </>
       ) : (
         <p className="py-10 text-center text-[length:var(--font-size-body2)] text-text-subtle">
           표시할 학과별 연구실이 없어요.

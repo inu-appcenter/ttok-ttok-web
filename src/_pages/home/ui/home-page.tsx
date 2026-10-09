@@ -109,8 +109,10 @@ export function HomePage({
                 )}
               </div>
             </section>
-            {departmentSection ?? <HomeDepartmentDirectory />}
           </div>
+        </div>
+        <div className="mx-auto w-full max-w-[1440px] px-4 md:px-[clamp(24px,8.89vw,128px)]">
+          {departmentSection ?? <HomeDepartmentDirectory />}
         </div>
       </main>
       <MobileBottomNav />
