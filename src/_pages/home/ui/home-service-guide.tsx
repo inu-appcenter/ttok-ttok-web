@@ -59,7 +59,7 @@ function ServiceCard({ title, description, children, href }: {
 }) {
   return (
     <article className="flex min-h-[116px] min-w-0 overflow-hidden rounded-[var(--radius-xl)] bg-bg-default shadow-[0_2px_8px_var(--color-opacity-black-10)] md:flex-col md:rounded-[var(--radius-2xl)] md:shadow-[0_4px_16px_var(--color-opacity-black-10)]">
-      <div aria-hidden="true" className="flex w-[min(160px,46.65%)] shrink-0 items-center justify-center overflow-hidden bg-[var(--color-primary-primary-100)] md:h-[218px] md:w-full md:px-6 md:py-4"><div className="w-[333.333px] shrink-0 scale-[0.4] md:w-full md:shrink md:scale-100">{children}</div></div>
+      <div aria-hidden="true" className="relative flex w-[min(160px,46.65%)] shrink-0 items-center justify-center overflow-hidden bg-[var(--color-primary-primary-100)] md:h-[218px] md:w-full md:px-6 md:py-4"><div className="absolute top-1/2 w-[333.333px] shrink-0 -translate-y-1/2 scale-[0.4] md:static md:w-full md:shrink md:translate-y-0 md:scale-100">{children}</div></div>
       <div className="flex min-w-0 flex-1 flex-col items-start justify-center gap-1 py-3 pl-4 pr-3 md:justify-start md:gap-2.5 md:p-6">
         <h3 className="text-[length:var(--font-size-headline2)] font-semibold leading-[1.4] tracking-[-0.01em] md:text-[length:var(--font-size-heading2)] md:leading-[1.5]">{title}</h3>
         <p className="text-[length:var(--font-size-label2)] leading-[1.5] text-text-subtle md:text-[length:var(--font-size-body2)]">{description}</p>
@@ -69,10 +69,10 @@ function ServiceCard({ title, description, children, href }: {
   );
 }
 
-export function HomeServiceGuide() {
+export function HomeServiceGuide({ headingId = "home-services-heading" }: { headingId?: string }) {
   return (
-    <section aria-labelledby="home-services-heading" className="flex flex-col gap-3 py-8 md:gap-5 md:py-12">
-      <h2 className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] tracking-[-0.01em]" id="home-services-heading">처음이라면 이렇게 시작해 보세요</h2>
+    <section aria-labelledby={headingId} className="flex flex-col gap-3 py-8 md:gap-5 md:py-12">
+      <h2 className="text-[20px] font-semibold leading-[1.5] tracking-[-0.01em] md:text-[length:var(--font-size-heading2)]" id={headingId}>처음이라면 이렇게 시작해 보세요</h2>
       <div className="grid grid-cols-1 gap-2 md:gap-5 lg:grid-cols-3">
         <ServiceCard href="/recommendations" title="AI 추천 받기" description="대화하듯 관심사를 말하면 연구실을 추천해드려요"><RecommendationPreview /></ServiceCard>
         <ServiceCard title="교수님께 메일 쓰기" description={<>원하는 연구실을 고르고,<br />교수님께 보낼 메일을 첨삭받아 보세요</>}><MailPreview /></ServiceCard>

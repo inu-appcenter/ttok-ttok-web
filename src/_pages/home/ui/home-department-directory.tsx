@@ -129,7 +129,7 @@ export function HomeDepartmentDirectory({
       className="flex flex-col gap-3 py-8 md:gap-5 md:pb-12 md:pt-6"
     >
       <h2
-        className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] tracking-[-0.01em]"
+        className="text-[20px] font-semibold leading-[1.5] tracking-[-0.01em] md:text-[length:var(--font-size-heading2)]"
         id="home-departments-heading"
       >
         단과대학 · 학과별 연구실
