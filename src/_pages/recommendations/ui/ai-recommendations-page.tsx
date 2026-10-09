@@ -127,9 +127,17 @@ export function AiRecommendationsPage({
 
   useEffect(() => () => request.current?.abort(), []);
   useEffect(() => {
-    if (step !== initialStep)
+    if (step === "interest") return;
+    if (window.matchMedia("(min-width: 1024px)").matches) {
+      const conversation = end.current?.parentElement;
+      conversation?.scrollTo({
+        top: conversation.scrollHeight,
+        behavior: "smooth",
+      });
+    } else {
       end.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [step, initialStep]);
+    }
+  }, [step]);
   useEffect(() => {
     if (!sheetOpen) return;
     const trigger = resultTrigger.current;
@@ -276,7 +284,7 @@ export function AiRecommendationsPage({
             </div>
           )}
           <div
-            className="mt-7 flex flex-col gap-3 lg:mt-6 lg:max-h-[calc(100dvh-270px)] lg:gap-4 lg:overflow-y-auto lg:pb-4"
+            className="mt-7 flex flex-col gap-3 lg:mt-6 lg:max-h-[calc(100dvh-300px)] lg:gap-4 lg:overflow-y-auto lg:pb-4"
             aria-live="polite"
             aria-busy={pending}
           >
@@ -348,7 +356,7 @@ export function AiRecommendationsPage({
                           ? "관심 키워드"
                           : "선호하는 연구실 분위기"}
                       </legend>
-                      {options.map((option) => (
+                      {[...new Set(options)].map((option) => (
                         <Checkbox
                           appearance="chip"
                           key={option}
@@ -455,7 +463,7 @@ export function AiRecommendationsPage({
             <div ref={end} />
           </div>
         </section>
-        <aside className="hidden min-h-[720px] w-[440px] shrink-0 rounded-[20px] bg-[#f5f5f5] p-9 shadow-[0_4px_16px_#0000001a] lg:block">
+        <aside className="hidden h-[calc(100dvh-168px)] w-[440px] overflow-y-auto shrink-0 rounded-[20px] bg-[#f5f5f5] p-9 shadow-[0_4px_16px_#0000001a] lg:block">
           {hasResults ? (
             <>
               <h2
