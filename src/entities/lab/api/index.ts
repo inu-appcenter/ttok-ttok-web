@@ -11,6 +11,5 @@ export {
 } from "./laboratory-api";
 export { searchLaboratories } from "./search-laboratories";
 export { getResearchCategories } from "./get-research-categories";
-export { searchLaboratoriesByCategory } from "./search-laboratories-by-category";
 
 export { getDepartmentDirectory } from "./get-department-directory";

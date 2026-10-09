@@ -3,29 +3,26 @@ import type {
   LaboratorySearchParams,
 } from "../model/laboratory";
 
-import { LaboratoryApiError, getLaboratoryPage } from "./laboratory-api";
+import { getLaboratoryPage } from "./laboratory-api";
 
-/** 연구실명·교수명 키워드와 학과명으로 페이지 단위 검색합니다. */
+/** 선택한 조건은 AND로 결합하며, 조건이 없으면 전체 연구실을 조회합니다. */
 export function searchLaboratories({
   keyword = "",
+  category = "",
+  college = "",
   department = "",
   ...params
 }: LaboratorySearchParams): Promise<LaboratoryPage> {
-  const normalizedKeyword = keyword.trim();
-
-  const normalizedDepartment = department.trim();
-
-  if (!normalizedKeyword && !normalizedDepartment) {
-    throw new LaboratoryApiError("검색어를 입력해주세요.", 400);
+  const conditions = { keyword, category, college, department };
+  const searchParams: Record<string, string> = {};
+  for (const [name, value] of Object.entries(conditions)) {
+    if (value.trim()) searchParams[name] = value.trim();
   }
 
   return getLaboratoryPage(
     "/api/laboratory/search",
     params,
-    {
-      ...(normalizedKeyword ? { keyword: normalizedKeyword } : {}),
-      ...(normalizedDepartment ? { department: normalizedDepartment } : {}),
-    },
+    searchParams,
     { cache: "no-store", revalidate: 0 },
   );
 }

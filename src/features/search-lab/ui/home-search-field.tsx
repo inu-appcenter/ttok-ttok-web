@@ -22,6 +22,7 @@ export type HomeSearchFieldProps = {
   categoriesError?: string;
   initialQuery?: string;
   initialCategory?: string;
+  initialCollege?: string;
   initialDepartment?: string;
   isDisabled?: boolean;
   showRecommendations?: boolean;
@@ -31,6 +32,7 @@ export function HomeSearchField({
   categories = [],
   initialQuery = "",
   initialCategory = "",
+  initialCollege = "",
   initialDepartment = "",
   isDisabled = false,
   showRecommendations = true,
@@ -39,6 +41,7 @@ export function HomeSearchField({
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState(initialCategory);
+  const [college, setCollege] = useState(initialCollege);
   const [department, setDepartment] = useState(initialDepartment);
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -52,11 +55,11 @@ export function HomeSearchField({
       !categories.includes(category)
     ) {
       setMessage(
-        "선택한 분야의 검색은 아직 지원하지 않아요. 분야를 전체로 변경해주세요.",
+        "선택한 분야를 확인해주세요.",
       );
       return;
     }
-    if (showRecommendations && !normalizedQuery && !category && !department) {
+    if (showRecommendations && !normalizedQuery && !category && !college && !department) {
       setMessage("검색어를 입력해주세요");
       inputRef.current?.focus();
       return;
@@ -64,6 +67,7 @@ export function HomeSearchField({
     const conditions = parseSearchConditions({
       q: normalizedQuery,
       category,
+      college,
       department,
     });
     if (conditions.error) {
@@ -108,8 +112,10 @@ export function HomeSearchField({
         <SearchConditionDropdown
           disabled={isPending || isDisabled}
           kind="department"
-          onChange={(value) => {
+          college={college}
+          onChange={(value, selectedCollege = "") => {
             setDepartment(value);
+            setCollege(selectedCollege);
             setMessage("");
           }}
           value={department}

@@ -22,6 +22,7 @@ export type SearchPageProps = {
   invalidConditions?: boolean;
   errorMessage?: string;
   category?: string;
+  college?: string;
   department?: string;
   initialQuery?: string;
   page?: number;
@@ -60,6 +61,7 @@ export function SearchPage({
   invalidConditions = false,
   errorMessage,
   category = "",
+  college = "",
   department = "",
   initialQuery = "",
   result,
@@ -67,14 +69,14 @@ export function SearchPage({
 }: SearchPageProps) {
   const normalizedQuery = initialQuery.trim();
   const conditionLabel =
-    category || [department, normalizedQuery].filter(Boolean).join(" · ");
+    [category, college, department, normalizedQuery].filter(Boolean).join(" · ");
   const labs = result?.content ?? [];
   const visiblePages = result
     ? getVisiblePages(result.page, result.totalPages)
     : [];
   const isEmptyPage = !labs.length && (result?.totalElements ?? 0) > 0;
   const resetHref = isEmptyPage
-    ? createSearchHref({ query: normalizedQuery, category, department })
+    ? createSearchHref({ query: normalizedQuery, category, college, department })
     : createSearchHref();
 
   return (
@@ -84,10 +86,11 @@ export function SearchPage({
           <LaboratorySearchField
             categories={categories}
             category={category}
+            college={college}
             department={department}
             initialQuery={initialQuery}
             isDisabled={status === "loading"}
-            key={`${initialQuery}:${category}:${department}`}
+            key={`${initialQuery}:${category}:${college}:${department}`}
           />
         </div>
       </section>
@@ -158,6 +161,7 @@ export function SearchPage({
                       query: normalizedQuery,
                       page: result.page - 1,
                       category,
+                      college,
                       department,
                     })}
                   >
@@ -185,6 +189,7 @@ export function SearchPage({
                       query: normalizedQuery,
                       page,
                       category,
+                      college,
                       department,
                     })}
                     key={page}
@@ -201,6 +206,7 @@ export function SearchPage({
                       query: normalizedQuery,
                       page: result.page + 1,
                       category,
+                      college,
                       department,
                     })}
                   >
