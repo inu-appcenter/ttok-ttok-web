@@ -14,9 +14,6 @@ import {
   parseSearchConditions,
 } from "../model/search-conditions";
 
-// 현재 Figma의 표시 예시입니다. 서버의 인기순 추천이나 검색 결과로 사용하지 않습니다.
-const RECOMMENDED_KEYWORDS = ["LLM", "컴퓨터비전", "강화학습", "IoT", "반도체"];
-
 export type HomeSearchFieldProps = {
   categories?: string[];
   categoriesError?: string;
@@ -27,7 +24,7 @@ export type HomeSearchFieldProps = {
   initialCollege?: string;
   initialDepartment?: string;
   isDisabled?: boolean;
-  showRecommendations?: boolean;
+  requireCondition?: boolean;
 };
 
 export function HomeSearchField({
@@ -40,7 +37,7 @@ export function HomeSearchField({
   initialCollege = "",
   initialDepartment = "",
   isDisabled = false,
-  showRecommendations = true,
+  requireCondition = true,
 }: HomeSearchFieldProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -64,7 +61,7 @@ export function HomeSearchField({
       );
       return;
     }
-    if (showRecommendations && !normalizedQuery && !category && !college && !department) {
+    if (requireCondition && !normalizedQuery && !category && !college && !department) {
       setMessage("검색어를 입력해주세요");
       inputRef.current?.focus();
       return;
@@ -163,26 +160,7 @@ export function HomeSearchField({
           </Button>
         </div>
       </form>
-      {showRecommendations ? (
-        <div
-          aria-label="추천 검색어"
-          className="flex max-w-full flex-wrap items-center justify-center gap-2"
-        >
-          <span className="text-[length:var(--font-size-label1)] font-semibold text-text-subtle">
-            추천 검색어
-          </span>
-          {RECOMMENDED_KEYWORDS.map((keyword) => (
-            <button
-              disabled
-              className="rounded-full border border-border-subtle bg-bg-default px-3.5 py-1 text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-              key={keyword}
-              type="button"
-            >
-              {keyword}
-            </button>
-          ))}
-        </div>
-      ) : null}
+
     </div>
   );
 }

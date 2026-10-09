@@ -38,7 +38,7 @@ export function LaboratorySearchField({
       initialDepartment={department}
       initialQuery={initialQuery}
       isDisabled={isDisabled}
-      showRecommendations={false}
+      requireCondition={false}
     />
   );
 }
