@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { CollegeOption } from "@/entities/lab";
 
 import {
   LabCard,
@@ -19,6 +20,8 @@ export type SearchPageProps = {
   alternativeLabs?: LabSummary[];
   categories?: string[];
   categoriesError?: string;
+  colleges?: CollegeOption[];
+  collegesError?: string;
   invalidConditions?: boolean;
   errorMessage?: string;
   category?: string;
@@ -58,6 +61,9 @@ function SearchPageSkeleton() {
 export function SearchPage({
   alternativeLabs = [],
   categories = [],
+  categoriesError,
+  colleges,
+  collegesError,
   invalidConditions = false,
   errorMessage,
   category = "",
@@ -85,6 +91,9 @@ export function SearchPage({
         <div className="mx-auto w-full max-w-[1184px]">
           <LaboratorySearchField
             categories={categories}
+            categoriesError={categoriesError}
+            colleges={colleges}
+            collegesError={collegesError}
             category={category}
             college={college}
             department={department}

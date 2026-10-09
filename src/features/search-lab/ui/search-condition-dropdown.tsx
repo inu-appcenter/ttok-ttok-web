@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import type { CollegeOption } from "@/entities/lab";
 import { useEffect, useId, useRef, useState } from "react";
 
 import {
-  COLLEGE_PREVIEW,
   FIELD_INDEX,
   getFieldIndex,
   getInitials,
@@ -16,6 +16,8 @@ type SearchConditionDropdownProps = {
   value: string;
   college?: string;
   options?: string[];
+  colleges?: CollegeOption[];
+  error?: string;
   disabled?: boolean;
   onChange: (value: string, college?: string) => void;
 };
@@ -47,6 +49,8 @@ export function SearchConditionDropdown({
   value,
   college = "",
   options = [],
+  colleges = [],
+  error,
   disabled,
   onChange,
 }: SearchConditionDropdownProps) {
@@ -58,7 +62,7 @@ export function SearchConditionDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState("");
-  const [activeCollege, setActiveCollege] = useState(college || COLLEGE_PREVIEW.find((group) => group.departments.includes(value))?.name || "전체");
+  const [activeCollege, setActiveCollege] = useState(college || colleges.find((group) => group.departments.some((department) => department.departmentName === value))?.collegeName || "전체");
   useEffect(() => {
     if (!isOpen) return;
     const firstControl =
@@ -84,7 +88,7 @@ export function SearchConditionDropdown({
   }, [isOpen, kind]);
   const selectedLabel = value || (kind === "department" ? college : "");
   const label = kind === "category" ? "분야" : "학과";
-  const fields = [...new Set([...options, ...(value ? [value] : [])])].sort(
+  const fields = [...new Set(options)].sort(
     (left, right) => left.localeCompare(right, "ko"),
   );
   const visibleFields = fields.filter((field) => matchesField(field, query));
@@ -94,9 +98,9 @@ export function SearchConditionDropdown({
   }));
   const departments =
     activeCollege === "전체"
-      ? COLLEGE_PREVIEW.flatMap((college) => college.departments)
-      : (COLLEGE_PREVIEW.find((college) => college.name === activeCollege)
-          ?.departments ?? []);
+      ? colleges.flatMap((college) => college.departments.map((department) => department.departmentName))
+      : (colleges.find((college) => college.collegeName === activeCollege)
+          ?.departments.map((department) => department.departmentName) ?? []);
 
   function handleSelect(nextValue: string) {
     onChange(nextValue, kind === "department" && !nextValue && activeCollege !== "전체" ? activeCollege : "");
@@ -355,7 +359,7 @@ export function SearchConditionDropdown({
                   ))}
                 {!visibleFields.length ? (
                   <p className="px-2 py-3 text-[12px] text-text-subtlest">
-                    ‘{query}’에 맞는 분야가 없어요
+                    {error || (options.length ? `‘${query}’에 맞는 분야가 없어요` : "등록된 분야가 없어요")}
                   </p>
                 ) : null}
               </div>
@@ -368,7 +372,7 @@ export function SearchConditionDropdown({
               >
                 {[
                   "전체",
-                  ...COLLEGE_PREVIEW.map((college) => college.name),
+                  ...colleges.map((college) => college.collegeName),
                 ].map((college) => (
                   <button
                     data-option-group="college"
@@ -397,6 +401,11 @@ export function SearchConditionDropdown({
                 aria-label="학과 목록"
                 className="min-w-0 flex-1 overflow-y-auto p-2"
               >
+                {!departments.length ? (
+                  <p role="status" className="px-3 py-2 text-[14px] text-text-subtle">
+                    {error || "등록된 학과가 없어요"}
+                  </p>
+                ) : null}
                 {["", ...departments].map((department) => (
                   <button
                     data-option-group="department"

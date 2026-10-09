@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, userEvent, within } from "storybook/test";
 
-import { FIELD_PREVIEW } from "../model/search-options";
+import { CATEGORY_FIXTURE, COLLEGE_FIXTURE } from "./search-classification-fixtures";
 import { HomeSearchField } from "./home-search-field";
 
 const meta = {
   title: "Features/SearchConditions",
   component: HomeSearchField,
-  args: { categories: FIELD_PREVIEW, showRecommendations: false },
+  args: { categories: CATEGORY_FIXTURE, colleges: COLLEGE_FIXTURE, showRecommendations: false },
   parameters: { layout: "padded" },
 } satisfies Meta<typeof HomeSearchField>;
 
@@ -19,7 +19,9 @@ export const Home: Story = { args: { showRecommendations: true } };
 export const SelectedField: Story = {
   args: { initialCategory: "데이터베이스" },
 };
-export const CategoriesUnavailable: Story = { args: { categories: [] } };
+export const EmptyLists: Story = { args: { categories: [], colleges: [] } };
+export const CategoriesUnavailable: Story = { args: { categories: [], categoriesError: "분야 목록을 불러오지 못했어요." } };
+export const CollegesUnavailable: Story = { args: { colleges: [], collegesError: "학과 목록을 불러오지 못했어요." } };
 export const Disabled: Story = { args: { isDisabled: true } };
 
 export const KeyboardSelection: Story = {
