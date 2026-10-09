@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
 import { AiRecommendationsPage } from "@/_pages/recommendations";
-import { getPopularLabs } from "@/entities/lab";
 import { getAuthSession } from "@/shared/lib/auth/session";
 
 export default async function Page() {
@@ -11,7 +10,5 @@ export default async function Page() {
     redirect("/login");
   }
 
-  const labs = await getPopularLabs();
-
-  return <AiRecommendationsPage labs={labs} />;
+  return <AiRecommendationsPage />;
 }
