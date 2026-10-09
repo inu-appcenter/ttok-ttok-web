@@ -26,3 +26,4 @@ export type {
 } from "./model/laboratory";
 
 export type { CollegeLabCount, DepartmentLabCount } from "./model/department-directory";
+export type { CollegeOption, DepartmentOption } from "./model/search-classifications";
