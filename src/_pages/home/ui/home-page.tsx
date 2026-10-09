@@ -56,11 +56,13 @@ export function HomePage({
 
         <div className="px-4 pb-11 md:hidden">
           <div className="mt-5">
-            {labsError ? (
-              <LabLoadError message={labsError} />
-            ) : (
-              <MobileLabExplorer labs={labs} categories={categories} categoriesError={categoriesError} colleges={colleges} collegesError={collegesError} />
-            )}
+            <MobileLabExplorer categories={categories} categoriesError={categoriesError} colleges={colleges} collegesError={collegesError} />
+            <section aria-label="홈 연구실 목록" className="mt-8 flex flex-col gap-3">
+              <h2 className="text-[length:var(--font-size-heading2)] font-semibold">인기 연구실 둘러보기</h2>
+              {labsError ? <LabLoadError message={labsError} /> : labs.length ? (
+                <div className="flex flex-col gap-2">{labs.map((lab) => <LabCard key={lab.labId} lab={lab} />)}</div>
+              ) : <p className="py-10 text-center text-text-subtle">표시할 연구실이 아직 없어요.</p>}
+            </section>
           </div>
         </div>
 

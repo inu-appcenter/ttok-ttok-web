@@ -1,7 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import { MOCK_LABS } from "@/entities/lab";
-
 import { CATEGORY_FIXTURE, COLLEGE_FIXTURE } from "./search-classification-fixtures";
 
 import { MobileLabExplorer } from "./mobile-lab-explorer";
@@ -10,7 +8,6 @@ const meta = {
   title: "Features/SearchLab/MobileLabExplorer",
   component: MobileLabExplorer,
   args: {
-    labs: MOCK_LABS,
     categories: CATEGORY_FIXTURE,
     colleges: COLLEGE_FIXTURE,
   },
