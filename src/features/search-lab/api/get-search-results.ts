@@ -1,11 +1,7 @@
 import "server-only";
 
 import { toLabSummaryPage } from "@/entities/lab";
-import {
-  getLaboratories,
-  searchLaboratories,
-  searchLaboratoriesByCategory,
-} from "@/entities/lab/api";
+import { LaboratoryApiError, searchLaboratories } from "@/entities/lab/api";
 
 import {
   getSearchRequest,
@@ -14,32 +10,28 @@ import {
 
 export async function getSearchResults(conditions: SearchConditions) {
   const request = getSearchRequest(conditions);
-  if (!request) return { errorMessage: conditions.error, result: undefined };
+  if (!request) {
+    return { errorMessage: conditions.error, invalidConditions: true, result: undefined };
+  }
 
   try {
-    const page = Number(request.params.page);
-    const laboratoryPage =
-      request.path === "/api/laboratory/search/category"
-        ? await searchLaboratoriesByCategory(request.params.categoryName, page)
-        : request.path === "/api/laboratory/search"
-          ? await searchLaboratories({
-              keyword: request.params.keyword,
-              department:
-                "department" in request.params
-                  ? request.params.department
-                  : undefined,
-              page,
-            })
-          : await getLaboratories(
-              { page },
-              { cache: "no-store", revalidate: 0 },
-            );
-
+    const laboratoryPage = await searchLaboratories({
+      ...request.params,
+      page: Number(request.params.page),
+    });
     return {
       result: toLabSummaryPage(laboratoryPage),
       errorMessage: undefined,
+      invalidConditions: false,
     };
-  } catch {
-    return { errorMessage: "잠시 후 다시 시도해주세요.", result: undefined };
+  } catch (error) {
+    const invalidConditions = error instanceof LaboratoryApiError && error.status === 400;
+    return {
+      errorMessage: invalidConditions
+        ? "선택한 검색 조건을 확인해주세요."
+        : "잠시 후 다시 시도해주세요.",
+      invalidConditions,
+      result: undefined,
+    };
   }
 }

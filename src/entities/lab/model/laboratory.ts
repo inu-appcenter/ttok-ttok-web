@@ -45,5 +45,7 @@ export type LaboratoryPageParams = {
 
 export type LaboratorySearchParams = LaboratoryPageParams & {
   keyword?: string;
+  category?: string;
+  college?: string;
   department?: string;
 };
