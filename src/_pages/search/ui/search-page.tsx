@@ -12,11 +12,14 @@ import {
   createSearchHref,
   LaboratorySearchField,
   RetryLabSearch,
+  InfiniteLabResults,
+  type SearchPageLoader,
 } from "@/features/search-lab";
 
 export type SearchPageStatus = "error" | "loading" | "ready";
 
 export type SearchPageProps = {
+  loadPage?: SearchPageLoader;
   alternativeLabs?: LabSummary[];
   categories?: string[];
   categoriesError?: string;
@@ -32,15 +35,6 @@ export type SearchPageProps = {
   result?: LabSummaryPage;
   status?: SearchPageStatus;
 };
-
-function getVisiblePages(currentPage: number, totalPages: number) {
-  const firstPage = Math.max(0, Math.min(currentPage - 2, totalPages - 5));
-  const lastPage = Math.min(totalPages, firstPage + 5);
-  return Array.from(
-    { length: lastPage - firstPage },
-    (_, index) => firstPage + index,
-  );
-}
 
 function SearchPageSkeleton() {
   return (
@@ -59,6 +53,7 @@ function SearchPageSkeleton() {
 }
 
 export function SearchPage({
+  loadPage,
   alternativeLabs = [],
   categories = [],
   categoriesError,
@@ -77,9 +72,6 @@ export function SearchPage({
   const conditionLabel =
     [category, college, department, normalizedQuery].filter(Boolean).join(" · ");
   const labs = result?.content ?? [];
-  const visiblePages = result
-    ? getVisiblePages(result.page, result.totalPages)
-    : [];
   const isEmptyPage = !labs.length && (result?.totalElements ?? 0) > 0;
   const resetHref = isEmptyPage
     ? createSearchHref({ query: normalizedQuery, category, college, department })
@@ -150,88 +142,13 @@ export function SearchPage({
             )}
           </div>
         ) : null}
-        {status === "ready" && labs.length ? (
-          <>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {labs.map((lab) => (
-                <LabCard key={lab.labId} lab={lab} />
-              ))}
-            </div>
-            {result && result.totalPages > 1 ? (
-              <nav
-                aria-label="연구실 검색 결과 페이지"
-                className="mt-10 flex items-center justify-center gap-2"
-              >
-                {result.page > 0 ? (
-                  <Link
-                    aria-label="이전 페이지"
-                    className="rounded-md border border-border-subtle px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                    href={createSearchHref({
-                      query: normalizedQuery,
-                      page: result.page - 1,
-                      category,
-                      college,
-                      department,
-                    })}
-                  >
-                    이전
-                  </Link>
-                ) : (
-                  <span
-                    aria-disabled="true"
-                    className="rounded-md border border-border-disabled px-3 py-2 text-sm text-text-disabled"
-                  >
-                    이전
-                  </span>
-                )}
-
-                {visiblePages.map((page) => (
-                  <Link
-                    aria-current={page === result.page ? "page" : undefined}
-                    aria-label={`${page + 1}페이지`}
-                    className={`size-10 items-center justify-center rounded-md text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary ${
-                      page === result.page
-                        ? "flex bg-bg-primary font-semibold text-text-inverse"
-                        : "hidden border border-border-subtle text-text-default sm:flex"
-                    }`}
-                    href={createSearchHref({
-                      query: normalizedQuery,
-                      page,
-                      category,
-                      college,
-                      department,
-                    })}
-                    key={page}
-                  >
-                    {page + 1}
-                  </Link>
-                ))}
-
-                {result.hasNext ? (
-                  <Link
-                    aria-label="다음 페이지"
-                    className="rounded-md border border-border-subtle px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                    href={createSearchHref({
-                      query: normalizedQuery,
-                      page: result.page + 1,
-                      category,
-                      college,
-                      department,
-                    })}
-                  >
-                    다음
-                  </Link>
-                ) : (
-                  <span
-                    aria-disabled="true"
-                    className="rounded-md border border-border-disabled px-3 py-2 text-sm text-text-disabled"
-                  >
-                    다음
-                  </span>
-                )}
-              </nav>
-            ) : null}
-          </>
+        {status === "ready" && labs.length && result ? (
+          <InfiniteLabResults
+            conditions={{ query: normalizedQuery, category, college, department, page: result.page }}
+            initialResult={result}
+            loadPage={loadPage}
+            key={createSearchHref({ query: normalizedQuery, category, college, department, page: result.page })}
+          />
         ) : null}
         {status === "ready" && !labs.length ? (
           <div className="flex flex-col items-center">

@@ -9,3 +9,6 @@ export { RetryLabSearch } from "./ui/retry-lab-search";
 export type { LaboratorySearchFieldProps } from "./ui/laboratory-search-field";
 export { MobileLabExplorer } from "./ui/mobile-lab-explorer";
 export type { MobileLabExplorerProps } from "./ui/mobile-lab-explorer";
+
+export { InfiniteLabResults } from "./ui/infinite-lab-results";
+export type { SearchPageLoader } from "./ui/infinite-lab-results";

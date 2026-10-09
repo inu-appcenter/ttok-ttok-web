@@ -22,6 +22,13 @@ const meta = {
   args: {
     categories: ["AI", "데이터", "보안"],
     result: firstPage,
+    loadPage: async (conditions) => ({
+      ...firstPage,
+      page: conditions.page,
+      content: MOCK_LABS.map((lab) => ({ ...lab, labId: `${lab.labId}-page-${conditions.page}` })),
+      hasNext: conditions.page < 2,
+      isLast: conditions.page >= 2,
+    }),
   },
   parameters: {
     layout: "fullscreen",
