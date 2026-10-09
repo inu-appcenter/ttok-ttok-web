@@ -14,9 +14,10 @@ import {
 type SearchConditionDropdownProps = {
   kind: "category" | "department";
   value: string;
+  college?: string;
   options?: string[];
   disabled?: boolean;
-  onChange: (value: string) => void;
+  onChange: (value: string, college?: string) => void;
 };
 
 function HighlightedField({ value, query }: { value: string; query: string }) {
@@ -44,6 +45,7 @@ function HighlightedField({ value, query }: { value: string; query: string }) {
 export function SearchConditionDropdown({
   kind,
   value,
+  college = "",
   options = [],
   disabled,
   onChange,
@@ -56,7 +58,7 @@ export function SearchConditionDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState("");
-  const [activeCollege, setActiveCollege] = useState(COLLEGE_PREVIEW[0].name);
+  const [activeCollege, setActiveCollege] = useState(college || COLLEGE_PREVIEW.find((group) => group.departments.includes(value))?.name || "전체");
   useEffect(() => {
     if (!isOpen) return;
     const firstControl =
@@ -80,6 +82,7 @@ export function SearchConditionDropdown({
     return () =>
       document.removeEventListener("pointerdown", handleOutsidePointer);
   }, [isOpen, kind]);
+  const selectedLabel = value || (kind === "department" ? college : "");
   const label = kind === "category" ? "분야" : "학과";
   const fields = [...new Set([...options, ...(value ? [value] : [])])].sort(
     (left, right) => left.localeCompare(right, "ko"),
@@ -96,7 +99,7 @@ export function SearchConditionDropdown({
           ?.departments ?? []);
 
   function handleSelect(nextValue: string) {
-    onChange(nextValue);
+    onChange(nextValue, kind === "department" && !nextValue && activeCollege !== "전체" ? activeCollege : "");
     setIsOpen(false);
     setQuery("");
     triggerRef.current?.focus();
@@ -181,7 +184,7 @@ export function SearchConditionDropdown({
           aria-controls={id}
           aria-expanded={isOpen}
           aria-haspopup="dialog"
-          aria-label={`${label}: ${value || "전체"}`}
+          aria-label={`${label}: ${selectedLabel || "전체"}`}
           className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-1 rounded-lg pl-2 pr-4 text-left focus-visible:outline-2 focus-visible:outline-border-primary"
           disabled={disabled}
           onClick={() => {
@@ -197,9 +200,9 @@ export function SearchConditionDropdown({
               {label}
             </span>
             <span
-              className={`truncate text-[20px] font-semibold leading-[1.5] tracking-[-0.01em] ${value ? "text-text-primary" : "text-text-default"}`}
+              className={`truncate text-[20px] font-semibold leading-[1.5] tracking-[-0.01em] ${selectedLabel ? "text-text-primary" : "text-text-default"}`}
             >
-              {value || "전체"}
+              {selectedLabel || "전체"}
             </span>
           </span>
           <Image
@@ -210,12 +213,17 @@ export function SearchConditionDropdown({
             width={18}
           />
         </button>
-        {value ? (
+        {selectedLabel ? (
           <button
             aria-label={`${label} 초기화`}
             className="mr-2 rounded px-1 text-text-subtle focus-visible:outline-2 focus-visible:outline-border-primary"
             disabled={disabled}
-            onClick={() => handleSelect("")}
+            onClick={() => {
+              onChange("", "");
+              setActiveCollege("전체");
+              setIsOpen(false);
+              triggerRef.current?.focus();
+            }}
             type="button"
           >
             ×
@@ -392,7 +400,7 @@ export function SearchConditionDropdown({
                 {["", ...departments].map((department) => (
                   <button
                     data-option-group="department"
-                    aria-pressed={department === value}
+                    aria-pressed={department === value && (department !== "" || college === (activeCollege === "전체" ? "" : activeCollege))}
                     className="block min-h-[37px] w-full rounded-lg px-3 py-2 text-left text-[14px] leading-[1.5] text-text-default hover:bg-bg-primary-subtle aria-pressed:bg-bg-primary-subtle aria-pressed:font-semibold aria-pressed:text-text-primary focus-visible:outline-2 focus-visible:outline-border-primary"
                     key={department}
                     onClick={() => handleSelect(department)}

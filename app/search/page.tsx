@@ -27,7 +27,7 @@ export default async function Page({
   // 개인화/연관 검색 API가 없으므로 별도의 추천 순위를 만들지 않습니다.
   const alternativeLabs =
     search.result?.totalElements === 0 &&
-    (conditions.query || conditions.category || conditions.department)
+    (conditions.query || conditions.category || conditions.college || conditions.department)
       ? ((
           await getSearchResults({ query: "", category: "", page: 0 })
         ).result?.content.slice(0, 3) ?? [])
@@ -39,9 +39,10 @@ export default async function Page({
       {...search}
       {...categories}
       category={conditions.category}
+      college={conditions.college}
       department={conditions.department}
       initialQuery={conditions.query}
-      invalidConditions={Boolean(conditions.error)}
+      invalidConditions={search.invalidConditions}
       page={conditions.page}
       status={search.result ? "ready" : "error"}
     />

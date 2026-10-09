@@ -5,6 +5,7 @@ import { HomeSearchField } from "./home-search-field";
 export type LaboratorySearchFieldProps = {
   initialQuery?: string;
   category?: string;
+  college?: string;
   department?: string;
   categories?: string[];
   isDisabled?: boolean;
@@ -13,6 +14,7 @@ export type LaboratorySearchFieldProps = {
 export function LaboratorySearchField({
   initialQuery = "",
   category = "",
+  college = "",
   department = "",
   categories = [],
   isDisabled = false,
@@ -21,6 +23,7 @@ export function LaboratorySearchField({
     <HomeSearchField
       categories={categories}
       initialCategory={category}
+      initialCollege={college}
       initialDepartment={department}
       initialQuery={initialQuery}
       isDisabled={isDisabled}
