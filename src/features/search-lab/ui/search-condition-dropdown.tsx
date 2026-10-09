@@ -386,7 +386,7 @@ export function SearchConditionDropdown({
                           <button
                             data-option-group="category"
                             aria-pressed={value === field}
-                            className="truncate rounded-md px-2.5 py-[9px] text-left text-[14px] leading-[1.5] text-text-default hover:bg-bg-primary-subtle aria-pressed:bg-bg-primary-subtle aria-pressed:font-semibold aria-pressed:text-text-primary focus-visible:outline-2 focus-visible:outline-border-primary"
+                            className="truncate rounded-md px-2.5 py-[9px] text-left md:px-2 md:py-1 text-[14px] leading-[1.5] text-text-default hover:bg-bg-primary-subtle aria-pressed:bg-bg-primary-subtle aria-pressed:font-semibold aria-pressed:text-text-primary focus-visible:outline-2 focus-visible:outline-border-primary"
                             key={field}
                             onClick={() => handleSelect(field)}
                             title={field}
