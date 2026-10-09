@@ -7,7 +7,7 @@ import { HomeSearchField } from "./home-search-field";
 const meta = {
   title: "Features/SearchConditions",
   component: HomeSearchField,
-  args: { categories: CATEGORY_FIXTURE, colleges: COLLEGE_FIXTURE, showRecommendations: false },
+  args: { categories: CATEGORY_FIXTURE, colleges: COLLEGE_FIXTURE, requireCondition: false },
   parameters: { layout: "padded" },
 } satisfies Meta<typeof HomeSearchField>;
 
@@ -15,7 +15,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-export const Home: Story = { args: { showRecommendations: true } };
+export const Home: Story = { args: { requireCondition: true } };
 export const SelectedField: Story = {
   args: { initialCategory: "데이터베이스" },
 };

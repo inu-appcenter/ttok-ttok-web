@@ -32,7 +32,7 @@ const navigationItems: Array<{
     icon: "/icons/header/search.svg",
     iconSize: 18,
     id: "search",
-    label: "연구실 검색",
+    label: "연구실 탐색",
   },
   {
     activeIcon: "/icons/header/ai-active.svg",

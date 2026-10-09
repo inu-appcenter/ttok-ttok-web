@@ -43,6 +43,9 @@ export const OneDepartment: Story = {
 export const ExpandAndCollapse: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await expect(canvas.getByRole("link", { name: /^공과대학$/ })).toHaveAttribute(
+      "href", "/search?college=%EA%B3%B5%EA%B3%BC%EB%8C%80%ED%95%99",
+    );
     const trigger = canvas.getByRole("button", {
       name: "공과대학 학과 더보기",
     });

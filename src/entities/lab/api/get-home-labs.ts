@@ -14,5 +14,5 @@ export async function getHomeLabs(): Promise<LabSummary[]> {
     { revalidate: HOME_LAB_REVALIDATE_SECONDS },
   );
 
-  return toLabSummaryPage(page).content;
+  return toLabSummaryPage(page).content.slice(0, HOME_LAB_COUNT);
 }
