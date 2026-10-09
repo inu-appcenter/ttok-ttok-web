@@ -54,6 +54,7 @@ export function HomePage({
             <h1 id="mobile-home-search-heading" className="bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] bg-clip-text text-center text-[length:var(--font-size-title3)] font-bold leading-[1.3] tracking-[-0.02em] text-transparent">어떤 연구를 하고 싶으세요?</h1>
             <MobileLabExplorer categories={categories} categoriesError={categoriesError} colleges={colleges} collegesError={collegesError} />
           </section>
+          <div className="px-4"><HomeServiceGuide /></div>
           <section aria-labelledby="mobile-home-labs-heading" className="flex flex-col gap-3 px-4 py-8">
             <h2 id="mobile-home-labs-heading" className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] tracking-[-0.01em]">인기 연구실 둘러보기</h2>
             {labsError ? <LabLoadError message={labsError} /> : labs.length ? (
