@@ -45,7 +45,7 @@ export function MobileBottomNav({ activeHref }: MobileBottomNavProps) {
   return (
     <nav
       aria-label="모바일 주요 메뉴"
-      className="fixed bottom-[calc(20px_+_env(safe-area-inset-bottom))] left-1/2 z-40 flex h-[71px] w-[calc(100%_-_32px)] max-w-[343px] -translate-x-1/2 items-center rounded-[var(--radius-full)] bg-bg-neutral p-1 shadow-[0_4px_8px_var(--color-opacity-black-10)] md:hidden"
+      className="fixed bottom-[calc(24px_+_env(safe-area-inset-bottom))] left-1/2 z-40 flex h-[71px] w-[calc(100%_-_32px)] max-w-[343px] -translate-x-1/2 items-center rounded-[var(--radius-full)] bg-bg-neutral p-1 shadow-[0_4px_8px_var(--color-opacity-black-10)] md:hidden"
     >
       {items.map((item) => {
         const isActive =

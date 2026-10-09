@@ -47,7 +47,7 @@ export function HomePage({
   departmentSection,
 }: HomePageProps) {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-bg-default pb-[calc(111px_+_env(safe-area-inset-bottom))] text-text-default md:pb-0">
+    <div className="min-h-screen overflow-x-hidden bg-bg-default text-text-default">
       <main>
         <div className="md:hidden">
           <section aria-labelledby="mobile-home-search-heading" className="flex flex-col items-center gap-5 bg-bg-primary-subtle px-4 py-20">
@@ -116,7 +116,7 @@ export function HomePage({
         </div>
       </main>
       <MobileBottomNav />
-      <SiteFooter />
+      <SiteFooter showOnMobile />
     </div>
   );
 }
