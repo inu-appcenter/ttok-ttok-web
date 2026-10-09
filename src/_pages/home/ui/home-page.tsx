@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CollegeOption } from "@/entities/lab";
 import type { ReactNode } from "react";
 
 import { LabCard } from "@/entities/lab";
@@ -17,6 +18,8 @@ export type HomePageProps = {
   labsError?: string;
   categories?: string[];
   categoriesError?: string;
+  colleges?: CollegeOption[];
+  collegesError?: string;
 };
 
 function LabLoadError({ message }: { message: string }) {
@@ -40,6 +43,8 @@ export function HomePage({
   labsError,
   categories,
   categoriesError,
+  colleges,
+  collegesError,
   departmentSection,
 }: HomePageProps) {
   return (
@@ -54,7 +59,7 @@ export function HomePage({
             {labsError ? (
               <LabLoadError message={labsError} />
             ) : (
-              <MobileLabExplorer labs={labs} />
+              <MobileLabExplorer labs={labs} categories={categories} categoriesError={categoriesError} colleges={colleges} collegesError={collegesError} />
             )}
           </div>
         </div>
@@ -74,6 +79,8 @@ export function HomePage({
               <HomeSearchField
                 categories={categories}
                 categoriesError={categoriesError}
+                colleges={colleges}
+                collegesError={collegesError}
               />
             </div>
           </section>

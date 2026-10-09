@@ -6,7 +6,7 @@ import { useRef, useState, useTransition, type FormEvent } from "react";
 
 import { Button, Toast } from "@/shared/ui";
 
-import { FIELD_PREVIEW } from "../model/search-options";
+import type { CollegeOption } from "@/entities/lab";
 import { SearchConditionDropdown } from "./search-condition-dropdown";
 
 import {
@@ -20,6 +20,8 @@ const RECOMMENDED_KEYWORDS = ["LLM", "컴퓨터비전", "강화학습", "IoT", "
 export type HomeSearchFieldProps = {
   categories?: string[];
   categoriesError?: string;
+  colleges?: CollegeOption[];
+  collegesError?: string;
   initialQuery?: string;
   initialCategory?: string;
   initialCollege?: string;
@@ -30,6 +32,9 @@ export type HomeSearchFieldProps = {
 
 export function HomeSearchField({
   categories = [],
+  categoriesError,
+  colleges = [],
+  collegesError,
   initialQuery = "",
   initialCategory = "",
   initialCollege = "",
@@ -102,7 +107,8 @@ export function HomeSearchField({
             setCategory(value);
             setMessage("");
           }}
-          options={categories.length ? categories : FIELD_PREVIEW}
+          options={categories}
+          error={categoriesError}
           value={category}
         />
         <div
@@ -113,6 +119,8 @@ export function HomeSearchField({
           disabled={isPending || isDisabled}
           kind="department"
           college={college}
+          colleges={colleges}
+          error={collegesError}
           onChange={(value, selectedCollege = "") => {
             setDepartment(value);
             setCollege(selectedCollege);

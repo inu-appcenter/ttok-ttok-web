@@ -1,5 +1,5 @@
 import { SearchPage } from "@/_pages/search";
-import { getResearchCategories } from "@/entities/lab/api";
+import { getResearchCategories, getCollegeOptions } from "@/entities/lab/api";
 import {
   parseSearchConditions,
   type SearchRouteParams,
@@ -12,7 +12,7 @@ export default async function Page({
   searchParams: Promise<SearchRouteParams>;
 }) {
   const conditions = parseSearchConditions(await searchParams);
-  const [search, categories] = await Promise.all([
+  const [search, categories, collegesResult] = await Promise.all([
     getSearchResults(conditions),
     getResearchCategories().then(
       (categories) => ({ categories, categoriesError: undefined }),
@@ -20,6 +20,10 @@ export default async function Page({
         categories: [],
         categoriesError: "분야 목록을 불러오지 못했어요.",
       }),
+    ),
+    getCollegeOptions().then(
+      (colleges) => ({ colleges, collegesError: undefined }),
+      () => ({ colleges: [], collegesError: "학과 목록을 불러오지 못했어요." }),
     ),
   ]);
 
@@ -38,6 +42,7 @@ export default async function Page({
       alternativeLabs={alternativeLabs}
       {...search}
       {...categories}
+      {...collegesResult}
       category={conditions.category}
       college={conditions.college}
       department={conditions.department}

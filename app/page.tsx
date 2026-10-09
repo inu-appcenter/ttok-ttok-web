@@ -5,10 +5,10 @@ import {
   HomeDepartmentDirectory,
   HomeDepartmentSection,
 } from "@/_pages/home";
-import { getHomeLabs, getResearchCategories } from "@/entities/lab/api";
+import { getHomeLabs, getResearchCategories, getCollegeOptions } from "@/entities/lab/api";
 
 export default async function Page() {
-  const [labsResult, categoriesResult] = await Promise.all([
+  const [labsResult, categoriesResult, collegesResult] = await Promise.all([
     getHomeLabs().then(
       (labs) => ({ labs, labsError: undefined }),
       () => ({ labs: [], labsError: "연구실 정보를 불러오지 못했습니다." }),
@@ -21,12 +21,17 @@ export default async function Page() {
           "분야 목록을 불러오지 못했습니다. 검색어로 검색해주세요. ",
       }),
     ),
+    getCollegeOptions().then(
+      (colleges) => ({ colleges, collegesError: undefined }),
+      () => ({ colleges: [], collegesError: "학과 목록을 불러오지 못했어요." }),
+    ),
   ]);
 
   return (
     <HomePage
       {...labsResult}
       {...categoriesResult}
+      {...collegesResult}
       departmentSection={
         <Suspense fallback={<HomeDepartmentDirectory status="loading" />}>
           <HomeDepartmentSection />

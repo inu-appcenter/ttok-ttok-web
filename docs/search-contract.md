@@ -1,34 +1,46 @@
-# 연구실 검색 계약 (TTOK-63)
+# 연구실 검색 계약 (TTOK-72·74)
 
-2026-10-05 Swagger `/v3/api-docs` 기준.
-명세: https://ttokttok-server.inuappcenter.kr/swagger-ui/index.html#/
+2026-10-09 서버 참조 목록과 공개 검색 API 확인 기준.
 
-| URL | 조회 API | 조건 |
-| --- | --- | --- |
-| `/search` | `GET /api/laboratory?page=0` | 전체 |
-| `/search?q=검색어` | `GET /api/laboratory/search?keyword=검색어&page=0` | 연구실명·교수명 단일 키워드 |
-| `/search?category=AI` | `GET /api/laboratory/search/category?categoryName=AI&page=0` | 상위 분야 단일 선택 |
-| `/search?department=학과명` | `GET /api/laboratory/search?department=학과명&page=0` | 서버 학과 한글 명칭 |
-| `/search?department=학과명&q=검색어` | 동일 API의 `department`와 `keyword` | 학과 내 연구실명·교수명 검색 |
-| 위 URL에 `&page=1` | 동일 API의 `page=1` | 0부터 시작하는 페이지 |
+## 검색 조건
 
-- 검색 가능한 분야는 `GET /api/research-area-category`의 `categoryName`을 사용한다. 목록이 없을 때 드롭다운은 Figma 예시 목록으로 활성화한다. 예시 선택은 UI 상태만 변경하며, 검색 제출 시 서버 목록에 없는 분야는 안내하고 요청하지 않는다. 이미 URL로 조회한 분야는 유지한다.
-- 목록 API는 `page`만 명세에 있다. 페이지 크기·정렬은 서버 응답을 따르며 UI의 전체 개수·현재 페이지·다음 페이지 여부를 응답에서 매핑한다.
-- 상위 분야와 키워드 또는 학과의 동시 검색, 중복 조건은 오류와 초기화를 제공하고 연구실 조회를 호출하지 않는다. 학과 단독과 학과+키워드는 최신 API에 연결한다.
-- 조건은 앞뒤 공백을 제거한다. 빈 키워드·분야는 전체 조회이며 빈 keyword API 요청을 보내지 않는다.
-- 음수·소수·지수 표기·서버 int32 범위를 넘는 페이지는 0으로 정규화한다. 반복 page 값은 첫 값을 사용한다.
-- 페이지 링크는 현재 조건을 유지한다. 드롭다운 선택은 입력 폼의 상태만 변경하며 검색 버튼·Enter 제출 시 첫 페이지로 이동한다. 분야와 키워드를 동시에 입력하면 조건 선택 오류를 표시한다.
-- 초기화는 `/search`로 이동한다. 모든 전환은 Next Link 또는 router.push를 사용하여 새로고침·직접 접근·뒤로 가기에서 URL 조건을 복원한다.
-- 키워드 입력은 URL 값과 분야를 key로 삼아 라우트 전환 완료 후 복원한다. 입력 중에는 API를 요청하지 않고 Enter·검색 버튼으로 제출한다.
-- 조회 실패는 오류 상태로, 성공한 빈 목록은 정상 빈 결과로 표시한다. 분야 목록 실패는 결과 목록을 가리지 않고 Figma 예시 드롭다운을 제공한다. 미지원 조건에 대한 안내는 검색 제출 시에만 표시한다.
-- 홈과 검색 결과 화면은 같은 분야·학과·키워드 검색바를 사용한다. 학과 조건은 URL에서 복원하고 검색 제출·페이지 이동에도 유지한다. 드롭다운의 기존 예시 분류는 유지하며, 홈 디렉터리는 개수 API의 실제 departmentName으로 이동한다.
+모든 검색은 `GET /api/laboratory/search`를 사용한다. 빈 조건은 생략하며 조건이 없으면 전체 연구실을 조회한다.
 
-검증: `node --test tests/search-conditions.test.mjs`, `pnpm lint`, `pnpm build`.
+| 화면 URL 조건 | 서버 파라미터 |
+| --- | --- |
+| q | keyword |
+| category | categoryName 값인 category |
+| college | collegeName 값인 college |
+| department | departmentName 값인 department |
+| page | 0부터 시작하는 page |
 
-## 운영 서버 확인
+조건 간 AND, 여러 category 값 간 OR는 서버 계약이다. 이번 UI는 분야 단일 선택을 유지하며 중복 URL 조건을 오류로 처리한다. 분야·학과·단과대·검색어 조합은 허용한다. 단과대 전체 선택은 department 없이 college만 전달한다. 페이지 크기는 서버의 20건 고정 계약을 따른다.
 
-2026-10-02 비로그인 요청에서 분야 목록 API는 HTTP 403을 반환했다. 반면 `categoryName=AI` 검색은 200이며 전체 26건, 20건/페이지, 총 2페이지였다. 목록 실패 시 키워드·분야 직접 URL 검색은 계속 제공하고 드롭다운은 Figma 예시로 사용할 수 있다. 분야 목록의 공개 접근 정책은 서버 확인이 필요하며, 전체 분야 선택의 운영 검증은 403 해소 후 완료한다.
+- URL은 공백을 정리하고 한글·특수문자를 보존한다. q를 사용하는 기존 링크를 유지한다.
+- 페이지 링크는 모든 조건을 유지한다. 입력만 변경하면 요청하지 않고 검색 버튼·Enter 제출 시 첫 페이지로 이동한다.
+- 잘못된 page는 0으로 정규화한다. 뒤로가기·직접 접근·새로고침은 URL에서 폼 상태를 복원한다.
+- 서버의 400은 검색 조건 오류로, 다른 실패는 일반 조회 오류로 구분한다. 성공한 빈 결과는 정상 빈 상태다.
 
+## 분류 참조 목록 · TTOK-74
+
+- `GET /api/research-area-category`: 분야 categoryName 목록.
+- `GET /api/college`: 단과대 코드와 collegeName.
+- `GET /api/college/department`: 학과 코드·departmentName과 소속 단과대 코드·이름.
+- 단과대·학과 참조는 병렬 조회하고 코드로 그룹을 연결한다. 코드와 이름을 모두 보존하여 검색에는 한글 이름을, 이후 코드 기반 요청에는 원래 코드를 사용할 수 있다.
+- 서버 순서와 빈 단과대, COLLEGE_OF_NULL을 유지한다. 잘못된 소속·중복 코드·잘못된 형식은 조회 실패로 처리한다.
+- 실제 검색창과 모바일 선택창은 API 목록만 사용한다. 실패·빈 목록에 예시 선택지를 넣지 않는다. 현재 URL 선택값은 표시·초기화할 수 있지만 서버 목록에 없는 값을 새 선택지로 삽입하지 않는다.
+- 실패·정상 빈 목록·목록 내 검색 결과 없음은 각각 다른 메시지를 표시한다. 분류 조회 실패는 다른 정상 목록과 검색어 입력을 막지 않는다.
+- 참조 데이터는 기존 공통 조회의 5분 재검증을 재사용한다. 검색 결과는 no-store다. 별도 캐시 라이브러리를 추가하지 않는다.
+- 연구실 count API는 홈 카드 개수를 위한 별도 계약이다. 참조 목록을 count 항목에서 추출하지 않는다.
+- Storybook fixture는 실제 선택지와 분리한다. 모바일 홈의 일부 연구실 로컬 필터를 전체 검색 흐름으로 바꾸는 작업은 TTOK-76에서 진행한다.
+
+## 검증
+
+- 실제 공개 GET: 단과대 13개, 학과 65개, 분야 119개. 이 개수는 검증 시점 값이며 코드에 고정하지 않는다.
+- COLLEGE_OF_NULL 소속 4학과와 정보기술대학 소속 3학과를 데스크톱·375px 모바일 선택창에서 확인했다.
+- 컴퓨터공학부 선택 후 department 한글 URL과 실제 검색 결과 13건을 확인했다.
+- Storybook: 정상·빈 목록·분야 실패·학과 실패, KeyboardSelection 자동 play 완료와 콘솔 오류 없음 확인.
+- 타입 검사·lint·앱 빌드·Storybook 빌드·테스트 22개 통과.
 
 ## 학과별 탐색 연결 · TTOK-65
 

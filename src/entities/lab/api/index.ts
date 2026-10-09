@@ -13,3 +13,4 @@ export { searchLaboratories } from "./search-laboratories";
 export { getResearchCategories } from "./get-research-categories";
 
 export { getDepartmentDirectory } from "./get-department-directory";
+export { getCollegeOptions } from "./get-college-options";
