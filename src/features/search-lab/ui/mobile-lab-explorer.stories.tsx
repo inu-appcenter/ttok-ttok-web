@@ -13,7 +13,9 @@ const meta = {
     categories: CATEGORY_FIXTURE,
     colleges: COLLEGE_FIXTURE,
   },
-  decorators: [(Story) => <div className="w-[375px] bg-bg-default p-4"><Story /></div>],
+  parameters: { layout: "fullscreen", viewport: { options: { mobile375: { name: "Mobile 375", styles: { width: "375px", height: "812px" }, type: "mobile" } } } },
+  globals: { viewport: { value: "mobile375", isRotated: false } },
+  decorators: [(Story) => <div className="w-full bg-bg-default p-4"><Story /></div>],
 } satisfies Meta<typeof MobileLabExplorer>;
 
 export default meta;
@@ -52,5 +54,21 @@ export const CombinedConditions: Story = {
     await userEvent.clear(canvas.getByRole("searchbox", { name: "연구실 검색" }));
     await userEvent.click(canvas.getByRole("button", { name: "검색" }));
     await expect(getRouter().push).toHaveBeenLastCalledWith("/search");
+  },
+};
+
+export const CloseSheet: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole("button", { name: "분야: 전체" });
+    await userEvent.click(trigger);
+    await expect(canvas.getByRole("dialog", { name: "분야 선택" })).toHaveAttribute("aria-modal", "true");
+    await userEvent.keyboard("{Escape}");
+    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
+    await expect(trigger).toHaveFocus();
+    await userEvent.click(trigger);
+    await userEvent.click(canvas.getByRole("button", { name: "닫기" }));
+    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
+    await expect(trigger).toHaveFocus();
   },
 };
