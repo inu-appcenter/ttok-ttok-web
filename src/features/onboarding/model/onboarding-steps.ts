@@ -1,5 +1,7 @@
 type OnboardingQuestionId =
   | "purpose"
+  | "department"
+  | "interest"
   | "lab"
   | "coreTime"
   | "meetingFrequency"
@@ -20,6 +22,7 @@ type OnboardingAnswers = Partial<
   Record<OnboardingQuestionId, OnboardingAnswerValue>
 > & {
   laboratoryId?: number;
+  departmentCode?: string;
 };
 
 const ONBOARDING_PURPOSE = {
@@ -48,7 +51,11 @@ const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     type: "lab-search",
   },
   { id: "coreTime", question: "연구실에 코어타임이 있나요?", type: "choice" },
-  { id: "meetingFrequency", question: "미팅은 얼마나 자주 갖나요?", type: "choice" },
+  {
+    id: "meetingFrequency",
+    question: "미팅은 얼마나 자주 갖나요?",
+    type: "choice",
+  },
   {
     id: "activities",
     question: "마지막으로, 주로 하는 일을 알려주세요!",
@@ -87,7 +94,10 @@ function getOnboardingQuestions(
     }
 
     if (question.id === "meetingFrequency") {
-      return { ...question, options: toOptions(reviewOptions?.weeklyMeeting ?? []) };
+      return {
+        ...question,
+        options: toOptions(reviewOptions?.weeklyMeeting ?? []),
+      };
     }
 
     if (question.id === "activities") {
@@ -97,13 +107,21 @@ function getOnboardingQuestions(
     return question;
   });
 
-  return purpose === ONBOARDING_PURPOSE.explore ? questions.slice(0, 1) : questions;
+  return purpose === ONBOARDING_PURPOSE.explore
+    ? [questions[0], ...FINDER_QUESTIONS]
+    : questions;
 }
 
+const FINDER_QUESTIONS: OnboardingQuestion[] = [
+  { id: "department", question: "어느 학과에 다니고 계세요?", type: "text" },
+  {
+    id: "interest",
+    question: "요즘 어떤 연구에 관심이 가세요?",
+    helper: "키워드만 적어도 괜찮아요",
+    type: "text",
+  },
+];
+
 export { getOnboardingQuestions, ONBOARDING_PURPOSE, ONBOARDING_QUESTIONS };
-export type {
-  OnboardingAnswers,
-  OnboardingQuestion,
-  OnboardingQuestionId,
-};
+export type { OnboardingAnswers, OnboardingQuestion, OnboardingQuestionId };
 import type { OnboardingReviewOptions } from "./review-options";
