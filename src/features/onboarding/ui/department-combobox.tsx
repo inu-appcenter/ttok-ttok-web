@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Image from "next/image";
 import type { CollegeOption, DepartmentOption } from "@/entities/lab";
 
@@ -22,6 +22,10 @@ export function DepartmentCombobox({
   const id = useId();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
+  const activeOption = useRef<HTMLLIElement>(null);
+  useEffect(() => {
+    activeOption.current?.scrollIntoView({ block: "nearest" });
+  }, [active]);
   const options = colleges
     .flatMap((college) =>
       college.departments.map((department) => ({
@@ -102,6 +106,7 @@ export function DepartmentCombobox({
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => select(option)}
               role="option"
+              ref={active === index ? activeOption : undefined}
             >
               <span className="flex min-w-0 flex-col gap-1.5">
                 <span className="text-base font-semibold">
