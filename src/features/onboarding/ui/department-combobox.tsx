@@ -88,7 +88,20 @@ export function DepartmentCombobox({
           role="combobox"
           value={value}
         />
-        <Image alt="" height={18} src="/icons/search.svg" width={18} />
+        <Image
+          alt=""
+          className="hidden md:block"
+          height={18}
+          src="/icons/search.svg"
+          width={18}
+        />
+        <Image
+          alt=""
+          className="md:hidden"
+          height={18}
+          src="/icons/onboarding/search-mobile.svg"
+          width={18}
+        />
       </div>
       {open ? (
         <ul
