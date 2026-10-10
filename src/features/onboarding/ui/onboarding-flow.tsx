@@ -117,7 +117,8 @@ export function OnboardingFlow({
         ? { laboratoryId: selectedLaboratory.laboratoryId }
         : {}),
     }));
-    const nextQuestion = activeQuestions[completedQuestionCount + 1];
+    const nextQuestions = currentQuestion.id === "purpose" && typeof nextAnswer === "string" ? getOnboardingQuestions(nextAnswer, reviewOptions) : activeQuestions;
+    const nextQuestion = nextQuestions[completedQuestionCount + 1];
     const draft = nextQuestion ? draftAnswers[nextQuestion.id] : undefined;
     setPendingAnswer(typeof draft === "string" ? draft : "");
     setPendingSelections([]);
