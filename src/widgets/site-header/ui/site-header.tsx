@@ -50,7 +50,7 @@ export function SiteHeader({
 }: SiteHeaderProps) {
   return (
     <header className="relative z-50 w-full bg-bg-default shadow-[0_2px_8px_var(--color-opacity-black-10)]">
-      <div className="mx-auto flex min-h-[53px] w-full max-w-[1440px] min-w-0 items-center justify-between px-4 py-3 max-md:w-screen max-md:max-w-[100vw] md:h-[72px] md:px-[clamp(24px,8.89vw,128px)] md:py-0">
+      <div className="mx-auto flex min-h-[53px] w-full max-w-[1440px] min-w-0 items-center justify-between px-4 py-3 md:h-[72px] md:px-[clamp(24px,8.89vw,128px)] md:py-0">
         <div className="flex min-w-0 items-center gap-[clamp(16px,3.33vw,48px)]">
           <Link
             aria-label="똑똑 홈"
