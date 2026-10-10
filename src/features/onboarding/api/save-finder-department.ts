@@ -1,4 +1,9 @@
-export async function saveFinderDepartment({ baseUrl, accessToken, department, fetcher = fetch }: {
+export async function saveFinderDepartment({
+  baseUrl,
+  accessToken,
+  department,
+  fetcher = fetch,
+}: {
   baseUrl: string;
   accessToken: string;
   department: string;
@@ -7,7 +12,10 @@ export async function saveFinderDepartment({ baseUrl, accessToken, department, f
   return fetcher(`${baseUrl.replace(/\/$/, "")}/api/member`, {
     method: "PATCH",
     cache: "no-store",
-    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ department }),
   });
 }

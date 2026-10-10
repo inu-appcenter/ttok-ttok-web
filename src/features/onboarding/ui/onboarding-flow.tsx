@@ -26,7 +26,10 @@ type OnboardingFlowProps = {
   onComplete?: (answers: OnboardingAnswers, href?: string) => Promise<void>;
   colleges?: CollegeOption[];
   collegesError?: string;
-  renderFinderResults?: (props: { onOpen: (href: string) => void; disabled: boolean }) => ReactNode;
+  renderFinderResults?: (props: {
+    onOpen: (href: string) => void;
+    disabled: boolean;
+  }) => ReactNode;
   renderLabSearch: (props: {
     onClearSelection: () => void;
     onSelect: (lab: LabSummary) => void;
@@ -52,7 +55,8 @@ export function OnboardingFlow({
 }: OnboardingFlowProps) {
   const [answers, setAnswers] = useState<OnboardingAnswers>({});
   const [draftAnswers, setDraftAnswers] = useState<OnboardingAnswers>({});
-  const [selectedLaboratory, setSelectedLaboratory] = useState<LabSummary | null>(null);
+  const [selectedLaboratory, setSelectedLaboratory] =
+    useState<LabSummary | null>(null);
   const [pendingAnswer, setPendingAnswer] = useState("");
   const [pendingSelections, setPendingSelections] = useState<string[]>([]);
   const [departmentCode, setDepartmentCode] = useState<string>();
@@ -65,16 +69,18 @@ export function OnboardingFlow({
     typeof answers.purpose === "string" ? answers.purpose : undefined;
   const activeQuestions = getOnboardingQuestions(purpose, reviewOptions);
 
-  const completedQuestionCount = activeQuestions.filter(
-    (question) => {
-      const answer = answers[question.id];
-      return Array.isArray(answer) ? answer.length > 0 : Boolean(answer);
-    },
-  ).length;
+  const completedQuestionCount = activeQuestions.filter((question) => {
+    const answer = answers[question.id];
+    return Array.isArray(answer) ? answer.length > 0 : Boolean(answer);
+  }).length;
   const currentQuestion = activeQuestions[completedQuestionCount];
   const isComplete = currentQuestion === undefined;
   const isFinder = purpose === ONBOARDING_PURPOSE.explore;
-  const currentStep = isFinder ? Math.min(completedQuestionCount, 3) : isComplete ? 8 : completedQuestionCount + 1;
+  const currentStep = isFinder
+    ? Math.min(completedQuestionCount, 3)
+    : isComplete
+      ? 8
+      : completedQuestionCount + 1;
 
   useEffect(() => {
     if (isInitialRender.current) {
@@ -83,7 +89,8 @@ export function OnboardingFlow({
     }
 
     const animationFrame = window.requestAnimationFrame(() => {
-      const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      const behavior = window.matchMedia("(prefers-reduced-motion: reduce)")
+        .matches
         ? "auto"
         : "smooth";
 
@@ -99,15 +106,20 @@ export function OnboardingFlow({
       return;
     }
 
-    const nextAnswer = currentQuestion.type === "lab-search"
-      ? selectedLaboratory
-        ? String(selectedLaboratory.laboratoryId)
-        : ""
-      : currentQuestion.type === "multi-choice"
-        ? pendingSelections
-        : pendingAnswer.trim();
+    const nextAnswer =
+      currentQuestion.type === "lab-search"
+        ? selectedLaboratory
+          ? String(selectedLaboratory.laboratoryId)
+          : ""
+        : currentQuestion.type === "multi-choice"
+          ? pendingSelections
+          : pendingAnswer.trim();
 
-    if (nextAnswer.length === 0 || (currentQuestion.id === "department" && !departmentCode)) return;
+    if (
+      nextAnswer.length === 0 ||
+      (currentQuestion.id === "department" && !departmentCode)
+    )
+      return;
 
     setAnswers((currentAnswers) => ({
       ...currentAnswers,
@@ -117,7 +129,10 @@ export function OnboardingFlow({
         ? { laboratoryId: selectedLaboratory.laboratoryId }
         : {}),
     }));
-    const nextQuestions = currentQuestion.id === "purpose" && typeof nextAnswer === "string" ? getOnboardingQuestions(nextAnswer, reviewOptions) : activeQuestions;
+    const nextQuestions =
+      currentQuestion.id === "purpose" && typeof nextAnswer === "string"
+        ? getOnboardingQuestions(nextAnswer, reviewOptions)
+        : activeQuestions;
     const nextQuestion = nextQuestions[completedQuestionCount + 1];
     const draft = nextQuestion ? draftAnswers[nextQuestion.id] : undefined;
     setPendingAnswer(typeof draft === "string" ? draft : "");
@@ -127,13 +142,18 @@ export function OnboardingFlow({
   function editPreviousAnswer() {
     const previous = activeQuestions[completedQuestionCount - 1];
     if (!previous) return;
-    setDraftAnswers((current) => ({ ...current, ...answers, ...(currentQuestion ? { [currentQuestion.id]: pendingAnswer } : {}) }));
+    setDraftAnswers((current) => ({
+      ...current,
+      ...answers,
+      ...(currentQuestion ? { [currentQuestion.id]: pendingAnswer } : {}),
+    }));
     const previousAnswer = answers[previous.id];
     setPendingAnswer(typeof previousAnswer === "string" ? previousAnswer : "");
     setSubmitError("");
     setAnswers((current) => {
       const next = { ...current };
-      for (const question of activeQuestions.slice(completedQuestionCount - 1)) delete next[question.id];
+      for (const question of activeQuestions.slice(completedQuestionCount - 1))
+        delete next[question.id];
       return next;
     });
   }
@@ -160,12 +180,19 @@ export function OnboardingFlow({
 
   return (
     <>
-      <OnboardingProgress currentStep={currentStep} totalSteps={isFinder ? 3 : 8} />
+      <OnboardingProgress
+        currentStep={currentStep}
+        totalSteps={isFinder ? 3 : 8}
+      />
       <section className="mx-auto flex w-full max-w-[680px] flex-col gap-[var(--spacing-spacing-4)] overflow-y-auto overscroll-y-contain px-[var(--spacing-spacing-4)] pb-[max(var(--spacing-spacing-10),env(safe-area-inset-bottom))] pt-[var(--spacing-spacing-10)] max-md:min-h-0 max-md:flex-1 md:overflow-visible md:px-0">
         <ChatMessage sender="bot">똑똑에 오신 걸 환영해요!</ChatMessage>
         {activeQuestions.slice(0, completedQuestionCount).map((question) => (
           <div className="contents" key={question.id}>
-            {question.id === "department" ? <ChatMessage sender="bot">연구실 추천을 위해 몇 가지 물어볼게요!</ChatMessage> : null}
+            {question.id === "department" ? (
+              <ChatMessage sender="bot">
+                연구실 추천을 위해 몇 가지 물어볼게요!
+              </ChatMessage>
+            ) : null}
             <ChatMessage sender="bot">{question.question}</ChatMessage>
             {question.helper ? (
               <ChatMessage emphasis="subtle" sender="bot">
@@ -183,16 +210,52 @@ export function OnboardingFlow({
         ))}
 
         {isComplete && isFinder ? (
-          <section aria-label="추천 연구실" className="flex flex-col gap-4 focus:outline-none" ref={(node) => { activeStepRef.current = node; }} tabIndex={-1}>
-            <ChatMessage sender="bot">찾았어요! 이 연구실이 잘 맞을 것 같아요</ChatMessage>
+          <section
+            aria-label="추천 연구실"
+            className="flex flex-col gap-4 focus:outline-none"
+            ref={(node) => {
+              activeStepRef.current = node;
+            }}
+            tabIndex={-1}
+          >
+            <ChatMessage sender="bot">
+              찾았어요! 이 연구실이 잘 맞을 것 같아요
+            </ChatMessage>
             <ChatMessage emphasis="subtle" sender="bot">
               마음에 드는 곳이 있나요?{" "}
-              <button className="cursor-pointer text-text-primary underline underline-offset-4 disabled:opacity-50" disabled={isSubmitting} onClick={() => handleCompletion()} type="button">홈에서 더 둘러보기 ›</button>
+              <button
+                className="cursor-pointer text-text-primary underline underline-offset-4 disabled:opacity-50"
+                disabled={isSubmitting}
+                onClick={() => handleCompletion()}
+                type="button"
+              >
+                홈에서 더 둘러보기 ›
+              </button>
             </ChatMessage>
-            {renderFinderResults?.({ onOpen: (href) => { void handleCompletion(href); }, disabled: isSubmitting })}
-            <button className="w-fit cursor-pointer text-sm text-text-subtle underline disabled:opacity-50" disabled={isSubmitting} onClick={editPreviousAnswer} type="button">입력 내용 수정</button>
-            {submitError ? <p role="alert" className="text-sm text-text-error">{submitError}</p> : null}
-            {isSubmitting ? <p role="status" className="text-sm text-text-subtle">온보딩을 저장하고 있어요.</p> : null}
+            {renderFinderResults?.({
+              onOpen: (href) => {
+                void handleCompletion(href);
+              },
+              disabled: isSubmitting,
+            })}
+            <button
+              className="w-fit cursor-pointer text-sm text-text-subtle underline disabled:opacity-50"
+              disabled={isSubmitting}
+              onClick={editPreviousAnswer}
+              type="button"
+            >
+              입력 내용 수정
+            </button>
+            {submitError ? (
+              <p role="alert" className="text-sm text-text-error">
+                {submitError}
+              </p>
+            ) : null}
+            {isSubmitting ? (
+              <p role="status" className="text-sm text-text-subtle">
+                온보딩을 저장하고 있어요.
+              </p>
+            ) : null}
           </section>
         ) : isComplete ? (
           <section
@@ -234,7 +297,12 @@ export function OnboardingFlow({
                   href={completionHref}
                 >
                   시작하기
-                  <Image alt="" height={18} src="/icons/arrow-right.svg" width={18} />
+                  <Image
+                    alt=""
+                    height={18}
+                    src="/icons/arrow-right.svg"
+                    width={18}
+                  />
                 </Link>
               )}
             </div>
@@ -252,7 +320,11 @@ export function OnboardingFlow({
             }}
             tabIndex={-1}
           >
-            {currentQuestion.id === "department" ? <ChatMessage sender="bot">연구실 추천을 위해 몇 가지 물어볼게요!</ChatMessage> : null}
+            {currentQuestion.id === "department" ? (
+              <ChatMessage sender="bot">
+                연구실 추천을 위해 몇 가지 물어볼게요!
+              </ChatMessage>
+            ) : null}
             <ChatMessage sender="bot">{currentQuestion.question}</ChatMessage>
             {currentQuestion.helper ? (
               <ChatMessage emphasis="subtle" sender="bot">
@@ -263,14 +335,33 @@ export function OnboardingFlow({
             ["coreTime", "meetingFrequency", "activities"].includes(
               currentQuestion.id,
             ) ? (
-              <p aria-live="polite" className="text-[length:var(--font-size-label2)] text-text-error">
+              <p
+                aria-live="polite"
+                className="text-[length:var(--font-size-label2)] text-text-error"
+              >
                 {reviewOptionsError}
               </p>
             ) : null}
             {currentQuestion.id === "department" ? (
               <>
-                <DepartmentCombobox colleges={colleges} onChange={(value) => { setPendingAnswer(value); setDepartmentCode(undefined); }} onSelect={(department) => { setPendingAnswer(department.departmentName); setDepartmentCode(department.department); }} selectedCode={departmentCode} value={pendingAnswer} />
-                {collegesError ? <p role="alert" className="text-sm text-text-error">{collegesError}</p> : null}
+                <DepartmentCombobox
+                  colleges={colleges}
+                  onChange={(value) => {
+                    setPendingAnswer(value);
+                    setDepartmentCode(undefined);
+                  }}
+                  onSelect={(department) => {
+                    setPendingAnswer(department.departmentName);
+                    setDepartmentCode(department.department);
+                  }}
+                  selectedCode={departmentCode}
+                  value={pendingAnswer}
+                />
+                {collegesError ? (
+                  <p role="alert" className="text-sm text-text-error">
+                    {collegesError}
+                  </p>
+                ) : null}
               </>
             ) : currentQuestion.type === "choice" ? (
               <QuickReplies
@@ -302,11 +393,23 @@ export function OnboardingFlow({
             ) : (
               <div className="ml-auto w-full max-w-[444px]">
                 <Field
-                  aria-label={currentQuestion.id === "interest" ? "관심 연구" : "오픈채팅 링크"}
-                  className={currentQuestion.id === "interest" ? "text-base" : undefined}
-                  maxLength={currentQuestion.id === "interest" ? 1000 : undefined}
+                  aria-label={
+                    currentQuestion.id === "interest"
+                      ? "관심 연구"
+                      : "오픈채팅 링크"
+                  }
+                  className={
+                    currentQuestion.id === "interest" ? "text-base" : undefined
+                  }
+                  maxLength={
+                    currentQuestion.id === "interest" ? 1000 : undefined
+                  }
                   onChange={(event) => setPendingAnswer(event.target.value)}
-                  placeholder={currentQuestion.id === "interest" ? "예: 추천시스템, 파이썬 크롤링" : "https://open.kakao.com/..."}
+                  placeholder={
+                    currentQuestion.id === "interest"
+                      ? "예: 추천시스템, 파이썬 크롤링"
+                      : "https://open.kakao.com/..."
+                  }
                   type={currentQuestion.id === "interest" ? "text" : "url"}
                   value={pendingAnswer}
                 />
@@ -315,14 +418,22 @@ export function OnboardingFlow({
             <div className="flex justify-end">
               <OnboardingSubmit
                 disabled={
-                  currentQuestion.id === "department" ? !departmentCode : currentQuestion.type === "multi-choice"
-                    ? pendingSelections.length === 0
-                    : !pendingAnswer.trim()
+                  currentQuestion.id === "department"
+                    ? !departmentCode
+                    : currentQuestion.type === "multi-choice"
+                      ? pendingSelections.length === 0
+                      : !pendingAnswer.trim()
                 }
               />
             </div>
             {isFinder && completedQuestionCount > 0 ? (
-              <button className="w-fit cursor-pointer text-sm text-text-subtle underline" onClick={editPreviousAnswer} type="button">이전 답변 수정</button>
+              <button
+                className="w-fit cursor-pointer text-sm text-text-subtle underline"
+                onClick={editPreviousAnswer}
+                type="button"
+              >
+                이전 답변 수정
+              </button>
             ) : null}
           </form>
         )}

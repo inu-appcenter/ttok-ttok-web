@@ -16,9 +16,7 @@ type OnboardingResponse = {
   message?: unknown;
 };
 
-type CompleteOnboardingResult =
-  | { ok: true }
-  | { message: string; ok: false };
+type CompleteOnboardingResult = { ok: true } | { message: string; ok: false };
 
 const ERROR_MESSAGE = "온보딩 저장 중 문제가 발생했습니다.";
 const ERROR_MESSAGES: Record<string, string> = {
@@ -27,7 +25,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   TOKEN_INVALID: "로그인이 만료되었습니다. 다시 로그인해주세요.",
 };
 
-export function toOnboardingRequest(answers: OnboardingAnswers): OnboardingRequest {
+export function toOnboardingRequest(
+  answers: OnboardingAnswers,
+): OnboardingRequest {
   const isExplorer = answers.purpose === "연구실을 알아보고 있어요";
   const coffeeChatAllowed = answers.coffeeChat === "네, 좋아요";
   const contactValue =
@@ -90,7 +90,9 @@ function getErrorMessage(response: OnboardingResponse) {
     return ERROR_MESSAGES[response.code];
   }
 
-  return typeof response.message === "string" ? response.message : ERROR_MESSAGE;
+  return typeof response.message === "string"
+    ? response.message
+    : ERROR_MESSAGE;
 }
 
 export async function completeOnboarding(
@@ -105,7 +107,12 @@ export async function completeOnboarding(
 
   try {
     const response = await fetch("/api/auth/onboarding", {
-      body: JSON.stringify({ ...request, ...(request.purpose === "FINDER" && answers.departmentCode ? { departmentCode: answers.departmentCode } : {}) }),
+      body: JSON.stringify({
+        ...request,
+        ...(request.purpose === "FINDER" && answers.departmentCode
+          ? { departmentCode: answers.departmentCode }
+          : {}),
+      }),
       headers: { "Content-Type": "application/json" },
       method: "POST",
     });

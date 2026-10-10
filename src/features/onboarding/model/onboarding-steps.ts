@@ -51,7 +51,11 @@ const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     type: "lab-search",
   },
   { id: "coreTime", question: "연구실에 코어타임이 있나요?", type: "choice" },
-  { id: "meetingFrequency", question: "미팅은 얼마나 자주 갖나요?", type: "choice" },
+  {
+    id: "meetingFrequency",
+    question: "미팅은 얼마나 자주 갖나요?",
+    type: "choice",
+  },
   {
     id: "activities",
     question: "마지막으로, 주로 하는 일을 알려주세요!",
@@ -90,7 +94,10 @@ function getOnboardingQuestions(
     }
 
     if (question.id === "meetingFrequency") {
-      return { ...question, options: toOptions(reviewOptions?.weeklyMeeting ?? []) };
+      return {
+        ...question,
+        options: toOptions(reviewOptions?.weeklyMeeting ?? []),
+      };
     }
 
     if (question.id === "activities") {
@@ -116,9 +123,5 @@ const FINDER_QUESTIONS: OnboardingQuestion[] = [
 ];
 
 export { getOnboardingQuestions, ONBOARDING_PURPOSE, ONBOARDING_QUESTIONS };
-export type {
-  OnboardingAnswers,
-  OnboardingQuestion,
-  OnboardingQuestionId,
-};
+export type { OnboardingAnswers, OnboardingQuestion, OnboardingQuestionId };
 import type { OnboardingReviewOptions } from "./review-options";

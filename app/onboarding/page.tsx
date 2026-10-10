@@ -26,13 +26,21 @@ export default async function OnboardingRoute() {
     getOnboardingReviewOptions(accessToken),
     getCollegeOptions(),
   ]);
-  const reviewOptions: OnboardingReviewOptions | undefined = reviewResult.status === "fulfilled" ? reviewResult.value : undefined;
-  const reviewOptionsError = reviewResult.status === "rejected" ? "선택지를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요." : undefined;
+  const reviewOptions: OnboardingReviewOptions | undefined =
+    reviewResult.status === "fulfilled" ? reviewResult.value : undefined;
+  const reviewOptionsError =
+    reviewResult.status === "rejected"
+      ? "선택지를 불러오지 못했습니다. 새로고침 후 다시 시도해주세요."
+      : undefined;
 
   return (
     <OnboardingPage
       colleges={collegeResult.status === "fulfilled" ? collegeResult.value : []}
-      collegesError={collegeResult.status === "rejected" ? "학과 목록을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요." : undefined}
+      collegesError={
+        collegeResult.status === "rejected"
+          ? "학과 목록을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요."
+          : undefined
+      }
       reviewOptions={reviewOptions}
       reviewOptionsError={reviewOptionsError}
     />
