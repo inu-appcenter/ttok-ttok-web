@@ -63,6 +63,7 @@ export function OnboardingFlow({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const activeStepRef = useRef<HTMLElement>(null);
+  const completionErrorRef = useRef<HTMLParagraphElement>(null);
   const isInitialRender = useRef(true);
 
   const purpose =
@@ -81,6 +82,13 @@ export function OnboardingFlow({
     : isComplete
       ? 8
       : completedQuestionCount + 1;
+
+  useEffect(() => {
+    if (submitError && isFinder) {
+      completionErrorRef.current?.scrollIntoView({ block: "nearest" });
+      completionErrorRef.current?.focus({ preventScroll: true });
+    }
+  }, [submitError, isFinder]);
 
   useEffect(() => {
     if (isInitialRender.current) {
@@ -232,6 +240,16 @@ export function OnboardingFlow({
                 홈에서 더 둘러보기 ›
               </button>
             </ChatMessage>
+            {submitError ? (
+              <p
+                className="text-sm text-text-error focus:outline-none"
+                ref={completionErrorRef}
+                role="alert"
+                tabIndex={-1}
+              >
+                {submitError}
+              </p>
+            ) : null}
             {renderFinderResults?.({
               onOpen: (href) => {
                 void handleCompletion(href);
@@ -246,11 +264,6 @@ export function OnboardingFlow({
             >
               입력 내용 수정
             </button>
-            {submitError ? (
-              <p role="alert" className="text-sm text-text-error">
-                {submitError}
-              </p>
-            ) : null}
             {isSubmitting ? (
               <p role="status" className="text-sm text-text-subtle">
                 온보딩을 저장하고 있어요.
