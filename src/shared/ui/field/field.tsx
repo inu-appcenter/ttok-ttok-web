@@ -21,7 +21,10 @@ export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> &
 const labelClassName =
   "text-[length:var(--font-size-label1)] font-[600] leading-[1.5]";
 
-function getFieldStateClassName(disabled: boolean | undefined, hasError: boolean) {
+function getFieldStateClassName(
+  disabled: boolean | undefined,
+  hasError: boolean,
+) {
   if (disabled) return "border-border-disabled bg-bg-disabled";
   if (hasError) return "border-border-error bg-bg-default";
 
@@ -55,11 +58,12 @@ export function Field({
   const hasError = Boolean(error) || invalid;
 
   return (
-    <label
-      className="flex w-full flex-col gap-[var(--spacing-spacing-1)] text-text-default"
-      htmlFor={inputId}
-    >
-      {label ? <span className={labelClassName}>{label}</span> : null}
+    <div className="flex w-full flex-col gap-[var(--spacing-spacing-1)] text-text-default">
+      {label ? (
+        <label className={labelClassName} htmlFor={inputId}>
+          {label}
+        </label>
+      ) : null}
       <span
         className={`flex h-[44px] items-center overflow-hidden rounded-[var(--radius-xl)] border py-[var(--spacing-spacing-3)] pl-[var(--spacing-spacing-4)] pr-[var(--spacing-spacing-3)] transition-colors ${getFieldStateClassName(disabled, hasError)}`}
       >
@@ -78,7 +82,7 @@ export function Field({
         ) : null}
       </span>
       <ErrorMessage error={error} id={errorId} />
-    </label>
+    </div>
   );
 }
 
@@ -97,11 +101,12 @@ export function Textarea({
   const hasError = Boolean(error) || invalid;
 
   return (
-    <label
-      className="flex w-full flex-col gap-[var(--spacing-spacing-1)] text-text-default"
-      htmlFor={textareaId}
-    >
-      {label ? <span className={labelClassName}>{label}</span> : null}
+    <div className="flex w-full flex-col gap-[var(--spacing-spacing-1)] text-text-default">
+      {label ? (
+        <label className={labelClassName} htmlFor={textareaId}>
+          {label}
+        </label>
+      ) : null}
       <textarea
         aria-describedby={error ? errorId : undefined}
         aria-invalid={hasError}
@@ -111,6 +116,6 @@ export function Textarea({
         {...props}
       />
       <ErrorMessage error={error} id={errorId} />
-    </label>
+    </div>
   );
 }

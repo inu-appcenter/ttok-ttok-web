@@ -103,6 +103,16 @@ export function LoginForm({ initialHasError = false }: LoginFormProps) {
         로그인
       </Button>
 
+      <a
+        className="self-center rounded-sm text-[length:var(--font-size-label2)] leading-[1.5] text-text-subtle underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-primary"
+        href="https://portal.inu.ac.kr:444/enview/user/pwHelp.face"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        비밀번호 찾기
+        <span className="sr-only"> (새 창에서 열림)</span>
+      </a>
+
       <p
         aria-live="polite"
         className={`h-5 text-center text-[length:var(--font-size-label2)] leading-[1.5] text-text-error ${hasError ? "visible" : "invisible"}`}

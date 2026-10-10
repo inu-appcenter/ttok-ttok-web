@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { useEffect, useId } from "react";
+import { useEffect, useId, useRef } from "react";
 
 export type DialogProps = {
   children: ReactNode;
@@ -28,21 +28,61 @@ export function Dialog({
   variant = "default",
 }: DialogProps) {
   const titleId = useId();
+  const dialogRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
 
     const previousOverflow = document.body.style.overflow;
+    const previousFocus =
+      document.activeElement instanceof HTMLElement &&
+      !dialogRef.current?.contains(document.activeElement)
+        ? document.activeElement
+        : null;
     document.body.style.overflow = "hidden";
+
+    function focusableElements() {
+      return [
+        ...(dialogRef.current?.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]',
+        ) ?? []),
+      ].filter((element) => element.getClientRects().length > 0);
+    }
+    if (!dialogRef.current?.contains(document.activeElement))
+      (focusableElements()[0] ?? dialogRef.current)?.focus();
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
+      if (event.key === "Tab") {
+        const elements = focusableElements(),
+          first = elements[0],
+          last = elements.at(-1);
+        if (!first) {
+          event.preventDefault();
+          dialogRef.current?.focus();
+        } else if (
+          event.shiftKey &&
+          (document.activeElement === first ||
+            !dialogRef.current?.contains(document.activeElement))
+        ) {
+          event.preventDefault();
+          last?.focus();
+        } else if (
+          !event.shiftKey &&
+          (document.activeElement === last ||
+            !dialogRef.current?.contains(document.activeElement))
+        ) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
+      previousFocus?.focus();
     };
   }, [isOpen, onClose]);
 
@@ -59,6 +99,8 @@ export function Dialog({
       }}
     >
       <section
+        ref={dialogRef}
+        tabIndex={-1}
         aria-labelledby={titleId}
         aria-modal="true"
         className={`max-h-[calc(100dvh-32px)] w-full overflow-y-auto bg-bg-default shadow-[0_8px_32px_var(--color-opacity-black-10)] ${isConfirmation ? "max-w-[320px] rounded-[var(--radius-xl)] p-[var(--spacing-spacing-6)]" : mobileBottomSheet ? "rounded-t-[var(--radius-2xl)] md:max-w-[483px] md:rounded-[var(--radius-2xl)] md:border md:border-border-subtle" : "rounded-[var(--radius-2xl)] border border-border-subtle"} ${className ?? (isConfirmation || mobileBottomSheet ? "" : "max-w-[483px]")}`}

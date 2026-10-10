@@ -67,6 +67,13 @@ const meta = {
   parameters: {
     layout: "fullscreen",
   },
+  args: {
+    bookmarkActions: {
+      initialBookmarks: [],
+      onLoad: async () => [],
+      onToggle: async () => [],
+    },
+  },
 } satisfies Meta<typeof LabDetailPage>;
 
 export default meta;

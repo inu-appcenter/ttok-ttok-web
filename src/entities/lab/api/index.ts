@@ -14,3 +14,5 @@ export { getResearchCategories } from "./get-research-categories";
 
 export { getDepartmentDirectory } from "./get-department-directory";
 export { getCollegeOptions } from "./get-college-options";
+export { getLaboratoryItem } from "./laboratory-api";
+export { getAllPublications } from "./get-all-publications";

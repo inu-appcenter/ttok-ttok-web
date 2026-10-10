@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { expect, within } from "storybook/test";
 
 import { Field, Textarea } from "./field";
 
@@ -22,23 +23,44 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 export const Focus: Story = { args: { autoFocus: true } };
 export const Typing: Story = { args: { defaultValue: "입력중..." } };
-export const Error: Story = { args: { error: "입력 내용을 확인해 주세요." } };
+export const Error: Story = {
+  args: { error: "입력 내용을 확인해 주세요." },
+  play: async ({ canvasElement }) => {
+    const field = within(canvasElement).getByLabelText("라벨");
+    await expect(field).toHaveAccessibleName("라벨");
+    await expect(field).toHaveAccessibleDescription(
+      "입력 내용을 확인해 주세요.",
+    );
+    await expect(field).toHaveAttribute("aria-invalid", "true");
+  },
+};
 export const Invalid: Story = { args: { invalid: true } };
 export const Disabled: Story = { args: { disabled: true } };
 
 export const TextareaDefault: Story = {
-  render: (args) => <Textarea label={args.label} placeholder={args.placeholder} />,
+  render: (args) => (
+    <Textarea label={args.label} placeholder={args.placeholder} />
+  ),
 };
 export const TextareaFocus: Story = {
-  render: (args) => <Textarea autoFocus label={args.label} placeholder={args.placeholder} />,
+  render: (args) => (
+    <Textarea autoFocus label={args.label} placeholder={args.placeholder} />
+  ),
 };
 export const TextareaError: Story = {
+  play: Error.play,
   render: (args) => (
-    <Textarea error="입력 내용을 확인해 주세요." label={args.label} placeholder={args.placeholder} />
+    <Textarea
+      error="입력 내용을 확인해 주세요."
+      label={args.label}
+      placeholder={args.placeholder}
+    />
   ),
 };
 export const TextareaDisabled: Story = {
-  render: (args) => <Textarea disabled label={args.label} placeholder={args.placeholder} />,
+  render: (args) => (
+    <Textarea disabled label={args.label} placeholder={args.placeholder} />
+  ),
 };
 
 export const InputStates: Story = {
