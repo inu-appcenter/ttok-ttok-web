@@ -7,6 +7,7 @@ import {
   ReportLabButton,
 } from "@/features/lab-detail-actions";
 import { Tag } from "@/shared/ui";
+import { BookmarkToggle } from "@/features/manage-bookmarks";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
 
 import { LabNews, ProfessorCard, ResearchProjects } from "./detail-content";
@@ -51,13 +52,16 @@ export function LabDetailPage({
           <MobileAiSummary paragraphs={aiSummary} />
         ) : null}
 
-        <header>
+        <header className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
           <h1 className="text-[length:var(--font-size-headline1)] font-semibold leading-[1.4] tracking-[-0.01em] text-text-default">
             {lab.name}
           </h1>
           <p className="text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
             {lab.professorName} 교수 · {lab.department}
           </p>
+          </div>
+          <BookmarkToggle laboratoryId={lab.laboratoryId} isAuthenticated={isAuthenticated} />
         </header>
 
         <section className="rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)]">
@@ -155,13 +159,16 @@ export function LabDetailPage({
                 </Tag>
               ))}
             </div>
-            <div className="mt-[6px]">
+            <div className="mt-[6px] flex items-start justify-between gap-3">
+              <div className="min-w-0">
               <h1 className="break-words text-[length:var(--font-size-title1)] font-bold leading-[1.5]">
                 {lab.name}
               </h1>
               <p className="text-[length:var(--font-size-heading2)] font-medium leading-[1.5] text-text-subtle">
                 {lab.professorName} 교수 · {lab.department}
               </p>
+              </div>
+              <BookmarkToggle laboratoryId={lab.laboratoryId} isAuthenticated={isAuthenticated} />
             </div>
             <div className="mt-[6px] flex flex-wrap items-center gap-x-6 gap-y-2 text-[length:var(--font-size-label1)] font-medium leading-[1.5] text-text-subtle">
               {lab.location ? <span>{lab.location}</span> : null}

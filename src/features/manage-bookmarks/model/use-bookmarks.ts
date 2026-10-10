@@ -16,8 +16,8 @@ export function useBookmarks({ initialBookmarks, onToggle, onLoad }: BookmarkAct
     if (onLoad) return onLoad();
     const response = await fetch("/api/bookmarks", { cache: "no-store" });
     const body = await response.json();
-    if (response.status === 401) { router.push("/login"); throw new Error("ログインが必要です。"); }
-    if (!response.ok || !Array.isArray(body.data)) throw new Error(body.message || "関心研究室を読み込めませんでした。");
+    if (response.status === 401) { router.push("/login"); throw new Error("로그인이 필요합니다."); }
+    if (!response.ok || !Array.isArray(body.data)) throw new Error(body.message || "관심 연구실을 불러오지 못했어요.");
     return body.data as Bookmark[];
   }, [onLoad, router]);
   const refresh = useCallback(async () => {
