@@ -1,13 +1,12 @@
 "use client";
 
-import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-
-import type { MemberProfile, MemberResearchProfile } from "@/entities/member";
-import { Button, Dialog, Tag, Toggle } from "@/shared/ui";
-
+import { useRef, useState, type ReactNode } from "react";
+import type { MemberProfile } from "@/entities/member";
+import { Button, Dialog, Tag } from "@/shared/ui";
 import { logout, withdrawMember } from "../api/manage-member";
+import { CoffeeChatSettings, type CoffeeChatSettingsProps } from "./coffee-chat-settings";
 
 export type MemberProfilePanelProps = {
   initialWithdrawalDialogOpen?: boolean;
@@ -15,492 +14,72 @@ export type MemberProfilePanelProps = {
   onEdit?: () => void;
   onLogout?: () => Promise<void> | void;
   onWithdraw?: () => Promise<void> | void;
+  onSaveContact?: CoffeeChatSettingsProps["onSaveContact"];
+  mockContacts?: CoffeeChatSettingsProps["mockContacts"];
+  bookmarks?: ReactNode;
   profile: MemberProfile;
 };
 
-type ProfileViewProps = Omit<
-  MemberProfilePanelProps,
-  "initialWithdrawalDialogOpen" | "onWithdraw"
-> & {
-  isCoffeeChatPublic: boolean;
-  isLoggingOut: boolean;
-  logoutError?: string;
-  onCoffeeChatPublicChange: (checked: boolean) => void;
-  onWithdrawalDialogOpen: () => void;
-};
-
-function ResearchActivityTags({
-  filled = false,
-  tags,
-}: {
-  filled?: boolean;
-  tags: string[];
-}) {
-  return (
-    <ul
-      aria-label="연구 활동 정보"
-      className={filled ? "flex flex-wrap gap-x-3.5 gap-y-[5px]" : "flex flex-wrap gap-2"}
-    >
-      {tags.map((tag) => (
-        <li
-          className={
-            filled
-              ? "rounded-full bg-[#bfd5f3] px-2.5 py-0.5 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-inverse"
-              : "rounded-full border border-border-subtle px-[14px] py-0.5 text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle"
-          }
-          key={tag}
-        >
-          {tag}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function ResearcherStatus({
-  isUndergraduateResearcher,
-  onChange,
-}: {
-  isUndergraduateResearcher: boolean;
-  onChange?: () => void;
-}) {
-  return (
-    <section className="flex w-full items-center justify-between rounded-[var(--radius-xl)] border border-bg-default bg-bg-default p-3 shadow-[0_2px_8px_var(--color-opacity-black-10)]">
-      <h2 className="text-[length:var(--font-size-headline2)] font-semibold leading-[1.4] tracking-[-0.01em] text-text-subtle">
-        학부연구생 여부
-      </h2>
-      <div className="flex items-center gap-[11px]">
-        <strong className="text-[length:var(--font-size-headline1)] font-semibold leading-[1.4] tracking-[-0.01em] text-text-default">
-          {isUndergraduateResearcher ? "예" : "아니요"}
-        </strong>
-        <button
-          className="cursor-pointer text-[length:var(--font-size-caption1)] leading-[1.5] text-text-primary underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-          onClick={onChange}
-          type="button"
-        >
-          변경
-        </button>
-      </div>
-    </section>
-  );
-}
-
-function DesktopProfileView({
-  isCoffeeChatPublic,
-  isLoggingOut,
-  logoutError,
-  onChangeResearcherStatus,
-  onCoffeeChatPublicChange,
-  onEdit,
-  onLogout,
-  onWithdrawalDialogOpen,
-  profile,
-}: ProfileViewProps) {
-  const researchProfile = profile.researchProfile;
-
-  return (
-    <section className="flex w-full flex-col items-center" aria-label="회원 프로필">
-      <Image
-        alt="기본 프로필 이미지"
-        height={130}
-        priority
-        src="/images/mypage/profile-placeholder.svg"
-        width={130}
-      />
-
-      <div className="mt-4 flex w-full max-w-[316px] flex-col items-center">
-        <p className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] text-text-default">
-          {profile.displayName ?? profile.email ?? profile.studentNumber ?? "회원"}
-        </p>
-        <p className="mt-0.5 text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle">
-          {profile.displayName && profile.email
-            ? profile.email
-            : profile.accountLabel}
-        </p>
-        {(profile.displayName || profile.email) &&
-        (profile.studentNumber || profile.department) ? (
-          <p className="mt-1 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
-            {[profile.studentNumber, profile.department].filter(Boolean).join(" · ")}
-          </p>
-        ) : null}
-        {profile.roleLabel ? (
-          <Tag className="mt-2" size="sm" tone="primary">
-            {profile.roleLabel}
-          </Tag>
-        ) : null}
-        <Button
-          className="mt-5 !h-8 w-full !rounded-[var(--radius-lg)] !px-2 !text-[length:var(--font-size-body2)] !font-semibold"
-          isLoading={isLoggingOut}
-          onClick={onLogout}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          로그아웃
-        </Button>
-        {logoutError ? (
-          <p
-            className="mt-2 text-center text-[length:var(--font-size-caption1)] text-text-error"
-            role="alert"
-          >
-            {logoutError}
-          </p>
-        ) : null}
-      </div>
-
-      {profile.isUndergraduateResearcher !== undefined ? (
-        <div className="mt-4 w-full">
-          <ResearcherStatus
-            isUndergraduateResearcher={profile.isUndergraduateResearcher}
-            onChange={onChangeResearcherStatus}
-          />
-        </div>
-      ) : null}
-
-      {researchProfile ? (
-        <article className="mt-4 w-full rounded-[var(--radius-md)] border border-border-subtle bg-bg-default px-5 py-2.5">
-          <h2 className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] text-text-default">
-            {researchProfile.laboratoryName}
-          </h2>
-          <p className="mt-0.5 text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle">
-            {researchProfile.professorName} 교수 · {researchProfile.department}
-          </p>
-          <p className="mt-2 text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle">
-            {researchProfile.registeredAtLabel} 등록
-          </p>
-
-          <div className="mt-2">
-            <ResearchActivityTags tags={researchProfile.tags} />
-          </div>
-
-          <div className="my-3 border-t border-border-subtle" />
-
-          <CoffeeChatVisibility
-            checked={isCoffeeChatPublic}
-            onChange={onCoffeeChatPublicChange}
-          />
-
-          <ProfileEditButton label="정보 수정하기" onClick={onEdit} />
-        </article>
-      ) : null}
-
-      <WithdrawalButton onClick={onWithdrawalDialogOpen} />
-    </section>
-  );
-}
-
-function MobileProfileView({
-  isCoffeeChatPublic,
-  isLoggingOut,
-  logoutError,
-  onChangeResearcherStatus,
-  onCoffeeChatPublicChange,
-  onEdit,
-  onLogout,
-  onWithdrawalDialogOpen,
-  profile,
-}: ProfileViewProps) {
-  const researchProfile = profile.researchProfile;
-
-  return (
-    <section className="flex w-full flex-col gap-3.5" aria-label="회원 프로필">
-      <article className="flex flex-col gap-3 rounded-[var(--radius-xl)] border border-bg-default bg-bg-default p-3 shadow-[0_2px_8px_var(--color-opacity-black-10)]">
-        <div className="flex items-start gap-2.5">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-full border-2 border-[#749fda] text-[length:var(--font-size-body2)] text-text-default">
-            나
-          </div>
-          <div>
-            <p className="text-[length:var(--font-size-headline1)] font-semibold leading-[1.4] tracking-[-0.01em] text-text-default">
-              {profile.displayName ??
-                profile.email ??
-                profile.studentNumber ??
-                "회원"}
-            </p>
-            <p className="text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
-              {profile.displayName && profile.email
-                ? profile.email
-                : profile.accountLabel}
-            </p>
-            {(profile.displayName || profile.email) &&
-            (profile.studentNumber || profile.department) ? (
-              <p className="text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtlest">
-                {[profile.studentNumber, profile.department]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-            ) : null}
-          </div>
-        </div>
-        <Button
-          className="!h-8 w-full !rounded-[var(--radius-md)] !px-4 !text-[length:var(--font-size-body3)]"
-          isLoading={isLoggingOut}
-          onClick={onLogout}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          로그아웃
-        </Button>
-        {logoutError ? (
-          <p
-            className="text-center text-[length:var(--font-size-caption1)] text-text-error"
-            role="alert"
-          >
-            {logoutError}
-          </p>
-        ) : null}
-      </article>
-
-      {profile.isUndergraduateResearcher !== undefined ? (
-        <ResearcherStatus
-          isUndergraduateResearcher={profile.isUndergraduateResearcher}
-          onChange={onChangeResearcherStatus}
-        />
-      ) : null}
-
-      {researchProfile ? (
-        <MobileResearchProfile
-          isCoffeeChatPublic={isCoffeeChatPublic}
-          onCoffeeChatPublicChange={onCoffeeChatPublicChange}
-          onEdit={onEdit}
-          researchProfile={researchProfile}
-        />
-      ) : null}
-
-      <div className="flex justify-end">
-        <WithdrawalButton onClick={onWithdrawalDialogOpen} />
-      </div>
-    </section>
-  );
-}
-
-function MobileResearchProfile({
-  isCoffeeChatPublic,
-  onCoffeeChatPublicChange,
-  onEdit,
-  researchProfile,
-}: {
-  isCoffeeChatPublic: boolean;
-  onCoffeeChatPublicChange: (checked: boolean) => void;
-  onEdit?: () => void;
-  researchProfile: MemberResearchProfile;
-}) {
-  return (
-    <article className="flex flex-col gap-3 rounded-[var(--radius-2xl)] bg-bg-default px-4 py-3.5 shadow-[0_4px_16px_var(--color-opacity-black-10)]">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="truncate text-[length:var(--font-size-headline2)] font-semibold leading-[1.4] tracking-[-0.01em] text-text-default">
-          {researchProfile.laboratoryName}
-        </h2>
-        <span className="shrink-0 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
-          {researchProfile.registeredAtLabel} 등록
-        </span>
-      </div>
-      <ResearchActivityTags filled tags={researchProfile.tags} />
-      <div className="border-t border-button-tertiary py-[7px]">
-        <CoffeeChatVisibility
-          checked={isCoffeeChatPublic}
-          onChange={onCoffeeChatPublicChange}
-        />
-      </div>
-      <ProfileEditButton label="정보 수정" onClick={onEdit} />
-    </article>
-  );
-}
-
-function CoffeeChatVisibility({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-[length:var(--font-size-headline2)] font-semibold leading-[1.4] tracking-[-0.01em] text-text-subtle md:text-[length:var(--font-size-body2)] md:font-medium md:leading-[1.5] md:tracking-normal md:text-text-default">
-        커피챗 공개
-      </span>
-      <Toggle
-        checked={checked}
-        className="sr-only"
-        onChange={(event) => onChange(event.target.checked)}
-      >
-        커피챗 공개 여부
-      </Toggle>
-    </div>
-  );
-}
-
-function ProfileEditButton({ label, onClick }: { label: string; onClick?: () => void }) {
-  return (
-    <Button
-      className="!h-8 w-full !rounded-[var(--radius-md)] !px-2 !text-[length:var(--font-size-body3)] md:mt-3 md:!text-[length:var(--font-size-body2)] md:!font-semibold"
-      onClick={onClick}
-      size="sm"
-      type="button"
-      variant="outline"
-    >
-      {label}
-    </Button>
-  );
-}
-
-function WithdrawalButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      className="cursor-pointer text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtlest underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary md:mt-4"
-      onClick={onClick}
-      type="button"
-    >
-      회원탈퇴
-    </button>
-  );
-}
-
-export function MemberProfilePanel({
-  initialWithdrawalDialogOpen = false,
-  onChangeResearcherStatus,
-  onEdit,
-  onLogout,
-  onWithdraw,
-  profile,
-}: MemberProfilePanelProps) {
+export function MemberProfilePanel({ initialWithdrawalDialogOpen = false, onChangeResearcherStatus, onEdit, onLogout, onWithdraw, onSaveContact, mockContacts, bookmarks, profile }: MemberProfilePanelProps) {
   const router = useRouter();
-  const [isCoffeeChatPublic, setIsCoffeeChatPublic] = useState(
-    profile.researchProfile?.coffeeChatPublic ?? false,
-  );
-  const [isWithdrawalDialogOpen, setIsWithdrawalDialogOpen] = useState(
-    initialWithdrawalDialogOpen,
-  );
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
-  const [logoutError, setLogoutError] = useState<string>();
-  const [withdrawalError, setWithdrawalError] = useState<string>();
-
-  async function handleLogout() {
-    if (isLoggingOut || isWithdrawing) return;
-
-    setLogoutError(undefined);
-    setIsLoggingOut(true);
-
-    if (onLogout) {
-      await onLogout();
-      setIsLoggingOut(false);
-      return;
-    }
-
-    const result = await logout();
-
-    if (result.ok) {
-      router.replace("/login");
-      router.refresh();
-      return;
-    }
-
-    setLogoutError(result.message);
-    setIsLoggingOut(false);
+  const [dialogOpen, setDialogOpen] = useState(initialWithdrawalDialogOpen);
+  const [pending, setPending] = useState<"logout" | "withdraw" | null>(null);
+  const [error, setError] = useState("");
+  const busy = useRef(false);
+  const isProfessor = profile.userType === "PROFESSOR";
+  const isResearcher = profile.userType === "RESEARCHER" || profile.isUndergraduateResearcher === true;
+  const research = profile.researchProfile;
+  async function act(kind: "logout" | "withdraw") {
+    if (busy.current) return;
+    busy.current = true; setPending(kind); setError("");
+    try {
+      const callback = kind === "logout" ? onLogout : onWithdraw;
+      if (callback) { await callback(); if (kind === "withdraw") setDialogOpen(false); }
+      else {
+        const result = await (kind === "logout" ? logout() : withdrawMember());
+        if (!result.ok) { if (result.requiresLogin) { router.replace("/login"); router.refresh(); return; } throw new Error(result.message); }
+        router.replace("/login"); router.refresh();
+      }
+    } catch (failure) { setError(failure instanceof Error ? failure.message : "요청을 완료하지 못했어요."); }
+    finally { busy.current = false; setPending(null); }
   }
-
-  const sharedProps: ProfileViewProps = {
-    isCoffeeChatPublic,
-    isLoggingOut,
-    logoutError,
-    onChangeResearcherStatus,
-    onCoffeeChatPublicChange: setIsCoffeeChatPublic,
-    onEdit,
-    onLogout: handleLogout,
-    onWithdrawalDialogOpen: () => {
-      setWithdrawalError(undefined);
-      setIsWithdrawalDialogOpen(true);
-    },
-    profile,
-  };
-
-  async function handleWithdraw() {
-    if (isWithdrawing || isLoggingOut) return;
-
-    setWithdrawalError(undefined);
-    setIsWithdrawing(true);
-
-    if (onWithdraw) {
-      await onWithdraw();
-      setIsWithdrawing(false);
-      setIsWithdrawalDialogOpen(false);
-      return;
-    }
-
-    const result = await withdrawMember();
-
-    if (result.ok || result.requiresLogin) {
-      router.replace("/login");
-      router.refresh();
-      return;
-    }
-
-    setWithdrawalError(result.message);
-    setIsWithdrawing(false);
-  }
-
-  function closeWithdrawalDialog() {
-    if (isWithdrawing) return;
-
-    setWithdrawalError(undefined);
-    setIsWithdrawalDialogOpen(false);
-  }
-
-  return (
-    <>
-      <div className="md:hidden">
-        <MobileProfileView {...sharedProps} />
+  function closeDialog() { if (!busy.current) { setDialogOpen(false); setError(""); } }
+  return <>
+    <div className="flex items-center justify-between gap-4">
+      <h1 className="flex min-w-0 flex-wrap items-baseline gap-x-10 gap-y-1">
+        <span className="text-[22px] font-semibold leading-[1.5] text-text-subtle">{profile.studentNumber || profile.displayName || profile.roleLabel}</span>
+        {profile.department ? <span className="text-base leading-6 text-text-subtle">{profile.department}</span> : null}
+      </h1>
+      <Button className="!h-[33px] !w-[100px] !rounded-lg !px-0 !text-sm" variant="outline" size="sm" isLoading={pending === "logout"} disabled={Boolean(pending)} onClick={() => void act("logout")}>로그아웃</Button>
+    </div>
+    {!dialogOpen && error ? <p role="alert" className="mt-3 text-sm text-text-error">{error}</p> : null}
+    <div className="mt-5 grid min-w-0 gap-[30px] lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="flex min-w-0 flex-col gap-[30px]">
+        {!isProfessor ? <section className="flex items-center justify-between gap-3 rounded-xl bg-bg-default px-5 py-3 shadow-[0_2px_4px_var(--color-opacity-black-10)]">
+          <h2 className="text-base font-semibold leading-6 text-text-subtle">학부연구생 여부</h2>
+          <div className="flex items-center gap-2"><span className="text-lg font-semibold leading-[1.4] text-text-subtle">{isResearcher ? "예" : "아니요"}</span>{onChangeResearcherStatus ? <button className="cursor-pointer text-xs text-text-subtlest underline" type="button" onClick={onChangeResearcherStatus}>변경</button> : null}</div>
+        </section> : null}
+        {(isResearcher || isProfessor) && research ? <div className="grid min-w-0 gap-[30px] sm:grid-cols-2">
+          <section className="min-w-0 rounded-xl bg-bg-default px-5 py-3 shadow-[0_2px_4px_var(--color-opacity-black-10)]">
+            {research.laboratoryId ? <Link className="hover:underline" href={`/labs/${research.laboratoryId}`}><h2 className="break-words text-xl font-bold leading-[1.5] text-text-subtle">{research.laboratoryName}</h2></Link> : <h2 className="break-words text-xl font-bold text-text-subtle">{research.laboratoryName}</h2>}
+            <p className="mt-1 text-sm font-semibold leading-[1.5] text-text-subtlest">{[research.professorName ? `${research.professorName} 교수` : "", research.department].filter(Boolean).join(" · ")}</p>
+            {research.tags.length ? <div className="mt-3 flex flex-wrap gap-2 border-t border-border-subtlest pt-3">{research.tags.map((tag) => <Tag key={tag} size="sm" tone="primary" className="!bg-[#bfd5f3]">{tag}</Tag>)}</div> : null}
+            {onEdit ? <button type="button" className="mt-3 block w-full cursor-pointer text-center text-xs text-text-primary underline" onClick={onEdit}>정보 수정하기</button> : null}
+          </section>
+          {isResearcher ? <CoffeeChatSettings research={research} onSaveContact={onSaveContact} mockContacts={mockContacts} /> : null}
+        </div> : null}
+        {isResearcher && !research ? <p className="text-sm text-text-subtle">연결된 연구실 정보가 없어요.</p> : null}
+        {!isResearcher && !isProfessor ? bookmarks : null}
       </div>
-      <div className="hidden md:block">
-        <DesktopProfileView {...sharedProps} />
+      {isResearcher || isProfessor ? <div className="min-w-0">{bookmarks}</div> : null}
+    </div>
+    <div className="mt-20 text-center"><button type="button" className="cursor-pointer text-xs text-text-subtlest underline" disabled={Boolean(pending)} onClick={() => { setError(""); setDialogOpen(true); }}>탈퇴하기</button></div>
+    <Dialog isOpen={dialogOpen} onClose={closeDialog} title="정말 탈퇴하시겠어요?" variant="confirmation">
+      <div className="mt-3 flex flex-col gap-3">
+        <p className="text-center text-sm leading-[1.5] text-text-subtle">{profile.hasContributedReview ? "제공하신 연구실 정보를 제외한 모든 기록은 삭제되며," : "탈퇴하면 기록이 모두 삭제되며,"}<br />삭제된 데이터는 복구할 수 없어요.</p>
+        <div className="flex gap-3"><Button autoFocus className="!h-8 flex-1 !rounded-lg !px-4 !text-sm" disabled={Boolean(pending)} variant="tertiary" size="sm" onClick={closeDialog}>취소</Button><Button className="!h-8 flex-1 !rounded-lg !bg-bg-error !px-4 !text-sm !text-text-inverse hover:!bg-[var(--color-red-red-400)]" size="sm" isLoading={pending === "withdraw"} disabled={Boolean(pending)} onClick={() => void act("withdraw")}>탈퇴하기</Button></div>
+        {error ? <p role="alert" className="text-center text-xs text-text-error">{error}</p> : null}
       </div>
-
-      <Dialog
-        isOpen={isWithdrawalDialogOpen}
-        onClose={closeWithdrawalDialog}
-        title="정말 탈퇴하시겠어요?"
-        variant="confirmation"
-      >
-        <div className="mt-3 flex flex-col gap-3">
-          <p className="text-center text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle">
-            탈퇴하면 기록이 모두 삭제되며,
-            <br />
-            삭제된 데이터는 복구할 수 없어요.
-          </p>
-          <div className="flex gap-3">
-            <Button
-              autoFocus
-              className="!h-8 flex-1 !rounded-[var(--radius-md)] !px-4 !text-[length:var(--font-size-body3)]"
-              disabled={isWithdrawing}
-              onClick={closeWithdrawalDialog}
-              size="sm"
-              type="button"
-              variant="tertiary"
-            >
-              취소
-            </Button>
-            <Button
-              className="!h-8 flex-1 !rounded-[var(--radius-md)] !border-border-error !px-4 !text-[length:var(--font-size-body3)] !text-text-error hover:!bg-[color:var(--color-red-red-50)]"
-              isLoading={isWithdrawing}
-              onClick={handleWithdraw}
-              size="sm"
-              type="button"
-              variant="outline"
-            >
-              탈퇴하기
-            </Button>
-          </div>
-          {withdrawalError ? (
-            <p
-              className="text-center text-[length:var(--font-size-caption1)] text-text-error"
-              role="alert"
-            >
-              {withdrawalError}
-            </p>
-          ) : null}
-        </div>
-      </Dialog>
-    </>
-  );
+    </Dialog>
+  </>;
 }
