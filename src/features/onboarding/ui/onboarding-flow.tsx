@@ -184,7 +184,7 @@ export function OnboardingFlow({
         currentStep={currentStep}
         totalSteps={isFinder ? 3 : 8}
       />
-      <section className="mx-auto flex w-full max-w-[680px] flex-col gap-[var(--spacing-spacing-4)] overflow-y-auto overscroll-y-contain px-[var(--spacing-spacing-4)] pb-[max(var(--spacing-spacing-10),env(safe-area-inset-bottom))] pt-[var(--spacing-spacing-10)] text-text-default max-md:min-h-0 max-md:flex-1 md:overflow-visible md:px-0">
+      <section className="mx-auto flex w-full max-w-[680px] flex-col gap-[var(--spacing-spacing-4)] overflow-y-auto overscroll-y-contain px-[var(--spacing-spacing-4)] pb-[max(var(--spacing-spacing-10),env(safe-area-inset-bottom))] pt-[var(--spacing-spacing-10)] text-text-default max-md:min-h-0 max-md:flex-1 max-md:[scrollbar-width:none] md:overflow-visible md:px-0">
         <ChatMessage sender="bot">똑똑에 오신 걸 환영해요!</ChatMessage>
         {activeQuestions.slice(0, completedQuestionCount).map((question) => (
           <div className="contents" key={question.id}>
@@ -391,7 +391,9 @@ export function OnboardingFlow({
                 selectedLaboratoryId: selectedLaboratory?.laboratoryId,
               })
             ) : (
-              <div className="ml-auto w-full max-w-[444px]">
+              <div
+                className={`ml-auto w-full max-w-[444px] ${currentQuestion.id === "interest" ? "max-md:max-w-[320px]" : ""}`}
+              >
                 <Field
                   aria-label={
                     currentQuestion.id === "interest"
