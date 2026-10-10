@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import type { LabDetail, LabDetailListState, LabPaper } from "@/entities/lab";
 import { Tag } from "@/shared/ui";
+import { ContactEmailButton } from "@/features/write-contact-email";
 
 import { DetailRetryButton } from "./detail-retry-button";
 
@@ -241,6 +242,14 @@ export function ProfessorCard({
           </a>
         ) : null}
       </div>
+      <ContactEmailButton
+        key={lab.labId}
+        recipient={{
+          professorName: professor?.name ?? lab.professorName,
+          labName: lab.name,
+          email: professor?.email ?? null,
+        }}
+      />
       <div className="mt-3 border-t border-border-subtle pt-3">
         <h3 className="flex items-center text-[length:var(--font-size-label1)] font-semibold text-text-subtle">
           최근 논문

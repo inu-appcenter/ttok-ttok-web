@@ -8,6 +8,8 @@ export type DialogProps = {
   children: ReactNode;
   className?: string;
   isOpen: boolean;
+  headerLayout?: "default" | "inline";
+  closeIconSrc?: string;
   mobileBottomSheet?: boolean;
   onClose: () => void;
   title: string;
@@ -18,6 +20,8 @@ export function Dialog({
   children,
   className,
   isOpen,
+  headerLayout = "default",
+  closeIconSrc = "/icons/home/mobile/close.svg",
   mobileBottomSheet = false,
   onClose,
   title,
@@ -45,6 +49,7 @@ export function Dialog({
   if (!isOpen) return null;
 
   const isConfirmation = variant === "confirmation";
+  const inlineHeader = headerLayout === "inline";
 
   return (
     <div
@@ -69,12 +74,22 @@ export function Dialog({
         ) : (
           <header
             className={
-              mobileBottomSheet
-                ? "flex items-center justify-between px-5 pt-4 md:block md:pt-5"
-                : "px-5 pt-5"
+              inlineHeader
+                ? "flex items-center justify-between px-6 pt-6"
+                : mobileBottomSheet
+                  ? "flex items-center justify-between px-5 pt-4 md:block md:pt-5"
+                  : "px-5 pt-5"
             }
           >
-            <div className={mobileBottomSheet ? "order-2 md:flex md:justify-end" : "flex justify-end"}>
+            <div
+              className={
+                inlineHeader
+                  ? "order-2"
+                  : mobileBottomSheet
+                    ? "order-2 md:flex md:justify-end"
+                    : "flex justify-end"
+              }
+            >
               <button
                 aria-label="닫기"
                 autoFocus
@@ -82,14 +97,16 @@ export function Dialog({
                 onClick={onClose}
                 type="button"
               >
-                <Image alt="" fill src="/icons/home/mobile/close.svg" />
+                <Image alt="" fill src={closeIconSrc} />
               </button>
             </div>
             <div
               className={
-                mobileBottomSheet
-                  ? "order-1 text-left md:order-2 md:border-b md:border-border-subtle md:pb-[22px] md:text-center"
-                  : "border-b border-border-subtle pb-[22px] text-center"
+                inlineHeader
+                  ? "order-1 text-left"
+                  : mobileBottomSheet
+                    ? "order-1 text-left md:order-2 md:border-b md:border-border-subtle md:pb-[22px] md:text-center"
+                    : "border-b border-border-subtle pb-[22px] text-center"
               }
             >
               <h2
