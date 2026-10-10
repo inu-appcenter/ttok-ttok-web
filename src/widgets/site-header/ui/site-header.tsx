@@ -60,7 +60,10 @@ export function SiteHeader({
             <Logo className="w-12 md:w-[72px]" priority variant="wordmark" />
           </Link>
 
-          <nav aria-label="주요 메뉴" className="hidden items-center gap-[var(--spacing-spacing-8)] md:flex">
+          <nav
+            aria-label="주요 메뉴"
+            className="hidden items-center gap-[var(--spacing-spacing-8)] md:flex"
+          >
             {navigationItems.map((item) => {
               const isActive = activeItem === item.id;
               const isAi = item.id === "ai";
@@ -106,7 +109,12 @@ export function SiteHeader({
               className="hidden cursor-pointer items-center gap-[var(--spacing-spacing-0-5)] rounded-sm px-[var(--spacing-spacing-1)] text-[22px] font-semibold leading-[1.5] tracking-[-0.01em] text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary md:flex"
               href="/mypage"
             >
-              <Image alt="" height={22} src="/icons/header/profile.svg" width={22} />
+              <Image
+                alt=""
+                height={22}
+                src="/icons/header/profile.svg"
+                width={22}
+              />
               마이페이지
             </Link>
           ) : (

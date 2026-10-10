@@ -251,7 +251,10 @@ export function ProfessorCard({
         }}
       />
       <div className="mt-3 border-t border-border-subtle pt-3">
-        <Link href={`/labs/${lab.laboratoryId}/papers`} className="flex items-center text-[length:var(--font-size-label1)] font-semibold text-text-subtle hover:underline focus-visible:outline-2 focus-visible:outline-border-primary">
+        <Link
+          href={`/labs/${lab.laboratoryId}/papers`}
+          className="flex items-center text-[length:var(--font-size-label1)] font-semibold text-text-subtle hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
+        >
           최근 논문
           <Image
             alt=""

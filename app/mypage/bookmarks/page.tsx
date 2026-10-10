@@ -7,7 +7,11 @@ import { getAuthSession } from "@/shared/lib/auth/session";
 export default async function Page() {
   if (!(await getAuthSession()).isAuthenticated) redirect("/login");
   let bookmarks;
-  try { bookmarks = await getMyBookmarks(); }
-  catch (error) { if (error instanceof AuthenticatedApiError && error.status === 401) redirect("/login"); }
+  try {
+    bookmarks = await getMyBookmarks();
+  } catch (error) {
+    if (error instanceof AuthenticatedApiError && error.status === 401)
+      redirect("/login");
+  }
   return <BookmarksPage initialBookmarks={bookmarks} />;
 }
