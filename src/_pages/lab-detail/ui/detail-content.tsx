@@ -190,7 +190,14 @@ export function PaperTitle({ paper }: { paper: LabPaper }) {
   );
 }
 
-export function ProfessorCard({ lab }: { lab: LabDetail; isMobile?: boolean }) {
+export function ProfessorCard({
+  lab,
+  isAuthenticated = false,
+}: {
+  lab: LabDetail;
+  isMobile?: boolean;
+  isAuthenticated?: boolean;
+}) {
   const professor = lab.professor;
   return (
     <section className="min-w-0 rounded-[var(--radius-2xl)] bg-bg-default p-4 shadow-[0_4px_16px_var(--color-opacity-black-10)]">
@@ -206,6 +213,7 @@ export function ProfessorCard({ lab }: { lab: LabDetail; isMobile?: boolean }) {
           ) : null}
         </div>
         <ContactEmailButton
+          isAuthenticated={isAuthenticated}
           compact
           key={lab.labId}
           recipient={{

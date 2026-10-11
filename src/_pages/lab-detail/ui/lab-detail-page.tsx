@@ -123,7 +123,7 @@ export function LabDetailPage({
           </dl>
         </section>
 
-        <ProfessorCard isMobile lab={lab} />
+        <ProfessorCard isMobile lab={lab} isAuthenticated={isAuthenticated} />
 
         <section className="rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)]">
           <h2 className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5]">
@@ -165,6 +165,7 @@ export function LabDetailPage({
           onSave={onProvideInfo}
           laboratoryId={lab.laboratoryId}
           canContribute={canContribute}
+          isAuthenticated={isAuthenticated}
         />
         <div className="text-center">
           <ReportLabButton />
@@ -281,7 +282,7 @@ export function LabDetailPage({
             </section>
           ) : null}
           {lab.metrics ? <ResearchMetrics metrics={lab.metrics} /> : null}
-          <ProfessorCard lab={lab} />
+          <ProfessorCard lab={lab} isAuthenticated={isAuthenticated} />
           <LabContactCard
             laboratoryId={lab.laboratoryId}
             contact={lab.contact}
@@ -292,6 +293,7 @@ export function LabDetailPage({
               onSave={onProvideInfo}
               laboratoryId={lab.laboratoryId}
               canContribute={canContribute}
+              isAuthenticated={isAuthenticated}
             />
           </div>
         </aside>

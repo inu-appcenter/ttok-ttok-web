@@ -19,9 +19,11 @@ import {
 function SubmissionToast({
   onDismiss,
   title,
+  state = "success",
 }: {
   onDismiss: () => void;
   title: string;
+  state?: "success" | "warning";
 }) {
   useEffect(() => {
     const timeout = window.setTimeout(onDismiss, 3000);
@@ -29,8 +31,8 @@ function SubmissionToast({
   }, [onDismiss]);
 
   return (
-    <div className="fixed left-1/2 top-3 z-[120] -translate-x-1/2">
-      <Toast state="success" title={title} />
+    <div className="fixed left-1/2 top-3 z-[120] max-w-[calc(100vw-32px)] -translate-x-1/2">
+      <Toast state={state} title={title} />
     </div>
   );
 }
@@ -154,10 +156,12 @@ const TASK_OPTIONS = [
 export function ProvideLabInfoCard({
   laboratoryId,
   canContribute = false,
+  isAuthenticated = false,
   onSave,
 }: {
   laboratoryId?: number;
   canContribute?: boolean;
+  isAuthenticated?: boolean;
   onSave?: (values: {
     coreTime: string;
     weeklyMeeting: string;
@@ -167,6 +171,7 @@ export function ProvideLabInfoCard({
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [toastTitle, setToastTitle] = useState("");
+  const [accessNotice, setAccessNotice] = useState("");
   const [coreTime, setCoreTime] = useState("");
   const [meetingFrequency, setMeetingFrequency] = useState("");
   const [tasks, setTasks] = useState<string[]>([]);
@@ -232,7 +237,17 @@ export function ProvideLabInfoCard({
     <>
       <button
         className="flex w-full cursor-pointer flex-col items-center justify-center rounded-[var(--radius-2xl)] border border-border-primary bg-bg-default px-3 py-2 text-center transition-colors hover:bg-bg-primary-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-        onClick={() => setIsDialogOpen(true)}
+        onClick={() => {
+          if (!isAuthenticated || !canContribute) {
+            setAccessNotice(
+              isAuthenticated
+                ? "이 연구실 소속 학부연구생만 정보를 제공할 수 있어요."
+                : "로그인 후 소속 학부연구생만 정보를 제공할 수 있어요.",
+            );
+            return;
+          }
+          setIsDialogOpen(true);
+        }}
         type="button"
       >
         <span className="text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle">
@@ -243,6 +258,13 @@ export function ProvideLabInfoCard({
         </strong>
       </button>
 
+      {accessNotice ? (
+        <SubmissionToast
+          state="warning"
+          title={accessNotice}
+          onDismiss={() => setAccessNotice("")}
+        />
+      ) : null}
       <Dialog
         className="max-w-[483px]"
         isOpen={isDialogOpen}
