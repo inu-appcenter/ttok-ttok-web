@@ -1,6 +1,7 @@
 type OnboardingQuestionId =
   | "purpose"
   | "department"
+  | "departmentConfirmation"
   | "interest"
   | "lab"
   | "coreTime"
@@ -50,6 +51,16 @@ const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
     helper: "연구실 이름이나 교수님 성함을 입력하면 찾을 수 있어요",
     type: "lab-search",
   },
+  {
+    id: "departmentConfirmation",
+    question: "선택한 연구실과 같은 학과 소속인가요?",
+    type: "choice",
+    options: [
+      { label: "네, 맞아요", value: "네, 맞아요" },
+      { label: "아니요, 다른 학과에요", value: "아니요, 다른 학과에요" },
+    ],
+  },
+  { id: "department", question: "소속 학과를 선택해주세요", type: "text" },
   { id: "coreTime", question: "연구실에 코어타임이 있나요?", type: "choice" },
   {
     id: "meetingFrequency",
@@ -87,6 +98,7 @@ function toOptions(values: string[]) {
 function getOnboardingQuestions(
   purpose?: string,
   reviewOptions?: OnboardingReviewOptions,
+  answers: OnboardingAnswers = {},
 ) {
   const questions = ONBOARDING_QUESTIONS.map((question) => {
     if (question.id === "coreTime") {
@@ -109,7 +121,13 @@ function getOnboardingQuestions(
 
   return purpose === ONBOARDING_PURPOSE.explore
     ? [questions[0], ...FINDER_QUESTIONS]
-    : questions;
+    : questions.filter((question) => {
+        if (question.id === "department")
+          return answers.departmentConfirmation === "아니요, 다른 학과에요";
+        if (question.id === "contact")
+          return answers.coffeeChat !== "아니요, 괜찮아요";
+        return true;
+      });
 }
 
 const FINDER_QUESTIONS: OnboardingQuestion[] = [
