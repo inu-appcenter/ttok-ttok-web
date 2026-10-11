@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { ComponentProps } from "react";
 
 import type { LabDetail } from "@/entities/lab";
 import {
@@ -26,6 +27,7 @@ export type LabDetailPageProps = {
   lab: LabDetail;
   bookmarkActions?: BookmarkActions;
   canContribute?: boolean;
+  onProvideInfo?: ComponentProps<typeof ProvideLabInfoCard>["onSave"];
 };
 
 function getHomepageLabel(homepageUrl: string) {
@@ -45,6 +47,7 @@ export function LabDetailPage({
   lab,
   bookmarkActions,
   canContribute = false,
+  onProvideInfo,
 }: LabDetailPageProps) {
   const { memberCounts } = lab;
   const aiSummary = lab.description.trim()
@@ -159,6 +162,7 @@ export function LabDetailPage({
           isAuthenticated={isAuthenticated}
         />
         <ProvideLabInfoCard
+          onSave={onProvideInfo}
           laboratoryId={lab.laboratoryId}
           canContribute={canContribute}
         />
@@ -285,6 +289,7 @@ export function LabDetailPage({
           />
           <div className="mt-auto pt-12">
             <ProvideLabInfoCard
+              onSave={onProvideInfo}
               laboratoryId={lab.laboratoryId}
               canContribute={canContribute}
             />

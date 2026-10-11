@@ -388,7 +388,7 @@ export function ContactEmailButton({
         onClick={() => setIsOpen(true)}
       >
         {compact ? (
-          <>
+          <span className="inline-flex items-center gap-1">
             <Image
               alt=""
               src="/icons/lab-detail/mail-sparkles.svg"
@@ -396,7 +396,7 @@ export function ContactEmailButton({
               height={12}
             />
             AI 메일 첨삭
-          </>
+          </span>
         ) : (
           "교수님께 메일 쓰기"
         )}

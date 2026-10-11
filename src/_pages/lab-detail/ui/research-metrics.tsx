@@ -110,8 +110,14 @@ export function ResearchMetrics({ metrics }: { metrics: LabResearchMetrics }) {
           ) : null}
           {activeMetric === "citations" ? (
             <>
-              <div aria-label="피인용지수 계산 예시" className="mt-3 rounded-[var(--radius-2xl)] border border-icon-disabled p-3">
-                <p className="sr-only">다음은 설명을 위한 예시이며 이 연구실의 실제 논문별 인용 횟수가 아닙니다.</p>
+              <div
+                aria-label="피인용지수 계산 예시"
+                className="mt-3 rounded-[var(--radius-2xl)] border border-icon-disabled p-3"
+              >
+                <p className="sr-only">
+                  다음은 설명을 위한 예시이며 이 연구실의 실제 논문별 인용
+                  횟수가 아닙니다.
+                </p>
                 {[10, 6, 3, 2].map((count, index) => (
                   <div
                     className="mb-2 flex items-center gap-[10px] text-[length:var(--font-size-label2)]"

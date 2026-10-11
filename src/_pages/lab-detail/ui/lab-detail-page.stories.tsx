@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { getRouter } from "@storybook/nextjs-vite/navigation.mock";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import { MOCK_LAB_DETAILS } from "@/entities/lab";
 
@@ -19,7 +19,9 @@ const DESIGN_LAB = {
   projects: [
     {
       id: "ongoing",
-      title: "그래프 스트림 이상 탐지 고도화 연구",
+      title:
+        "탄소섬유·고분자 기지재의 제조-구조-물성 상관성을 활용한 CFRP 구조체의 피로수명 예측용 멀티스케일 데이터 기반 설계 플랫폼",
+      keywords: ["멀티스케일 해석", "탄소섬유", "고분자 복합소재"],
       isOngoing: true,
       period: "2024.04 – 2027.03",
       agency: "과학기술정보통신부",
@@ -29,6 +31,7 @@ const DESIGN_LAB = {
     {
       id: "ended",
       title: "LSM 기반 저장 엔진 쓰기 증폭 최적화",
+      keywords: ["멀티스케일 해석", "탄소섬유", "고분자 복합소재"],
       isOngoing: false,
       period: "2021.06 – 2023.12",
       agency: "산업통상자원부",
@@ -89,6 +92,92 @@ export const Authenticated: Story = {
   args: {
     isAuthenticated: true,
     lab: DESIGN_LAB,
+  },
+};
+
+export const NoPublicContact: Story = {
+  args: {
+    isAuthenticated: true,
+    lab: {
+      ...DESIGN_LAB,
+      contact: { email: "", openChatUrl: "", members: [] },
+    },
+  },
+};
+
+export const LoginRequired: Story = {
+  args: { lab: DESIGN_LAB },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas
+        .getAllByRole("button", { name: "로그인하고 커피챗 확인하기" })
+        .find((button) => button.getClientRects().length > 0)!,
+    );
+    const dialog = within(canvas.getByRole("dialog", { name: "로그인 필요" }));
+    await expect(
+      dialog.getByRole("link", { name: "인천대학교 포털 로그인 ↗" }),
+    ).toHaveAttribute(
+      "href",
+      `/login?returnTo=${encodeURIComponent(`/labs/${DESIGN_LAB.laboratoryId}`)}`,
+    );
+  },
+};
+
+export const ProvideInformation: Story = {
+  args: {
+    lab: DESIGN_LAB,
+    isAuthenticated: true,
+    canContribute: true,
+    onProvideInfo: fn(async () => {}),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas
+        .getAllByRole("button", { name: /이 랩 학부연구생이신가요/ })
+        .find((button) => button.getClientRects().length > 0)!,
+    );
+    const dialog = within(
+      canvas.getByRole("dialog", { name: "정보 제공하기" }),
+    );
+    await userEvent.click(
+      within(dialog.getByRole("group", { name: "코어타임" })).getByRole(
+        "radio",
+        { name: "없음" },
+      ),
+    );
+    await userEvent.click(dialog.getByRole("radio", { name: "주 1회" }));
+    await userEvent.click(dialog.getByRole("checkbox", { name: "실험/코딩" }));
+    await userEvent.click(
+      dialog.getByRole("checkbox", { name: "데이터 라벨링" }),
+    );
+  },
+};
+
+export const ProvideInformationSaveFailure: Story = {
+  args: {
+    lab: DESIGN_LAB,
+    isAuthenticated: true,
+    canContribute: true,
+    onProvideInfo: fn(async () => {
+      throw new Error("정보를 저장하지 못했어요.");
+    }),
+  },
+  play: async (context) => {
+    await ProvideInformation.play!(context);
+    const dialog = within(
+      within(context.canvasElement).getByRole("dialog", {
+        name: "정보 제공하기",
+      }),
+    );
+    await userEvent.click(dialog.getByRole("button", { name: "완료" }));
+    await expect(await dialog.findByRole("alert")).toHaveTextContent(
+      "정보를 저장하지 못했어요.",
+    );
+    await expect(
+      dialog.getByRole("checkbox", { name: "실험/코딩" }),
+    ).toBeChecked();
   },
 };
 

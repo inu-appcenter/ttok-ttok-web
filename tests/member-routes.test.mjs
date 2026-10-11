@@ -416,6 +416,32 @@ test("연구실 리뷰는 제공 이력에 따라 생성과 수정을 구분한�
     ["POST", "PATCH"],
   );
 });
+test("상세의 정보 제공은 현재 상세와 본인 소속 연구실이 일치해야 저장한다", async () => {
+  const body = {
+    coreTime: "있음",
+    weeklyMeeting: "주 1회",
+    doings: ["실험/코딩"],
+    laboratoryId: 999,
+  };
+  assert.equal(
+    (await request("/api/member/review", { method: "POST", body })).status,
+    403,
+  );
+  assert.equal(
+    calls.some((call) => call.path === "/api/lab-review"),
+    false,
+  );
+  assert.equal(
+    (
+      await request("/api/member/review", {
+        method: "POST",
+        body: { ...body, laboratoryId: 157 },
+      })
+    ).status,
+    200,
+  );
+});
+
 test("논문 전체보기는 두 번째 페이지까지 조회해 마지막 논문을 렌더링한다", async () => {
   const response = await request("/labs/157/papers");
   assert.equal(response.status, 200);
