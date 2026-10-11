@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button, Field, Logo } from "@/shared/ui";
+import { getLabReturnPath } from "@/shared/lib/auth/return-path";
 
 import { login } from "../api/login";
 
@@ -12,9 +13,13 @@ const LOGIN_ERROR_MESSAGE = "학번 또는 비밀번호가 일치하지 않습�
 
 export type LoginFormProps = {
   initialHasError?: boolean;
+  returnTo?: string;
 };
 
-export function LoginForm({ initialHasError = false }: LoginFormProps) {
+export function LoginForm({
+  initialHasError = false,
+  returnTo,
+}: LoginFormProps) {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState(
     initialHasError ? LOGIN_ERROR_MESSAGE : "",
@@ -54,7 +59,12 @@ export function LoginForm({ initialHasError = false }: LoginFormProps) {
       return;
     }
 
-    router.replace(result.isNew ? "/onboarding" : "/");
+    const destination = getLabReturnPath(returnTo);
+    router.replace(
+      result.isNew
+        ? `/onboarding${destination ? `?returnTo=${encodeURIComponent(destination)}` : ""}`
+        : (destination ?? "/"),
+    );
     router.refresh();
   };
 

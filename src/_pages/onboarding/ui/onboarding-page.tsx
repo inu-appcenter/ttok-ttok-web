@@ -3,6 +3,7 @@ import type { OnboardingReviewOptions } from "@/features/onboarding";
 import type { CollegeOption } from "@/entities/lab";
 
 export type OnboardingPageProps = {
+  completionHref?: string;
   colleges?: CollegeOption[];
   collegesError?: string;
   reviewOptions?: OnboardingReviewOptions;
@@ -10,6 +11,7 @@ export type OnboardingPageProps = {
 };
 
 export function OnboardingPage({
+  completionHref,
   colleges,
   collegesError,
   reviewOptions,
@@ -17,6 +19,7 @@ export function OnboardingPage({
 }: OnboardingPageProps) {
   return (
     <OnboardingChat
+      completionHref={completionHref}
       colleges={colleges}
       collegesError={collegesError}
       reviewOptions={reviewOptions}

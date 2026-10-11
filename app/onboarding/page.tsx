@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getLabReturnPath } from "@/shared/lib/auth/return-path";
 import { redirect } from "next/navigation";
 
 import { getAuthSession } from "@/shared/lib/auth/session";
@@ -9,7 +10,12 @@ import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
 import { OnboardingPage } from "@/_pages/onboarding";
 import { getCollegeOptions } from "@/entities/lab/api/get-college-options";
 
-export default async function OnboardingRoute() {
+export default async function OnboardingRoute({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string | string[] }>;
+}) {
+  const returnTo = getLabReturnPath((await searchParams).returnTo);
   const { isAuthenticated } = await getAuthSession();
 
   if (!isAuthenticated) {
@@ -35,6 +41,7 @@ export default async function OnboardingRoute() {
 
   return (
     <OnboardingPage
+      completionHref={returnTo}
       colleges={collegeResult.status === "fulfilled" ? collegeResult.value : []}
       collegesError={
         collegeResult.status === "rejected"
