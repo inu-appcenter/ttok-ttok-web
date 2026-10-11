@@ -69,6 +69,15 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     lab: DESIGN_LAB,
+    isAuthenticated: false,
+    bookmarkActions: { onLoad: fn().mockResolvedValue([]) },
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      canvas.getByRole("link", { name: "관심 연구실" }),
+    ).toHaveAttribute("href", "/login");
+    await expect(args.bookmarkActions?.onLoad).not.toHaveBeenCalled();
   },
 };
 
