@@ -70,14 +70,19 @@ export function toResearchProject(value: unknown): LabResearchProject {
     id: String(item.id),
     title: getRequiredString(item.titleKorean),
     isOngoing: item.ongoing,
-    period: [
-      formatDate(item.totalPeriodStart || item.periodStart),
-      formatDate(item.totalPeriodEnd || item.periodEnd),
-    ]
+    period: [formatDate(item.periodStart), formatDate(item.periodEnd)]
       .filter(Boolean)
       .join(" – "),
     agency: getString(item.ministryName),
     summary: getString(item.contentSummary),
+    keywords: [
+      ...new Set(
+        getString(item.keywordKorean)
+          .split(",")
+          .map((keyword) => keyword.trim())
+          .filter(Boolean),
+      ),
+    ],
     url: getExternalUrl(item.ntisDetailUrl),
   };
 }

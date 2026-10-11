@@ -7,12 +7,6 @@ export function BookmarkToggle({
   isAuthenticated,
   ...props
 }: BookmarkActions & { laboratoryId: number; isAuthenticated: boolean }) {
-  const state = useBookmarks({
-    ...props,
-    ...(!isAuthenticated
-      ? { initialBookmarks: [], onLoad: async () => [] }
-      : {}),
-  });
   if (!isAuthenticated)
     return (
       <Link
@@ -22,6 +16,14 @@ export function BookmarkToggle({
         관심 연구실
       </Link>
     );
+  return <AuthenticatedBookmarkToggle laboratoryId={laboratoryId} {...props} />;
+}
+
+function AuthenticatedBookmarkToggle({
+  laboratoryId,
+  ...props
+}: BookmarkActions & { laboratoryId: number }) {
+  const state = useBookmarks(props);
   const selected = state.bookmarks.some(
     (item) => item.laboratory.laboratoryId === laboratoryId,
   );

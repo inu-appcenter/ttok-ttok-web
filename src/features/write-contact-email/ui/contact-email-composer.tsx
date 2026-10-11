@@ -363,10 +363,20 @@ export function ContactEmailComposer({
 
 export function ContactEmailButton({
   recipient,
+  compact = false,
+  isAuthenticated = false,
 }: {
   recipient: EmailRecipient;
+  compact?: boolean;
+  isAuthenticated?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [accessNotice, setAccessNotice] = useState(false);
+  useEffect(() => {
+    if (!accessNotice) return;
+    const timeout = window.setTimeout(() => setAccessNotice(false), 3000);
+    return () => window.clearTimeout(timeout);
+  }, [accessNotice]);
   const trigger = useRef<HTMLDivElement>(null);
   const handleClose = useCallback(() => {
     setIsOpen(false);
@@ -378,11 +388,41 @@ export function ContactEmailButton({
     <div ref={trigger}>
       <Button
         variant="outline"
-        className="mt-3 w-full"
-        onClick={() => setIsOpen(true)}
+        className={
+          compact
+            ? "shrink-0 !h-7 !rounded-[var(--radius-md)] !border-0 !bg-[linear-gradient(90deg,#a7c0db,#d699c5)] !px-2 !text-[12px] !text-white"
+            : "mt-3 w-full"
+        }
+        onClick={() => {
+          if (!isAuthenticated) {
+            setAccessNotice(true);
+            return;
+          }
+          setIsOpen(true);
+        }}
       >
-        교수님께 메일 쓰기
+        {compact ? (
+          <span className="inline-flex items-center gap-1">
+            <Image
+              alt=""
+              src="/icons/lab-detail/mail-sparkles.svg"
+              width={12}
+              height={12}
+            />
+            AI 메일 첨삭
+          </span>
+        ) : (
+          "교수님께 메일 쓰기"
+        )}
       </Button>
+      {accessNotice ? (
+        <div className="fixed left-1/2 top-3 z-[120] max-w-[calc(100vw-32px)] -translate-x-1/2">
+          <Toast
+            state="warning"
+            title="로그인 후 AI 메일 첨삭을 이용할 수 있어요."
+          />
+        </div>
+      ) : null}
       <ContactEmailComposer
         recipient={recipient}
         isOpen={isOpen}

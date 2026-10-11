@@ -104,21 +104,29 @@ export function ResearchProjects({
         ) : lab.projects?.length ? (
           <ul className="mt-5 flex flex-col gap-5">
             {lab.projects.map((project) => (
-              <li className="flex min-w-0 items-start gap-5" key={project.id}>
-                <Tag
-                  className="mt-1 shrink-0 !font-semibold"
-                  size="md"
-                  tone={project.isOngoing ? "primary" : "default"}
-                >
-                  {project.isOngoing ? "진행중" : "종료"}
-                </Tag>
-                <div className="min-w-0 flex-1">
+              <li className="flex min-w-0 flex-col gap-1" key={project.id}>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <Tag
+                    className="shrink-0 !font-semibold"
+                    size="sm"
+                    tone={project.isOngoing ? "primary" : "default"}
+                  >
+                    {project.isOngoing ? "진행중" : "종료"}
+                  </Tag>
+                  <p className="min-w-0 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle md:text-[14px]">
+                    {[project.period, project.agency]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                </div>
+                <div className="min-w-0 w-full">
                   <h3
-                    className={`text-[length:var(--font-size-label1)] font-semibold leading-[1.5] md:text-[length:var(--font-size-heading2)] ${project.isOngoing ? "text-text-primary" : "text-text-default"}`}
+                    title={project.title}
+                    className={`truncate text-[length:var(--font-size-label1)] font-semibold leading-[1.5] md:text-[length:var(--font-size-heading2)] ${project.isOngoing ? "text-text-primary" : "text-text-default"}`}
                   >
                     {project.url ? (
                       <a
-                        className="hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
+                        className="block truncate hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
                         href={project.url}
                         target="_blank"
                         rel="noreferrer"
@@ -129,11 +137,21 @@ export function ResearchProjects({
                       project.title
                     )}
                   </h3>
-                  <p className="line-clamp-2 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle md:line-clamp-1 md:text-[length:var(--font-size-body3)]">
-                    {[project.period, project.agency, project.summary]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
+                  {project.keywords?.length ? (
+                    <ul
+                      className="mt-1 flex flex-wrap gap-2"
+                      aria-label="과제 키워드"
+                    >
+                      {project.keywords.map((keyword) => (
+                        <li
+                          key={keyword}
+                          className={`max-w-full break-words rounded-[var(--radius-lg)] px-2 py-1 text-[length:var(--font-size-caption1)] ${project.isOngoing ? "bg-bg-primary-subtle text-text-primary" : "bg-bg-neutral text-text-subtle"}`}
+                        >
+                          {keyword}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
               </li>
             ))}
@@ -151,37 +169,6 @@ export function ResearchProjects({
         />
       </DetailContentCard>
     </div>
-  );
-}
-
-export function LabNews({ lab }: { lab: LabDetail }) {
-  if (!lab.news?.length) return null;
-  return (
-    <DetailContentCard title="랩 소식">
-      <ul className="mt-5 flex flex-col gap-5">
-        {lab.news.map((item) => (
-          <li key={item.id}>
-            <h3 className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] text-text-primary">
-              {item.url ? (
-                <a
-                  href={item.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
-                >
-                  {item.title} ↗
-                </a>
-              ) : (
-                item.title
-              )}
-            </h3>
-            <p className="text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle">
-              {[item.date, item.source].filter(Boolean).join(" · ")}
-            </p>
-          </li>
-        ))}
-      </ul>
-    </DetailContentCard>
   );
 }
 
@@ -205,26 +192,38 @@ export function PaperTitle({ paper }: { paper: LabPaper }) {
 
 export function ProfessorCard({
   lab,
-  isMobile = false,
+  isAuthenticated = false,
 }: {
   lab: LabDetail;
   isMobile?: boolean;
+  isAuthenticated?: boolean;
 }) {
   const professor = lab.professor;
   return (
-    <section
-      className="scroll-mt-24 rounded-[var(--radius-2xl)] bg-bg-default p-4 shadow-[0_4px_16px_var(--color-opacity-black-10)]"
-      id={isMobile ? "mobile-publications" : "publications"}
-    >
-      <h2 className="text-[length:var(--font-size-headline2)] font-semibold leading-[1.4]">
-        {professor?.name ?? lab.professorName} 교수
-      </h2>
-      {professor?.position ? (
-        <p className="mt-3 text-[length:var(--font-size-caption1)] text-text-subtlest">
-          {professor.position}
-        </p>
-      ) : null}
-      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[length:var(--font-size-caption1)] font-semibold text-text-primary">
+    <section className="min-w-0 rounded-[var(--radius-2xl)] bg-bg-default p-4 shadow-[0_4px_16px_var(--color-opacity-black-10)]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-[length:var(--font-size-headline2)] font-semibold leading-[1.4]">
+            {professor?.name ?? lab.professorName} 교수
+          </h2>
+          {professor?.position ? (
+            <p className="mt-1 text-[length:var(--font-size-caption1)] text-text-subtlest">
+              {professor.position}
+            </p>
+          ) : null}
+        </div>
+        <ContactEmailButton
+          isAuthenticated={isAuthenticated}
+          compact
+          key={lab.labId}
+          recipient={{
+            professorName: professor?.name ?? lab.professorName,
+            labName: lab.name,
+            email: professor?.email ?? null,
+          }}
+        />
+      </div>
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[length:var(--font-size-caption1)] font-semibold text-text-primary">
         {professor?.email ? (
           <a
             className="break-all underline focus-visible:outline-2 focus-visible:outline-border-primary"
@@ -242,66 +241,60 @@ export function ProfessorCard({
           </a>
         ) : null}
       </div>
-      <ContactEmailButton
-        key={lab.labId}
-        recipient={{
-          professorName: professor?.name ?? lab.professorName,
-          labName: lab.name,
-          email: professor?.email ?? null,
-        }}
-      />
-      <div className="mt-3 border-t border-border-subtle pt-3">
+    </section>
+  );
+}
+
+export function RecentPapers({
+  lab,
+  isMobile = false,
+}: {
+  lab: LabDetail;
+  isMobile?: boolean;
+}) {
+  return (
+    <section
+      id={isMobile ? "mobile-publications" : "publications"}
+      className="min-w-0 scroll-mt-24 rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)] md:px-6 md:py-5"
+    >
+      <h2>
         <Link
           href={`/labs/${lab.laboratoryId}/papers`}
-          className="flex items-center text-[length:var(--font-size-label1)] font-semibold text-text-subtle hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
+          className="inline-flex items-center gap-1 text-[length:var(--font-size-label1)] font-semibold leading-[1.5] hover:underline focus-visible:outline-2 focus-visible:outline-border-primary md:text-[length:var(--font-size-heading1)]"
         >
           최근 논문
           <Image
             alt=""
-            src="/icons/lab-detail/chevron-right.svg"
-            width={16}
-            height={16}
+            src="/icons/lab-detail/papers-chevron.svg"
+            width={22}
+            height={21}
           />
         </Link>
-        {lab.publicationState?.status === "error" ? (
-          <p
-            role="status"
-            className="mt-2 text-[length:var(--font-size-caption1)] text-text-subtle"
-          >
-            논문을 불러오지 못했어요.
-            <br />
-            <DetailRetryButton />
-          </p>
-        ) : lab.papers.length ? (
-          <ul className="mt-1">
-            {lab.papers.map((paper) => (
-              <li
-                className="flex items-start justify-between gap-2 border-b border-border-subtlest py-1 last:border-0"
-                key={`${paper.year}-${paper.title}`}
-              >
-                <div className="min-w-0 flex-1 text-[length:var(--font-size-caption1)] font-semibold leading-[1.5] text-text-primary">
-                  <PaperTitle paper={paper} />
-                </div>
-                <span className="max-w-[35%] shrink-0 truncate text-right text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtlest">
-                  {[paper.venue, paper.year]
-                    .filter((value) => value !== null && value !== "")
-                    .join(" · ")}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-2 text-[length:var(--font-size-caption1)] text-text-subtle">
-            등록된 논문이 없어요.
-          </p>
-        )}
-        <DetailPagination
-          lab={lab}
-          kind="publications"
-          state={lab.publicationState}
-          anchor={isMobile ? "mobile-publications" : "publications"}
-        />
-      </div>
+      </h2>
+      {lab.publicationState?.status === "error" ? (
+        <p role="status" className="mt-5 text-sm text-text-subtle">
+          논문을 불러오지 못했어요.
+          <br />
+          <DetailRetryButton />
+        </p>
+      ) : lab.papers.length ? (
+        <ul className="mt-5 flex min-w-0 flex-col gap-3">
+          {lab.papers.map((paper) => (
+            <li className="min-w-0" key={`${paper.year}-${paper.title}`}>
+              <h3 className="min-w-0 text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-primary md:text-[length:var(--font-size-heading2)]">
+                <PaperTitle paper={paper} />
+              </h3>
+              <p className="truncate text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle md:text-[14px]">
+                {[paper.year, paper.venue]
+                  .filter((value) => value !== null && value !== "")
+                  .join(" · ")}
+              </p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-5 text-sm text-text-subtle">등록된 논문이 없어요.</p>
+      )}
     </section>
   );
 }

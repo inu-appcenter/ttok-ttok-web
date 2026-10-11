@@ -16,6 +16,7 @@ import { OnboardingHeader } from "./onboarding-header";
 import { FinderResults } from "./finder-results";
 
 type OnboardingChatProps = {
+  completionHref?: string;
   colleges?: CollegeOption[];
   collegesError?: string;
   reviewOptions?: OnboardingReviewOptions;
@@ -23,6 +24,7 @@ type OnboardingChatProps = {
 };
 
 export function OnboardingChat({
+  completionHref = "/",
   colleges,
   collegesError,
   reviewOptions,
@@ -30,7 +32,10 @@ export function OnboardingChat({
 }: OnboardingChatProps) {
   const router = useRouter();
 
-  async function handleComplete(answers: OnboardingAnswers, href = "/") {
+  async function handleComplete(
+    answers: OnboardingAnswers,
+    href = completionHref,
+  ) {
     const result = await completeOnboarding(answers);
 
     if (!result.ok) {
@@ -45,11 +50,16 @@ export function OnboardingChat({
     <main className="flex min-h-screen flex-col bg-bg-default max-md:h-dvh max-md:min-h-0 max-md:overflow-hidden">
       <OnboardingHeader />
       <OnboardingFlow
+        completionHref={completionHref}
         colleges={colleges}
         collegesError={collegesError}
         onComplete={handleComplete}
         renderFinderResults={(props) => <FinderResults {...props} />}
-        renderLabSearch={({ onClearSelection, onSelect, selectedLaboratoryId }) => (
+        renderLabSearch={({
+          onClearSelection,
+          onSelect,
+          selectedLaboratoryId,
+        }) => (
           <LabSearchCombobox
             onClearSelection={onClearSelection}
             onSearch={searchOnboardingLaboratories}

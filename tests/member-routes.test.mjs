@@ -19,8 +19,10 @@ const laboratory = {
 let bookmarks, coffee, review, calls, malformed;
 let upstream, app, appUrl;
 let onboardingFailure, departmentFailure, onboardingDone;
+let publicationCount;
 
 beforeEach(() => {
+  publicationCount = 7;
   bookmarks = [];
   coffee = null;
   review = null;
@@ -120,8 +122,8 @@ before(async () => {
         page,
         size: 5,
         totalPages: 2,
-        totalElements: 7,
-        content: Array.from({ length: page === 0 ? 5 : 2 }, (_, index) => ({
+        totalElements: publicationCount,
+        content: Array.from({ length: Math.min(5, publicationCount - page * 5) }, (_, index) => ({
           title: `논문 ${page * 5 + index + 1}`,
           year: "2026",
           platform: "TEST",
@@ -416,6 +418,32 @@ test("연구실 리뷰는 제공 이력에 따라 생성과 수정을 구분한�
     ["POST", "PATCH"],
   );
 });
+test("상세의 정보 제공은 현재 상세와 본인 소속 연구실이 일치해야 저장한다", async () => {
+  const body = {
+    coreTime: "있음",
+    weeklyMeeting: "주 1회",
+    doings: ["실험/코딩"],
+    laboratoryId: 999,
+  };
+  assert.equal(
+    (await request("/api/member/review", { method: "POST", body })).status,
+    403,
+  );
+  assert.equal(
+    calls.some((call) => call.path === "/api/lab-review"),
+    false,
+  );
+  assert.equal(
+    (
+      await request("/api/member/review", {
+        method: "POST",
+        body: { ...body, laboratoryId: 157 },
+      })
+    ).status,
+    200,
+  );
+});
+
 test("논문 전체보기는 두 번째 페이지까지 조회해 마지막 논문을 렌더링한다", async () => {
   const response = await request("/labs/157/papers");
   assert.equal(response.status, 200);
@@ -425,4 +453,15 @@ test("논문 전체보기는 두 번째 페이지까지 조회해 마지막 논�
     calls.filter((call) => call.path.endsWith("/publications")).length,
     2,
   );
+});
+
+
+test("논문 전체보기 재조회는 이전 페이지 캐시 대신 변경된 전체 목록을 가져온다", async () => {
+  const first = await request("/labs/157/papers");
+  assert.match(await first.text(), /논문 7/);
+  publicationCount = 8;
+  const second = await request("/labs/157/papers");
+  const html = await second.text();
+  assert.match(html, /논문 8/);
+  assert.doesNotMatch(html, /논문을 불러오지 못했어요/);
 });

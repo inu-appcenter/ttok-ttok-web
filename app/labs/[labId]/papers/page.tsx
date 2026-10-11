@@ -20,7 +20,14 @@ export default async function Page({
     if (error instanceof LaboratoryApiError && error.status === 404) notFound();
     throw error;
   }
-  const papers = await getAllPublications(id).catch(() => null);
+  const papers = await getAllPublications(id).catch((error: unknown) => {
+    console.error("[papers] 전체 논문 조회 실패", {
+      laboratoryId: id,
+      message: error instanceof Error ? error.message : "Unknown error",
+      status: error instanceof LaboratoryApiError ? error.status : undefined,
+    });
+    return null;
+  });
   return (
     <PapersPage
       laboratoryId={id}
