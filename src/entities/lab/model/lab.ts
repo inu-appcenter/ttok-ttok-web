@@ -76,6 +76,7 @@ export type LabResearchProject = {
   period: string;
   agency: string;
   summary: string;
+  keywords?: string[];
   url: string | null;
 };
 

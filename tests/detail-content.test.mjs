@@ -35,7 +35,7 @@ test("논문은 원문 링크 없는 경우 텍스트로 표시하고 DOI가 있
   assert.equal(getExternalUrl("javascript:alert(1)"), null);
 });
 
-test("연구과제는 전체 기간과 서버 진행 상태를 보존한다", () => {
+test("연구과제는 어노테이션의 기간과 키워드 및 서버 진행 상태를 보존한다", () => {
   const project = toResearchProject({
     id: 3,
     titleKorean: "과제",
@@ -43,9 +43,12 @@ test("연구과제는 전체 기간과 서버 진행 상태를 보존한다", ()
     totalPeriodStart: "2015-10-01 00:00:00.0",
     totalPeriodEnd: "2020-06-30 00:00:00.0",
     periodStart: "20160701",
+    periodEnd: "20170630",
+    keywordKorean: "나노 멤브레인, NEMS,가스 센서, NEMS",
     ntisDetailUrl: "https://www.ntis.go.kr/",
   });
-  assert.equal(project.period, "2015.10 – 2020.06");
+  assert.equal(project.period, "2016.07 – 2017.06");
+  assert.deepEqual(project.keywords, ["나노 멤브레인", "NEMS", "가스 센서"]);
   assert.equal(project.isOngoing, false);
   assert.throws(() =>
     toResearchProject({ id: 3, titleKorean: "과제", ongoing: "true" }),
