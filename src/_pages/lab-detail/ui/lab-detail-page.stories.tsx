@@ -39,22 +39,6 @@ const DESIGN_LAB = {
       url: null,
     },
   ],
-  news: [
-    {
-      id: "kdd",
-      title: "박OO 학생, KDD 2026 논문 발표",
-      date: "2026.08.12",
-      source: "컴퓨터공학부 홈페이지",
-      url: "https://www.inu.ac.kr/",
-    },
-    {
-      id: "award",
-      title: "이OO 학생, 한국정보과학회 우수논문상 수상",
-      date: "2026.05.02",
-      source: "인천대 뉴스",
-      url: "https://www.inu.ac.kr/",
-    },
-  ],
   metrics: {
     hIndex: 14,
     citations: 1240,
@@ -205,6 +189,8 @@ export const MetricsExplanation: Story = {
     await userEvent.keyboard("{Escape}");
     await expect(canvas.queryByRole("tooltip")).not.toBeInTheDocument();
     await expect(trigger).toHaveFocus();
+    await userEvent.click(trigger);
+    await expect(canvas.getByRole("tooltip")).toBeVisible();
   },
 };
 
