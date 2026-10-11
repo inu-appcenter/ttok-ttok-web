@@ -13,6 +13,8 @@ export async function getAllPublications(
     const data = await getLaboratoryReferenceData(
       `/api/laboratory/${laboratoryId}/publications`,
       { page: String(page) },
+      // 전체 개수를 검증하므로 서로 다른 시점의 페이지 캐시를 섞지 않습니다.
+      { cache: "no-store", revalidate: 0 },
     );
     const result = parseDetailPage(data, toPublication);
     const totalElements =

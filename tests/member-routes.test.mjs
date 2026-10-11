@@ -19,8 +19,10 @@ const laboratory = {
 let bookmarks, coffee, review, calls, malformed;
 let upstream, app, appUrl;
 let onboardingFailure, departmentFailure, onboardingDone;
+let publicationCount;
 
 beforeEach(() => {
+  publicationCount = 7;
   bookmarks = [];
   coffee = null;
   review = null;
@@ -120,8 +122,8 @@ before(async () => {
         page,
         size: 5,
         totalPages: 2,
-        totalElements: 7,
-        content: Array.from({ length: page === 0 ? 5 : 2 }, (_, index) => ({
+        totalElements: publicationCount,
+        content: Array.from({ length: Math.min(5, publicationCount - page * 5) }, (_, index) => ({
           title: `논문 ${page * 5 + index + 1}`,
           year: "2026",
           platform: "TEST",
@@ -451,4 +453,15 @@ test("논문 전체보기는 두 번째 페이지까지 조회해 마지막 논�
     calls.filter((call) => call.path.endsWith("/publications")).length,
     2,
   );
+});
+
+
+test("논문 전체보기 재조회는 이전 페이지 캐시 대신 변경된 전체 목록을 가져온다", async () => {
+  const first = await request("/labs/157/papers");
+  assert.match(await first.text(), /논문 7/);
+  publicationCount = 8;
+  const second = await request("/labs/157/papers");
+  const html = await second.text();
+  assert.match(html, /논문 8/);
+  assert.doesNotMatch(html, /논문을 불러오지 못했어요/);
 });
