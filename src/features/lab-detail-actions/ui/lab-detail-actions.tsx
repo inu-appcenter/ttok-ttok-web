@@ -66,10 +66,10 @@ export function LabContactCard({
                 className="flex items-center justify-between gap-4 border-b border-border-subtlest py-1 last:border-0"
                 key={member.id}
               >
-                <span>{member.name}</span>
+                <span className="min-w-0 break-words">{member.name}</span>
                 {member.url ? (
                   <a
-                    className="text-text-primary hover:underline"
+                    className="min-w-0 break-all text-right text-text-primary hover:underline"
                     href={member.url}
                     rel="noreferrer"
                     target="_blank"
@@ -77,7 +77,9 @@ export function LabContactCard({
                     {member.contact}
                   </a>
                 ) : (
-                  <span className="text-text-primary">{member.contact}</span>
+                  <span className="min-w-0 break-all text-right text-text-primary">
+                    {member.contact}
+                  </span>
                 )}
               </li>
             ))}
