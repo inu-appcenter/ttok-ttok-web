@@ -217,6 +217,7 @@ export function ProfessorCard({
           compact
           key={lab.labId}
           recipient={{
+            laboratoryId: lab.laboratoryId,
             professorName: professor?.name ?? lab.professorName,
             labName: lab.name,
             email: professor?.email ?? null,

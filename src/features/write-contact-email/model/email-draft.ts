@@ -15,6 +15,7 @@ export type EmailInput = {
   experience: string;
 };
 export type EmailRecipient = {
+  laboratoryId: number;
   professorName: string;
   labName: string;
   email: string | null;
@@ -39,10 +40,19 @@ export function validateEmailInput(input: EmailInput) {
     "year",
     "email",
     "interest",
-    "experience",
   ] as const) {
     if (!input[key].trim()) errors[key] = "입력해 주세요.";
   }
+  for (const [key, max] of [
+    ["name", 20],
+    ["interest", 300],
+    ["phone", 13],
+    ["experience", 1200],
+  ] as const) {
+    if (input[key].length > max) errors[key] = `${max}자 이내로 입력해 주세요.`;
+  }
+  if (!["1학년", "2학년", "3학년", "4학년", "5학년 +"].includes(input.year))
+    errors.year = "학년을 선택해 주세요.";
   if (input.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email))
     errors.email = "올바른 이메일 주소를 입력해 주세요.";
   return errors;
