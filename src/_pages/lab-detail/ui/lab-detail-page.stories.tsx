@@ -78,6 +78,18 @@ export const Default: Story = {
       canvas.getByRole("link", { name: "관심 연구실" }),
     ).toHaveAttribute("href", "/login");
     await expect(args.bookmarkActions?.onLoad).not.toHaveBeenCalled();
+    await userEvent.click(canvas.getByRole("button", { name: "AI 메일 첨삭" }));
+    await expect(
+      canvas.getByText("로그인 후 AI 메일 첨삭을 이용할 수 있어요."),
+    ).toBeVisible();
+    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
+    await userEvent.click(
+      canvas.getByRole("button", { name: /이 랩 학부연구생이신가요/ }),
+    );
+    await expect(
+      canvas.getByText("로그인 후 소속 학부연구생만 정보를 제공할 수 있어요."),
+    ).toBeVisible();
+    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
   },
 };
 
@@ -244,5 +256,19 @@ export const LongContent: Story = {
         },
       ],
     },
+  },
+};
+
+export const ContributionRestricted: Story = {
+  args: { lab: DESIGN_LAB, isAuthenticated: true, canContribute: false },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole("button", { name: /이 랩 학부연구생이신가요/ }),
+    );
+    await expect(
+      canvas.getByText("이 연구실 소속 학부연구생만 정보를 제공할 수 있어요."),
+    ).toBeVisible();
+    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
   },
 };
