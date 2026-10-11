@@ -18,6 +18,7 @@ const laboratory = {
 };
 let bookmarks, coffee, review, calls, malformed;
 let upstream, app, appUrl;
+let onboardingFailure, departmentFailure, onboardingDone;
 
 beforeEach(() => {
   bookmarks = [];
@@ -25,6 +26,9 @@ beforeEach(() => {
   review = null;
   calls = [];
   malformed = false;
+  onboardingFailure = false;
+  departmentFailure = false;
+  onboardingDone = false;
 });
 async function listen(server) {
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -49,7 +53,29 @@ before(async () => {
       : null;
     calls.push({ path: url.pathname, method: request.method, body });
     let data = null;
-    if (url.pathname === "/api/member/me")
+    if (url.pathname === "/api/member" && request.method === "PATCH") {
+      if (departmentFailure) {
+        response.writeHead(400, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ code: "INVALID_INPUT", data: null }));
+        return;
+      }
+      data = { id: 1, department: body.department };
+    } else if (url.pathname === "/api/onboarding") {
+      if (onboardingFailure || onboardingDone) {
+        response.writeHead(onboardingDone ? 400 : 500, {
+          "Content-Type": "application/json",
+        });
+        response.end(
+          JSON.stringify({
+            code: onboardingDone ? "ONBOARDING_ALREADY_DONE" : "INTERNAL_ERROR",
+            data: null,
+          }),
+        );
+        return;
+      }
+      onboardingDone = true;
+      data = { id: 1, isNew: false, userType: "RESEARCHER" };
+    } else if (url.pathname === "/api/member/me")
       data = {
         id: 1,
         studentNumber: "202501716",
@@ -152,6 +178,105 @@ function request(
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
 }
+const onboardingBody = {
+  purpose: "RESEARCHER",
+  departmentCode: "INFORMATION_COMMUNICATION_ENGINEERING",
+  laboratoryId: 157,
+  coreTime: "있음",
+  weeklyMeeting: "주 1회",
+  doings: ["논문 리딩"],
+  coffeeChatAllowed: false,
+};
+test("연구생 학과 PATCH 성공 뒤 POST하고 학과 코드와 비허용 연락처를 제외한다", async () => {
+  const response = await request("/api/auth/onboarding", {
+    method: "POST",
+    body: onboardingBody,
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual(
+    calls.map(({ path, method }) => [path, method]),
+    [
+      ["/api/member", "PATCH"],
+      ["/api/onboarding", "POST"],
+    ],
+  );
+  assert.deepEqual(calls[0].body, {
+    department: "INFORMATION_COMMUNICATION_ENGINEERING",
+  });
+  assert.equal("departmentCode" in calls[1].body, false);
+  assert.equal("contactValue" in calls[1].body, false);
+});
+test("학과 저장 실패는 완료 POST를 중단하고 재시도는 같은 학과를 저장한다", async () => {
+  departmentFailure = true;
+  assert.equal(
+    (
+      await request("/api/auth/onboarding", {
+        method: "POST",
+        body: onboardingBody,
+      })
+    ).status,
+    400,
+  );
+  assert.deepEqual(
+    calls.map(({ path }) => path),
+    ["/api/member"],
+  );
+  departmentFailure = false;
+  assert.equal(
+    (
+      await request("/api/auth/onboarding", {
+        method: "POST",
+        body: onboardingBody,
+      })
+    ).status,
+    200,
+  );
+  assert.deepEqual(calls[1].body, calls[0].body);
+});
+test("온보딩 POST 실패는 완료 처리하지 않고 응답 유실 재시도는 중복 등록 없이 복구한다", async () => {
+  onboardingFailure = true;
+  assert.equal(
+    (
+      await request("/api/auth/onboarding", {
+        method: "POST",
+        body: onboardingBody,
+      })
+    ).status,
+    502,
+  );
+  onboardingFailure = false;
+  assert.equal(
+    (
+      await request("/api/auth/onboarding", {
+        method: "POST",
+        body: onboardingBody,
+      })
+    ).status,
+    200,
+  );
+  assert.equal(
+    (
+      await request("/api/auth/onboarding", {
+        method: "POST",
+        body: onboardingBody,
+      })
+    ).status,
+    200,
+  );
+  assert.equal(onboardingDone, true);
+});
+test("연구생 학과 코드 누락은 서버 요청 전에 거부한다", async () => {
+  assert.equal(
+    (
+      await request("/api/auth/onboarding", {
+        method: "POST",
+        body: { ...onboardingBody, departmentCode: undefined },
+      })
+    ).status,
+    400,
+  );
+  assert.equal(calls.length, 0);
+});
 test("비로그인·만료 인증은 401이고 만료 쿠키를 제거한다", async () => {
   assert.equal((await request("/api/bookmarks", { token: null })).status, 401);
   const response = await request("/api/bookmarks", { token: "fake-expired" });
