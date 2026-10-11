@@ -6,18 +6,30 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import {
-  ATMOSPHERE_OPTIONS,
-  KEYWORD_OPTIONS,
-  MOCK_RECOMMENDATIONS,
-  getMockRecommendations,
+  suggestKeywords,
+  requestRecommendations,
+  RecommendationApiError,
 } from "@/features/request-ai-recommendation";
+import type {
+  Recommendation,
+  RecommendationResult,
+  RecommendationRequest,
+} from "@/features/request-ai-recommendation";
+import { useRouter } from "next/navigation";
 import { Checkbox, Dialog, Field } from "@/shared/ui";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
 
-type Step = "interest" | "keywords" | "atmosphere" | "results";
+type Step = "interest" | "keywords" | "results";
 export type AiRecommendationsPageProps = {
   initialStep?: Step;
   initialPrompt?: string;
+  initialKeywords?: string[];
+  initialResult?: RecommendationResult;
+  onSuggest?: (interest: string, signal: AbortSignal) => Promise<string[]>;
+  onRecommend?: (
+    input: RecommendationRequest,
+    signal: AbortSignal,
+  ) => Promise<RecommendationResult>;
 };
 const gradient =
   "bg-[linear-gradient(90deg,#a7c0db,#b4bade,#c2aed6,#d699c5)] bg-clip-text text-transparent";
@@ -42,10 +54,16 @@ function Bubble({
   );
 }
 
-function ResultCards({ mobile = false }: { mobile?: boolean }) {
+function ResultCards({
+  recommendations,
+  mobile = false,
+}: {
+  recommendations: Recommendation[];
+  mobile?: boolean;
+}) {
   return (
     <div className="flex flex-col gap-3">
-      {MOCK_RECOMMENDATIONS.map((lab, index) => (
+      {recommendations.map((lab, index) => (
         <article
           key={lab.id}
           className="rounded-xl bg-white px-4 py-[13px] shadow-[0_2px_4px_#0000001a]"
@@ -58,7 +76,9 @@ function ResultCards({ mobile = false }: { mobile?: boolean }) {
           <h3 className="text-[20px] font-semibold leading-[1.5]">
             {lab.name}
           </h3>
-          <p className="text-[13px] text-text-subtle">{lab.professor} 교수</p>
+          <p className="text-[13px] text-text-subtle">
+            {lab.professor} 교수 · {lab.department}
+          </p>
           <div className="my-2 flex flex-wrap gap-1">
             {lab.tags.map((tag) => (
               <span
@@ -100,30 +120,33 @@ function ResultCards({ mobile = false }: { mobile?: boolean }) {
 export function AiRecommendationsPage({
   initialStep = "interest",
   initialPrompt = "",
+  initialKeywords = [],
+  initialResult,
+  onSuggest = suggestKeywords,
+  onRecommend = requestRecommendations,
 }: AiRecommendationsPageProps) {
   const [step, setStep] = useState<Step>(initialStep);
   const [interest, setInterest] = useState(initialPrompt);
+  const router = useRouter();
   const [keywords, setKeywords] = useState<string[]>(
-    initialStep === "interest" ? [] : KEYWORD_OPTIONS.slice(0, 2),
+    initialStep === "results" ? initialKeywords.slice(0, 3) : [],
   );
-  const [atmosphere, setAtmosphere] = useState<string[]>(
-    initialStep === "results" ? ATMOSPHERE_OPTIONS.slice(0, 2) : [],
+  const [suggestions, setSuggestions] = useState(initialKeywords);
+  const [result, setResult] = useState<RecommendationResult | undefined>(
+    initialResult,
   );
   const [customKeywords, setCustomKeywords] = useState<string[]>([]);
-  const [customAtmosphere, setCustomAtmosphere] = useState<string[]>([]);
   const [custom, setCustom] = useState("");
   const [adding, setAdding] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  const [hasResults, setHasResults] = useState(initialStep === "results");
+  const [hasResults, setHasResults] = useState(initialResult !== undefined);
   const [sheetOpen, setSheetOpen] = useState(false);
   const request = useRef<AbortController | null>(null);
   const end = useRef<HTMLDivElement>(null);
   const sheet = useRef<HTMLDivElement>(null);
   const resultTrigger = useRef<HTMLButtonElement>(null);
-  const stepIndex = ["interest", "keywords", "atmosphere", "results"].indexOf(
-    step,
-  );
+  const stepIndex = ["interest", "keywords", "results"].indexOf(step);
 
   useEffect(() => () => request.current?.abort(), []);
   useEffect(() => {
@@ -165,61 +188,74 @@ export function AiRecommendationsPage({
   }, [sheetOpen]);
 
   function toggle(value: string) {
-    const selected = step === "keywords" ? keywords : atmosphere;
-    const setter = step === "keywords" ? setKeywords : setAtmosphere;
-    setter(
-      selected.includes(value)
-        ? selected.filter((item) => item !== value)
-        : step === "keywords" && selected.length >= 3
-          ? selected
-          : [...selected, value],
+    setKeywords((items) =>
+      items.includes(value)
+        ? items.filter((item) => item !== value)
+        : items.length < 3
+          ? [...items, value]
+          : items,
     );
   }
   function addCustom() {
     const value = custom.trim();
-    if (!value || (step === "keywords" && keywords.length >= 3)) return;
-    if (step === "keywords") {
-      setCustomKeywords((items) => [...new Set([...items, value])]);
-      setKeywords((items) => [...new Set([...items, value])]);
-    } else {
-      setCustomAtmosphere((items) => [...new Set([...items, value])]);
-      setAtmosphere((items) => [...new Set([...items, value])]);
-    }
+    if (!value || value.length > 30 || keywords.length >= 3) return;
+    setCustomKeywords((items) => [...new Set([...items, value])]);
+    setKeywords((items) => [...new Set([...items, value])]);
     setCustom("");
     setAdding(false);
   }
-  async function recommend() {
+  function cancelRequest() {
+    request.current?.abort();
+    request.current = null;
+    setPending(false);
+  }
+  async function runRequest(keywordsOnly: boolean) {
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
     setPending(true);
     setError("");
     try {
-      await getMockRecommendations(
-        { interest, keywords, atmosphere },
-        controller.signal,
-      );
-      if (controller.signal.aborted) return;
-      setHasResults(true);
-      setStep("results");
+      if (keywordsOnly) {
+        const items = await onSuggest(interest.trim(), controller.signal);
+        if (controller.signal.aborted || request.current !== controller) return;
+        setSuggestions(items);
+        setKeywords([]);
+        setCustomKeywords([]);
+        setStep("keywords");
+      } else {
+        const data = await onRecommend(
+          { interest: interest.trim(), selectedKeywords: keywords },
+          controller.signal,
+        );
+        if (controller.signal.aborted || request.current !== controller) return;
+        setResult(data);
+        setHasResults(true);
+        setStep("results");
+      }
     } catch (cause) {
-      if (!controller.signal.aborted)
+      if (!controller.signal.aborted && request.current === controller) {
+        if (cause instanceof RecommendationApiError && cause.status === 401)
+          router.replace("/login");
         setError(
           cause instanceof Error
             ? cause.message
             : "결과를 불러오지 못했어요. 다시 시도해 주세요.",
         );
+      }
     } finally {
       if (request.current === controller) setPending(false);
     }
   }
   function restart() {
-    request.current?.abort();
-    setPending(false);
+    cancelRequest();
     setStep("interest");
     setInterest("");
     setKeywords([]);
-    setAtmosphere([]);
+    setSuggestions([]);
+    setResult(undefined);
+    setHasResults(false);
+    setCustomKeywords([]);
     setAdding(false);
     setCustom("");
     setError("");
@@ -228,14 +264,14 @@ export function AiRecommendationsPage({
   const progressLabels = [
     "관심 주제 파악하는 중…",
     "키워드 정리하는 중…",
-    "선호하는 분위기 알아내는 중…",
     "딱 맞는 연구실 찾기",
   ];
-  const options =
-    step === "keywords"
-      ? [...KEYWORD_OPTIONS, ...customKeywords]
-      : [...ATMOSPHERE_OPTIONS, ...customAtmosphere];
-  const selected = step === "keywords" ? keywords : atmosphere;
+  const options = [...suggestions, ...customKeywords];
+  const selected = keywords;
+  const recommendations = result?.recommendations ?? [];
+  const resultTitle = result?.noMatch
+    ? "조건에 맞는 연구실을 찾지 못했어요"
+    : `딱 맞는 연구실 ${recommendations.length}곳을 찾았어요`;
   const resultsFooter = (
     <div className="mt-5 text-center">
       <p className="mb-2 text-[13px] text-text-subtle">
@@ -258,9 +294,6 @@ export function AiRecommendationsPage({
           </h1>
           <p className="mt-1 text-[16px] font-semibold text-text-subtle lg:text-[20px]">
             몇 가지만 답하면 나에게 맞는 연구실을 찾아드려요.
-          </p>
-          <p className="mt-2 text-[12px] text-text-subtle">
-            미리보기 · 예시 키워드와 추천 결과입니다.
           </p>
           {step !== "results" && (
             <div className="mt-5 rounded-2xl bg-[#f5f5f5] px-4 py-3 lg:hidden">
@@ -296,54 +329,57 @@ export function AiRecommendationsPage({
                 className="ml-auto flex w-[300px] max-w-full flex-col items-end gap-3 lg:w-[400px]"
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (interest.trim()) setStep("keywords");
+                  if (interest.trim() && !pending) void runRequest(true);
                 }}
               >
                 <Field
                   aria-label="관심 연구 주제"
-                  maxLength={1000}
+                  maxLength={300}
+                  disabled={pending}
                   value={interest}
                   onChange={(event) => setInterest(event.target.value)}
                   placeholder="예: 추천시스템, 파이썬 크롤링"
                 />
                 <button
                   className={action}
-                  disabled={!interest.trim()}
+                  disabled={!interest.trim() || pending}
                   type="submit"
                 >
-                  보내기
+                  {pending ? "키워드 찾는 중…" : "보내기"}
                 </button>
+                {error && (
+                  <p role="alert" className="text-sm text-text-error">
+                    {error}
+                  </p>
+                )}
               </form>
             ) : (
               <>
                 <Bubble user>{interest}</Bubble>
                 <Bubble>
-                  좋아요! 적어주신 내용에서 키워드를 뽑아봤어요. 가까운 걸 골라
-                  주세요.
+                  {suggestions.length
+                    ? "적어주신 내용과 가까운 키워드를 골라주세요."
+                    : "관련 키워드를 찾지 못했어요. 직접 입력해서 추천받을 수 있어요."}
                 </Bubble>
                 <Bubble subtle>
                   최대 3개까지 고를 수 있고, 없으면 직접 입력해도 돼요
                 </Bubble>
-                {step !== "keywords" && (
-                  <>
-                    <Bubble user>{keywords.join(", ")}</Bubble>
-                    <Bubble>
-                      거의 다 왔어요. 마지막으로, 어떤 분위기의 연구실이
-                      좋으세요?
-                    </Bubble>
-                    <Bubble subtle>여러 개 골라도 돼요</Bubble>
-                  </>
+                {step === "results" && (
+                  <Bubble user>
+                    {keywords.length
+                      ? keywords.join(", ")
+                      : "관심 연구로 추천받기"}
+                  </Bubble>
                 )}
-                {(step === "keywords" || step === "atmosphere") && (
+                {step === "keywords" && (
                   <form
                     className="ml-auto flex w-[400px] max-w-full flex-col items-end gap-3"
                     onSubmit={(event) => {
                       event.preventDefault();
-                      if (selected.length) {
+                      if (!pending) {
                         setAdding(false);
                         setCustom("");
-                        if (step === "keywords") setStep("atmosphere");
-                        else void recommend();
+                        void runRequest(false);
                       }
                     }}
                   >
@@ -351,20 +387,14 @@ export function AiRecommendationsPage({
                       disabled={pending}
                       className="flex flex-wrap justify-end gap-2"
                     >
-                      <legend className="sr-only">
-                        {step === "keywords"
-                          ? "관심 키워드"
-                          : "선호하는 연구실 분위기"}
-                      </legend>
+                      <legend className="sr-only">관심 키워드</legend>
                       {[...new Set(options)].map((option) => (
                         <Checkbox
                           appearance="chip"
                           key={option}
                           checked={selected.includes(option)}
                           disabled={
-                            step === "keywords" &&
-                            keywords.length >= 3 &&
-                            !keywords.includes(option)
+                            keywords.length >= 3 && !keywords.includes(option)
                           }
                           onChange={() => toggle(option)}
                           className="text-[16px]"
@@ -375,7 +405,7 @@ export function AiRecommendationsPage({
                       <button
                         type="button"
                         className="flex items-center gap-1 rounded-full border border-border-subtle px-[14px] py-1 text-[16px] disabled:opacity-50"
-                        disabled={step === "keywords" && keywords.length >= 3}
+                        disabled={keywords.length >= 3}
                         onClick={() => setAdding((value) => !value)}
                       >
                         <Image
@@ -389,21 +419,23 @@ export function AiRecommendationsPage({
                     </fieldset>
                     {adding && (
                       <div className="flex w-full gap-2">
-                        <Field
-                          aria-label="직접 입력"
-                          maxLength={40}
-                          value={custom}
-                          onChange={(event) => setCustom(event.target.value)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter") {
-                              event.preventDefault();
-                              addCustom();
-                            }
-                          }}
-                          placeholder="원하는 조건을 입력해 주세요"
-                        />
+                        <div className="min-w-0 flex-1">
+                          <Field
+                            aria-label="직접 입력"
+                            maxLength={30}
+                            value={custom}
+                            onChange={(event) => setCustom(event.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault();
+                                addCustom();
+                              }
+                            }}
+                            placeholder="관심 키워드를 입력해 주세요"
+                          />
+                        </div>
                         <button
-                          className={action}
+                          className={`shrink-0 whitespace-nowrap ${action}`}
                           type="button"
                           disabled={!custom.trim()}
                           onClick={addCustom}
@@ -425,9 +457,8 @@ export function AiRecommendationsPage({
                         onClick={() => {
                           setAdding(false);
                           setCustom("");
-                          setStep(
-                            step === "keywords" ? "interest" : "keywords",
-                          );
+                          setError("");
+                          setStep("interest");
                         }}
                       >
                         이전 입력 수정
@@ -435,7 +466,7 @@ export function AiRecommendationsPage({
                       <button
                         type="submit"
                         className={action}
-                        disabled={!selected.length || pending}
+                        disabled={pending}
                       >
                         {pending ? "찾는 중…" : "보내기"}
                       </button>
@@ -444,21 +475,30 @@ export function AiRecommendationsPage({
                 )}
                 {step === "results" && (
                   <>
-                    <Bubble user>{atmosphere.join(", ")}</Bubble>
-                    <Bubble>
-                      찾았어요! 잘 맞을 것 같은 연구실 3곳을 정리했어요.
-                    </Bubble>
+                    <Bubble>{resultTitle}</Bubble>
                     <Bubble subtle>조건을 바꿔서 다시 찾아볼까요?</Bubble>
                     <button
                       type="button"
                       className={`ml-auto ${action}`}
-                      onClick={() => setStep("atmosphere")}
+                      onClick={() => {
+                        setError("");
+                        setStep("keywords");
+                      }}
                     >
                       입력 수정
                     </button>
                   </>
                 )}
               </>
+            )}
+            {pending && (
+              <button
+                type="button"
+                className="self-end text-sm underline"
+                onClick={cancelRequest}
+              >
+                요청 취소
+              </button>
             )}
             <div ref={end} />
           </div>
@@ -475,12 +515,14 @@ export function AiRecommendationsPage({
                   height={24}
                   alt=""
                 />
-                딱 맞는 연구실 3곳을 찾았어요
+                {resultTitle}
               </h2>
               <p className="mb-6 mt-2 text-[14px] text-text-subtle">
-                나눈 이야기를 바탕으로 골랐어요 · 예시 결과
+                {result?.noMatch
+                  ? "관심 연구나 키워드를 바꿔 다시 시도해보세요."
+                  : "나눈 이야기를 바탕으로 골랐어요"}
               </p>
-              <ResultCards />
+              <ResultCards recommendations={recommendations} />
               {resultsFooter}
             </>
           ) : (
@@ -495,7 +537,6 @@ export function AiRecommendationsPage({
                 {[
                   "관심 주제 파악하기",
                   "키워드 정리하기",
-                  "선호하는 분위기 알아내기",
                   "딱 맞는 연구실 찾기",
                 ].map((label, index) => (
                   <li
@@ -538,8 +579,8 @@ export function AiRecommendationsPage({
               alt=""
             />
             {step === "results"
-              ? "딱 맞는 연구실 3곳을 찾았어요"
-              : "이전 추천 3곳"}
+              ? resultTitle
+              : `이전 추천 ${recommendations.length}곳`}
           </span>
           <span className="text-[13px]">결과 보기 ⌃</span>
         </button>
@@ -549,14 +590,16 @@ export function AiRecommendationsPage({
           isOpen={sheetOpen}
           mobileBottomSheet
           onClose={() => setSheetOpen(false)}
-          title="딱 맞는 연구실 3곳을 찾았어요"
+          title={resultTitle}
           className="max-h-[82dvh] [&_h2]:text-[18px] [&_h2]:text-text-primary"
         >
           <div className="px-5 pt-2 pb-5">
             <p className="mb-5 text-[14px] text-text-subtle">
-              나눈 이야기를 바탕으로 골랐어요 · 예시 결과
+              {result?.noMatch
+                ? "관심 연구나 키워드를 바꿔 다시 시도해보세요."
+                : "나눈 이야기를 바탕으로 골랐어요"}
             </p>
-            <ResultCards mobile />
+            <ResultCards recommendations={recommendations} mobile />
             {resultsFooter}
           </div>
         </Dialog>
