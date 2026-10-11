@@ -109,7 +109,9 @@ export async function completeOnboarding(
     const response = await fetch("/api/auth/onboarding", {
       body: JSON.stringify({
         ...request,
-        ...(request.purpose === "FINDER" && answers.departmentCode
+        ...((request.purpose === "FINDER" ||
+          request.purpose === "RESEARCHER") &&
+        answers.departmentCode
           ? { departmentCode: answers.departmentCode }
           : {}),
       }),
