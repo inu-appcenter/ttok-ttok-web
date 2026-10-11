@@ -21,10 +21,13 @@ let upstream, app, appUrl;
 let onboardingFailure, departmentFailure, onboardingDone;
 let publicationCount;
 let aiFailure, aiMalformed;
+let emailStatus, emailMalformed;
 
 beforeEach(() => {
   publicationCount = 7;
   aiFailure = false;
+  emailStatus = 200;
+  emailMalformed = false;
   aiMalformed = false;
   bookmarks = [];
   coffee = null;
@@ -43,7 +46,7 @@ before(async () => {
   upstream = createServer(async (request, response) => {
     const url = new URL(request.url, "http://localhost");
     const token = request.headers.authorization?.replace("Bearer ", "");
-    const publicRead = url.pathname.startsWith("/api/laboratory/");
+    const publicRead = url.pathname.startsWith("/api/laboratory/") || url.pathname.startsWith("/api/college");
     if (!publicRead && (!token || token === "fake-expired")) {
       response.writeHead(401, { "Content-Type": "application/json" });
       response.end(
@@ -58,7 +61,27 @@ before(async () => {
       : null;
     calls.push({ path: url.pathname, method: request.method, body });
     let data = null;
-    if (url.pathname.startsWith("/api/chat/research-lab")) {
+    if (url.pathname === "/api/college") {
+      data = [{ college: "IT", collegeName: "정보기술대학" }];
+    } else if (url.pathname === "/api/college/department") {
+      data = [
+        {
+          college: "IT",
+          collegeName: "정보기술대학",
+          department: "COMPUTER_ENGINEERING",
+          departmentName: "컴퓨터공학부",
+        },
+      ];
+    } else if (url.pathname === "/api/chat/email-editor") {
+      if (emailStatus !== 200) {
+        response.writeHead(emailStatus, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ data: null, message: "메일 생성 실패" }));
+        return;
+      }
+      data = emailMalformed
+        ? { answer: "미지원 문자열" }
+        : { subject: "서버 제목", body: "안녕하세요.\n서버 본문" };
+    } else if (url.pathname.startsWith("/api/chat/research-lab")) {
       if (aiFailure) {
         response.writeHead(503, {"Content-Type":"application/json"});
         response.end(JSON.stringify({message:"추천 서비스 장애",data:null}));
@@ -495,4 +518,96 @@ test("추천 API는 입력 제한, 인증 만료, 서비스 장애 및 비구조
  assert.equal((await request("/api/recommendations",{method:"POST",body:{interest:"촉매",selectedKeywords:[]}})).status,503);
  aiFailure=false; aiMalformed=true;
  assert.equal((await request("/api/recommendations",{method:"POST",body:{interest:"촉매",selectedKeywords:[]}})).status,502);
+});
+
+const emailInput = {
+  laboratoryId: 157,
+  purpose: "UNDERGRADUATE_RESEARCH",
+  name: "홍길동",
+  department: "COMPUTER_ENGINEERING",
+  grade: "THIRD",
+  email: "student@example.com",
+  interest: "촉매 연구",
+};
+test("메일 API는 서버 학과 코드와 구조화 초안을 전달하며 개인정보 응답을 캐시하지 않는다", async () => {
+  const departments = await request("/api/email-drafts/departments");
+  assert.equal(departments.status, 200);
+  assert.deepEqual((await departments.json()).data, [
+    { department: "COMPUTER_ENGINEERING", departmentName: "컴퓨터공학부" },
+  ]);
+  const response = await request("/api/email-drafts", {
+    method: "POST",
+    body: { ...emailInput, ignored: "삭제할 필드" },
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual((await response.json()).data, {
+    subject: "서버 제목",
+    body: "안녕하세요.\n서버 본문",
+  });
+  assert.equal(response.headers.get("cache-control"), "private, no-store");
+  assert.deepEqual(
+    calls.find((call) => call.path === "/api/chat/email-editor").body,
+    emailInput,
+  );
+});
+test("메일 API는 입력 경계와 학과를 검증하고 인증·연구실 없음·AI 장애·잘못된 응답을 구분한다", async () => {
+  for (const patch of [
+    { name: "가".repeat(21) },
+    { interest: "가".repeat(301) },
+    { grade: "3학년" },
+    { purpose: "invalid" },
+    { content: "가".repeat(1201) },
+    { laboratoryId: -1 },
+  ]) {
+    assert.equal(
+      (
+        await request("/api/email-drafts", {
+          method: "POST",
+          body: { ...emailInput, ...patch },
+        })
+      ).status,
+      400,
+    );
+  }
+  assert.equal(calls.length, 0);
+  assert.equal(
+    (
+      await request("/api/email-drafts", {
+        method: "POST",
+        body: { ...emailInput, department: "컴퓨터공학부" },
+      })
+    ).status,
+    400,
+  );
+  assert.equal(
+    calls.some((call) => call.path === "/api/chat/email-editor"),
+    false,
+  );
+  assert.equal(
+    (
+      await request("/api/email-drafts", {
+        token: null,
+        method: "POST",
+        body: emailInput,
+      })
+    ).status,
+    401,
+  );
+  for (const status of [401, 404, 503]) {
+    emailStatus = status;
+    const response = await request("/api/email-drafts", {
+      method: "POST",
+      body: emailInput,
+    });
+    assert.equal(response.status, status);
+    if (status === 401)
+      assert.match(response.headers.get("set-cookie"), /Max-Age=0/i);
+  }
+  emailStatus = 200;
+  emailMalformed = true;
+  assert.equal(
+    (await request("/api/email-drafts", { method: "POST", body: emailInput }))
+      .status,
+    502,
+  );
 });
