@@ -20,9 +20,12 @@ let bookmarks, coffee, review, calls, malformed;
 let upstream, app, appUrl;
 let onboardingFailure, departmentFailure, onboardingDone;
 let publicationCount;
+let aiFailure, aiMalformed;
 
 beforeEach(() => {
   publicationCount = 7;
+  aiFailure = false;
+  aiMalformed = false;
   bookmarks = [];
   coffee = null;
   review = null;
@@ -55,7 +58,14 @@ before(async () => {
       : null;
     calls.push({ path: url.pathname, method: request.method, body });
     let data = null;
-    if (url.pathname === "/api/member" && request.method === "PATCH") {
+    if (url.pathname.startsWith("/api/chat/research-lab")) {
+      if (aiFailure) {
+        response.writeHead(503, {"Content-Type":"application/json"});
+        response.end(JSON.stringify({message:"추천 서비스 장애",data:null}));
+        return;
+      }
+      data = aiMalformed ? {answer:"자유 문자열"} : url.pathname.endsWith("/keywords") ? {keywords:["촉매","에너지"]} : {noMatch:false,recommendations:[{laboratoryId:157,labName:"촉매 연구실",department:"화학과",professorName:"교수",keywords:["촉매"],reason:null}]};
+    } else if (url.pathname === "/api/member" && request.method === "PATCH") {
       if (departmentFailure) {
         response.writeHead(400, { "Content-Type": "application/json" });
         response.end(JSON.stringify({ code: "INVALID_INPUT", data: null }));
@@ -464,4 +474,25 @@ test("논문 전체보기 재조회는 이전 페이지 캐시 대신 변경된 
   const html = await second.text();
   assert.match(html, /논문 8/);
   assert.doesNotMatch(html, /논문을 불러오지 못했어요/);
+});
+
+
+test("추천 키워드와 카드 API는 최신 요청 계약과 서버 순위를 매핑한다", async () => {
+ const first = await request("/api/recommendations/keywords", {method:"POST",body:{interest:"촉매 연구"}});
+ assert.equal(first.status,200); assert.deepEqual((await first.json()).data,["촉매","에너지"]);
+ const response = await request("/api/recommendations", {method:"POST",body:{interest:"촉매 연구",selectedKeywords:["촉매"]}});
+ assert.equal(response.status,200); const data=(await response.json()).data;
+ assert.equal(data.recommendations[0].id,157); assert.deepEqual(data.recommendations[0].reasons,[]);
+ assert.deepEqual(calls.filter(x=>x.path==="/api/chat/research-lab")[0].body,{interest:"촉매 연구",selectedKeywords:["촉매"]});
+ assert.equal(response.headers.get("cache-control"),"private, no-store");
+});
+test("추천 API는 입력 제한, 인증 만료, 서비스 장애 및 비구조화 응답을 구분한다", async () => {
+ assert.equal((await request("/api/recommendations/keywords",{method:"POST",body:{interest:"가".repeat(301)}})).status,400);
+ assert.equal((await request("/api/recommendations",{method:"POST",body:{interest:"촉매",selectedKeywords:["A","B","C","D"]}})).status,400);
+ assert.equal(calls.length,0);
+ assert.equal((await request("/api/recommendations/keywords",{token:null,method:"POST",body:{interest:"촉매"}})).status,401);
+ aiFailure=true;
+ assert.equal((await request("/api/recommendations",{method:"POST",body:{interest:"촉매",selectedKeywords:[]}})).status,503);
+ aiFailure=false; aiMalformed=true;
+ assert.equal((await request("/api/recommendations",{method:"POST",body:{interest:"촉매",selectedKeywords:[]}})).status,502);
 });
