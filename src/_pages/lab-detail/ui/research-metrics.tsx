@@ -85,7 +85,7 @@ export function ResearchMetrics({ metrics }: { metrics: LabResearchMetrics }) {
       </dl>
       {activeMetric ? (
         <div
-          className="absolute bottom-[calc(100%_-_24px)] left-0 z-30 w-full xl:-left-[27px] xl:w-[440px] rounded-[var(--radius-2xl)] bg-bg-default p-6 shadow-[0_4px_16px_var(--color-opacity-black-10)]"
+          className="absolute bottom-[calc(100%_-_24px)] left-0 z-30 w-full rounded-[var(--radius-2xl)] bg-bg-default p-6 shadow-[0_4px_16px_var(--color-opacity-black-10)] xl:-left-[27px] xl:w-[440px]"
           id={tooltipId}
           onMouseLeave={() => setActiveMetric(null)}
           onKeyDown={(event) => {
@@ -110,7 +110,8 @@ export function ResearchMetrics({ metrics }: { metrics: LabResearchMetrics }) {
           ) : null}
           {activeMetric === "citations" ? (
             <>
-              <div className="mt-3 rounded-[var(--radius-2xl)] border border-icon-disabled p-3">
+              <div aria-label="피인용지수 계산 예시" className="mt-3 rounded-[var(--radius-2xl)] border border-icon-disabled p-3">
+                <p className="sr-only">다음은 설명을 위한 예시이며 이 연구실의 실제 논문별 인용 횟수가 아닙니다.</p>
                 {[10, 6, 3, 2].map((count, index) => (
                   <div
                     className="mb-2 flex items-center gap-[10px] text-[length:var(--font-size-label2)]"
@@ -130,14 +131,14 @@ export function ResearchMetrics({ metrics }: { metrics: LabResearchMetrics }) {
                   전부 더하면 21회 → 피인용지수 21
                 </p>
               </div>
-              <p className="mt-3 text-[length:var(--font-size-body2)] leading-[1.5]">
+              <p className="mt-3 text-[length:var(--font-size-label1)] leading-[1.5]">
                 연구가 얼마나 많이 참고됐는지 보여주는 총량이에요.
                 <br />
                 연구실 연구가 학계에서 많이 참고되고 있다는 뜻이에요.
               </p>
             </>
           ) : (
-            <p className="mt-3 text-[length:var(--font-size-body2)] leading-[1.5]">
+            <p className="mt-3 text-[length:var(--font-size-label1)] leading-[1.5]">
               h번 이상 인용된 논문이 h편 있다는 뜻이에요. 예를 들어 14번 이상
               인용된 논문이 14편이면 h-index는 14예요.
             </p>
