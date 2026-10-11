@@ -62,13 +62,31 @@ export function OnboardingFlow({
   const [departmentCode, setDepartmentCode] = useState<string>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [contactError, setContactError] = useState("");
   const activeStepRef = useRef<HTMLElement>(null);
   const completionErrorRef = useRef<HTMLParagraphElement>(null);
   const isInitialRender = useRef(true);
 
   const purpose =
     typeof answers.purpose === "string" ? answers.purpose : undefined;
-  const activeQuestions = getOnboardingQuestions(purpose, reviewOptions);
+  const activeQuestions = getOnboardingQuestions(
+    purpose,
+    reviewOptions,
+    answers,
+  );
+  const labDepartment = colleges
+    .flatMap((college) => college.departments)
+    .find(
+      (department) =>
+        department.departmentName === selectedLaboratory?.department,
+    );
+  const totalSteps =
+    purpose === ONBOARDING_PURPOSE.explore ? 3 : activeQuestions.length + 1;
+  function questionText(question: (typeof activeQuestions)[number]) {
+    return question.id === "departmentConfirmation" && selectedLaboratory
+      ? `${selectedLaboratory.department} 소속인가요?`
+      : question.question;
+  }
 
   const completedQuestionCount = activeQuestions.filter((question) => {
     const answer = answers[question.id];
@@ -80,7 +98,7 @@ export function OnboardingFlow({
   const currentStep = isFinder
     ? Math.min(completedQuestionCount, 3)
     : isComplete
-      ? 8
+      ? totalSteps
       : completedQuestionCount + 1;
 
   useEffect(() => {
@@ -129,22 +147,67 @@ export function OnboardingFlow({
     )
       return;
 
-    setAnswers((currentAnswers) => ({
-      ...currentAnswers,
+    if (currentQuestion.id === "contact" && typeof nextAnswer === "string") {
+      try {
+        const url = new URL(nextAnswer);
+        if (
+          url.protocol !== "https:" ||
+          url.hostname !== "open.kakao.com" ||
+          url.pathname === "/"
+        )
+          throw new Error();
+      } catch {
+        setContactError(
+          "https://open.kakao.com/으로 시작하는 오픈채팅 링크를 입력해주세요.",
+        );
+        return;
+      }
+    }
+    setContactError("");
+
+    if (
+      currentQuestion.id === "departmentConfirmation" &&
+      nextAnswer === "네, 맞아요" &&
+      !labDepartment
+    )
+      return;
+    const nextAnswers: OnboardingAnswers = {
+      ...answers,
       [currentQuestion.id]: nextAnswer,
       ...(currentQuestion.id === "department" ? { departmentCode } : {}),
+      ...(currentQuestion.id === "departmentConfirmation" &&
+      nextAnswer === "네, 맞아요" &&
+      labDepartment
+        ? {
+            department: labDepartment.departmentName,
+            departmentCode: labDepartment.department,
+          }
+        : {}),
       ...(currentQuestion.type === "lab-search" && selectedLaboratory
         ? { laboratoryId: selectedLaboratory.laboratoryId }
         : {}),
-    }));
-    const nextQuestions =
-      currentQuestion.id === "purpose" && typeof nextAnswer === "string"
-        ? getOnboardingQuestions(nextAnswer, reviewOptions)
-        : activeQuestions;
+    };
+    if (
+      currentQuestion.id === "coffeeChat" &&
+      nextAnswer === "아니요, 괜찮아요"
+    ) {
+      delete nextAnswers.contact;
+      setDraftAnswers((current) => {
+        const next = { ...current };
+        delete next.contact;
+        return next;
+      });
+    }
+    setAnswers(nextAnswers);
+    const nextQuestions = getOnboardingQuestions(
+      typeof nextAnswers.purpose === "string" ? nextAnswers.purpose : undefined,
+      reviewOptions,
+      nextAnswers,
+    );
     const nextQuestion = nextQuestions[completedQuestionCount + 1];
     const draft = nextQuestion ? draftAnswers[nextQuestion.id] : undefined;
     setPendingAnswer(typeof draft === "string" ? draft : "");
-    setPendingSelections([]);
+    setPendingSelections(Array.isArray(draft) ? draft : []);
   }
 
   function editPreviousAnswer() {
@@ -157,11 +220,27 @@ export function OnboardingFlow({
     }));
     const previousAnswer = answers[previous.id];
     setPendingAnswer(typeof previousAnswer === "string" ? previousAnswer : "");
+    setPendingSelections(Array.isArray(previousAnswer) ? previousAnswer : []);
     setSubmitError("");
+    setContactError("");
+    if (
+      ["purpose", "lab", "departmentConfirmation", "department"].includes(
+        previous.id,
+      )
+    )
+      setDepartmentCode(undefined);
     setAnswers((current) => {
       const next = { ...current };
       for (const question of activeQuestions.slice(completedQuestionCount - 1))
         delete next[question.id];
+      if (
+        ["purpose", "lab", "departmentConfirmation", "department"].includes(
+          previous.id,
+        )
+      ) {
+        delete next.department;
+        delete next.departmentCode;
+      }
       return next;
     });
   }
@@ -188,20 +267,17 @@ export function OnboardingFlow({
 
   return (
     <>
-      <OnboardingProgress
-        currentStep={currentStep}
-        totalSteps={isFinder ? 3 : 8}
-      />
+      <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
       <section className="mx-auto flex w-full max-w-[680px] flex-col gap-[var(--spacing-spacing-4)] overflow-y-auto overscroll-y-contain px-[var(--spacing-spacing-4)] pb-[max(var(--spacing-spacing-10),env(safe-area-inset-bottom))] pt-[var(--spacing-spacing-10)] text-text-default max-md:min-h-0 max-md:flex-1 max-md:[scrollbar-width:none] md:overflow-visible md:px-0">
         <ChatMessage sender="bot">똑똑에 오신 걸 환영해요!</ChatMessage>
         {activeQuestions.slice(0, completedQuestionCount).map((question) => (
           <div className="contents" key={question.id}>
-            {question.id === "department" ? (
+            {question.id === "department" && isFinder ? (
               <ChatMessage sender="bot">
                 연구실 추천을 위해 몇 가지 물어볼게요!
               </ChatMessage>
             ) : null}
-            <ChatMessage sender="bot">{question.question}</ChatMessage>
+            <ChatMessage sender="bot">{questionText(question)}</ChatMessage>
             {question.helper ? (
               <ChatMessage emphasis="subtle" sender="bot">
                 {question.helper}
@@ -319,6 +395,14 @@ export function OnboardingFlow({
                 </Link>
               )}
             </div>
+            <button
+              className="w-fit cursor-pointer text-sm text-text-subtle underline disabled:opacity-50"
+              disabled={isSubmitting}
+              onClick={editPreviousAnswer}
+              type="button"
+            >
+              이전 답변 수정
+            </button>
           </section>
         ) : (
           <form
@@ -333,12 +417,14 @@ export function OnboardingFlow({
             }}
             tabIndex={-1}
           >
-            {currentQuestion.id === "department" ? (
+            {currentQuestion.id === "department" && isFinder ? (
               <ChatMessage sender="bot">
                 연구실 추천을 위해 몇 가지 물어볼게요!
               </ChatMessage>
             ) : null}
-            <ChatMessage sender="bot">{currentQuestion.question}</ChatMessage>
+            <ChatMessage sender="bot">
+              {questionText(currentQuestion)}
+            </ChatMessage>
             {currentQuestion.helper ? (
               <ChatMessage emphasis="subtle" sender="bot">
                 {currentQuestion.helper}
@@ -380,7 +466,12 @@ export function OnboardingFlow({
               <QuickReplies
                 name={currentQuestion.id}
                 onValueChange={setPendingAnswer}
-                options={currentQuestion.options ?? []}
+                options={(currentQuestion.options ?? []).filter(
+                  (option) =>
+                    currentQuestion.id !== "departmentConfirmation" ||
+                    labDepartment ||
+                    option.value !== "네, 맞아요",
+                )}
                 value={pendingAnswer}
               />
             ) : currentQuestion.type === "multi-choice" ? (
@@ -408,6 +499,9 @@ export function OnboardingFlow({
                 className={`ml-auto w-full max-w-[444px] ${currentQuestion.id === "interest" ? "max-md:max-w-[320px]" : ""}`}
               >
                 <Field
+                  error={
+                    currentQuestion.id === "contact" ? contactError : undefined
+                  }
                   aria-label={
                     currentQuestion.id === "interest"
                       ? "관심 연구"
@@ -419,7 +513,10 @@ export function OnboardingFlow({
                   maxLength={
                     currentQuestion.id === "interest" ? 1000 : undefined
                   }
-                  onChange={(event) => setPendingAnswer(event.target.value)}
+                  onChange={(event) => {
+                    setPendingAnswer(event.target.value);
+                    setContactError("");
+                  }}
                   placeholder={
                     currentQuestion.id === "interest"
                       ? "예: 추천시스템, 파이썬 크롤링"
@@ -441,7 +538,7 @@ export function OnboardingFlow({
                 }
               />
             </div>
-            {isFinder && completedQuestionCount > 0 ? (
+            {completedQuestionCount > 0 ? (
               <button
                 className="w-fit cursor-pointer text-sm text-text-subtle underline"
                 onClick={editPreviousAnswer}
