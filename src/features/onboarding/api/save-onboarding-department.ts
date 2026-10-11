@@ -1,4 +1,4 @@
-export async function saveFinderDepartment({
+export async function saveOnboardingDepartment({
   baseUrl,
   accessToken,
   department,

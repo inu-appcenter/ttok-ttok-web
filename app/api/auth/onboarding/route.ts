@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
-import { saveFinderDepartment } from "@/features/onboarding/api/save-finder-department";
+import { saveOnboardingDepartment } from "@/features/onboarding/api/save-onboarding-department";
 
 const API_ERROR_MESSAGE = "온보딩 저장 중 문제가 발생했습니다.";
 
@@ -41,7 +41,10 @@ export async function POST(request: Request) {
       string,
       unknown
     >;
-    if (body.purpose === "FINDER" && departmentCode !== undefined) {
+    if (
+      body.purpose === "RESEARCHER" ||
+      (body.purpose === "FINDER" && departmentCode !== undefined)
+    ) {
       if (
         typeof departmentCode !== "string" ||
         !/^[A-Z][A-Z_]+$/.test(departmentCode)
@@ -51,7 +54,7 @@ export async function POST(request: Request) {
           { status: 400 },
         );
       }
-      const departmentResponse = await saveFinderDepartment({
+      const departmentResponse = await saveOnboardingDepartment({
         baseUrl: apiBaseUrl,
         accessToken,
         department: departmentCode,
@@ -85,9 +88,9 @@ export async function POST(request: Request) {
       return NextResponse.json(response);
     }
 
-    // 완료 응답이 유실된 뒤 재시도한 FINDER는 이미 저장된 상태로 이동합니다.
+    // 온보딩은 서버의 단일 트랜잭션입니다. 응답 유실 후 재시도는 완료된 상태로 이동합니다.
     if (
-      body.purpose === "FINDER" &&
+      (body.purpose === "FINDER" || body.purpose === "RESEARCHER") &&
       response &&
       typeof response === "object" &&
       "code" in response &&
