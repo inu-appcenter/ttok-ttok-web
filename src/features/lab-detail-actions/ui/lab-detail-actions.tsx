@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 
@@ -36,9 +37,11 @@ function SubmissionToast({
 
 export function LabContactCard({
   contact,
+  laboratoryId,
   isAuthenticated = false,
 }: {
   contact: LabDetail["contact"];
+  laboratoryId?: number;
   isAuthenticated?: boolean;
 }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -59,10 +62,18 @@ export function LabContactCard({
         ) : isAuthenticated ? (
           <ul className="mt-[10px] flex flex-col text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
             {contact.members.map((member) => (
-              <li className="flex items-center justify-between gap-4 border-b border-border-subtlest py-1 last:border-0" key={member.id}>
+              <li
+                className="flex items-center justify-between gap-4 border-b border-border-subtlest py-1 last:border-0"
+                key={member.id}
+              >
                 <span>{member.name}</span>
                 {member.url ? (
-                  <a className="text-text-primary hover:underline" href={member.url} rel="noreferrer" target="_blank">
+                  <a
+                    className="text-text-primary hover:underline"
+                    href={member.url}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
                     {member.contact}
                   </a>
                 ) : (
@@ -105,7 +116,11 @@ export function LabContactCard({
           </p>
           <Link
             className="mt-[34px] inline-flex min-h-10 w-full items-center justify-center rounded-[var(--radius-md)] bg-bg-primary px-4 py-2 text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] text-text-inverse transition-colors hover:bg-bg-primary-hover active:bg-bg-primary-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-            href="/login"
+            href={
+              laboratoryId
+                ? `/login?returnTo=${encodeURIComponent(`/labs/${laboratoryId}`)}`
+                : "/login"
+            }
           >
             인천대학교 포털 로그인 ↗
           </Link>
@@ -119,33 +134,96 @@ export function LabContactCard({
 }
 
 const CORE_TIME_OPTIONS = ["있음", "없음"];
-const MEETING_OPTIONS = ["주 2회 이상", "주 1회", "격주", "월 1회 이하", "없음"];
-const TASK_OPTIONS = ["논문 리딩", "실험/코딩", "데이터 라벨링", "세미나 발표", "과제 참여"];
+const MEETING_OPTIONS = [
+  "주 2회 이상",
+  "주 1회",
+  "격주",
+  "월 1회 이하",
+  "없음",
+];
+const TASK_OPTIONS = [
+  "논문 리딩",
+  "실험/코딩",
+  "데이터 라벨링",
+  "세미나 발표",
+  "과제 참여",
+];
 
-export function ProvideLabInfoCard() {
+export function ProvideLabInfoCard({
+  laboratoryId,
+  canContribute = false,
+  onSave,
+}: {
+  laboratoryId?: number;
+  canContribute?: boolean;
+  onSave?: (values: {
+    coreTime: string;
+    weeklyMeeting: string;
+    doings: string[];
+  }) => Promise<void>;
+}) {
+  const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [toastTitle, setToastTitle] = useState("");
   const [coreTime, setCoreTime] = useState("");
   const [meetingFrequency, setMeetingFrequency] = useState("");
   const [tasks, setTasks] = useState<string[]>([]);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   function resetForm() {
     setCoreTime("");
     setMeetingFrequency("");
     setTasks([]);
     setHasSubmitted(false);
+    setSaveError("");
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isSaving) return;
     setHasSubmitted(true);
 
     if (!coreTime || !meetingFrequency || tasks.length === 0) return;
-
-    setIsDialogOpen(false);
-    resetForm();
-    setToastTitle("정보 제공이 완료되었습니다");
+    if (!canContribute && !onSave) {
+      setSaveError("본인 소속 연구실의 연구생 계정으로 로그인해주세요.");
+      return;
+    }
+    setSaveError("");
+    setIsSaving(true);
+    try {
+      const values = {
+        coreTime,
+        weeklyMeeting: meetingFrequency,
+        doings: tasks,
+      };
+      if (onSave) await onSave(values);
+      else {
+        const response = await fetch("/api/member/review", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...values, laboratoryId }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.ok !== true)
+          throw new Error(
+            typeof result.message === "string"
+              ? result.message
+              : "정보를 저장하지 못했어요. 다시 시도해주세요.",
+          );
+      }
+      setIsDialogOpen(false);
+      resetForm();
+      setToastTitle("정보 제공이 완료되었습니다");
+      if (!onSave) router.refresh();
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "정보를 저장하지 못했어요.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -164,8 +242,10 @@ export function ProvideLabInfoCard() {
       </button>
 
       <Dialog
+        className="max-w-[483px]"
         isOpen={isDialogOpen}
         onClose={() => {
+          if (isSaving) return;
           setIsDialogOpen(false);
           resetForm();
         }}
@@ -195,7 +275,10 @@ export function ProvideLabInfoCard() {
                 ))}
               </div>
               {hasSubmitted && !coreTime ? (
-                <p className="mt-1 text-[length:var(--font-size-caption1)] text-text-error" role="alert">
+                <p
+                  className="mt-1 text-[length:var(--font-size-caption1)] text-text-error"
+                  role="alert"
+                >
                   코어타임 여부를 선택해 주세요.
                 </p>
               ) : null}
@@ -220,7 +303,10 @@ export function ProvideLabInfoCard() {
                 ))}
               </div>
               {hasSubmitted && !meetingFrequency ? (
-                <p className="mt-1 text-[length:var(--font-size-caption1)] text-text-error" role="alert">
+                <p
+                  className="mt-1 text-[length:var(--font-size-caption1)] text-text-error"
+                  role="alert"
+                >
                   미팅 빈도를 선택해 주세요.
                 </p>
               ) : null}
@@ -229,7 +315,9 @@ export function ProvideLabInfoCard() {
             <fieldset>
               <legend className="mb-1 flex items-center gap-2 text-[length:var(--font-size-heading2)] font-medium leading-[1.5] text-text-subtle">
                 주로 하는 일
-                <span className="text-[length:var(--font-size-label1)]">복수 선택</span>
+                <span className="text-[length:var(--font-size-label1)]">
+                  복수 선택
+                </span>
               </legend>
               <div className="flex flex-wrap gap-2">
                 {TASK_OPTIONS.map((option) => (
@@ -252,20 +340,36 @@ export function ProvideLabInfoCard() {
                 ))}
               </div>
               {hasSubmitted && tasks.length === 0 ? (
-                <p className="mt-1 text-[length:var(--font-size-caption1)] text-text-error" role="alert">
+                <p
+                  className="mt-1 text-[length:var(--font-size-caption1)] text-text-error"
+                  role="alert"
+                >
                   주로 하는 일을 한 개 이상 선택해 주세요.
                 </p>
               ) : null}
             </fieldset>
           </div>
-          <Button className="mt-[30px] !h-10 w-full !font-semibold" type="submit">
+          {saveError ? (
+            <p role="alert" className="mt-4 text-sm text-text-error">
+              {saveError}
+            </p>
+          ) : null}
+          <Button
+            className="mt-[30px] !h-10 w-full !font-semibold"
+            type="submit"
+            disabled={isSaving}
+            isLoading={isSaving}
+          >
             완료
           </Button>
         </form>
       </Dialog>
 
       {toastTitle ? (
-        <SubmissionToast onDismiss={() => setToastTitle("")} title={toastTitle} />
+        <SubmissionToast
+          onDismiss={() => setToastTitle("")}
+          title={toastTitle}
+        />
       ) : null}
     </>
   );
@@ -326,7 +430,11 @@ export function ReportLabButton() {
         }}
         title="제보하기"
       >
-        <form className="flex flex-col gap-[19px] px-5 pb-5 pt-[19px]" noValidate onSubmit={handleSubmit}>
+        <form
+          className="flex flex-col gap-[19px] px-5 pb-5 pt-[19px]"
+          noValidate
+          onSubmit={handleSubmit}
+        >
           <fieldset>
             <legend className="mb-1 text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-default">
               카테고리
@@ -374,7 +482,10 @@ export function ReportLabButton() {
       </Dialog>
 
       {toastTitle ? (
-        <SubmissionToast onDismiss={() => setToastTitle("")} title={toastTitle} />
+        <SubmissionToast
+          onDismiss={() => setToastTitle("")}
+          title={toastTitle}
+        />
       ) : null}
     </>
   );

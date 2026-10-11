@@ -10,6 +10,8 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
   if (
     !body ||
+    (body.laboratoryId !== undefined &&
+      (!Number.isSafeInteger(body.laboratoryId) || body.laboratoryId < 1)) ||
     typeof body.coreTime !== "string" ||
     !body.coreTime.trim() ||
     body.coreTime.length > 30 ||
@@ -32,7 +34,9 @@ export async function POST(request: Request) {
     const profile = await getMyMember();
     if (
       profile.userType !== "RESEARCHER" ||
-      !profile.researchProfile?.laboratoryId
+      !profile.researchProfile?.laboratoryId ||
+      (body.laboratoryId !== undefined &&
+        body.laboratoryId !== profile.researchProfile.laboratoryId)
     )
       throw new AuthenticatedApiError(
         "연결된 연구실의 연구생만 수정할 수 있어요.",

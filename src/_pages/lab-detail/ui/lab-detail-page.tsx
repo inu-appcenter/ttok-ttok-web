@@ -13,15 +13,19 @@ import {
 } from "@/features/manage-bookmarks";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
 
-import { LabNews, ProfessorCard, ResearchProjects } from "./detail-content";
+import {
+  RecentPapers,
+  ProfessorCard,
+  ResearchProjects,
+} from "./detail-content";
 import { ResearchMetrics } from "./research-metrics";
-import { DETAIL_NEWS_PREVIEW } from "../model/detail-preview";
 import { MobileAiSummary } from "./mobile-ai-summary";
 
 export type LabDetailPageProps = {
   isAuthenticated?: boolean;
   lab: LabDetail;
   bookmarkActions?: BookmarkActions;
+  canContribute?: boolean;
 };
 
 function getHomepageLabel(homepageUrl: string) {
@@ -40,6 +44,7 @@ export function LabDetailPage({
   isAuthenticated = false,
   lab,
   bookmarkActions,
+  canContribute = false,
 }: LabDetailPageProps) {
   const { memberCounts } = lab;
   const aiSummary = lab.description.trim()
@@ -48,7 +53,6 @@ export function LabDetailPage({
         .map((paragraph) => paragraph.trim())
         .filter(Boolean)
     : lab.aiSummary;
-  const displayLab = { ...lab, news: lab.news ?? DETAIL_NEWS_PREVIEW };
 
   return (
     <div className="min-h-screen bg-bg-default text-text-default">
@@ -148,11 +152,16 @@ export function LabDetailPage({
         </section>
 
         <ResearchProjects isMobile lab={lab} />
+        <RecentPapers isMobile lab={lab} />
         <LabContactCard
+          laboratoryId={lab.laboratoryId}
           contact={lab.contact}
           isAuthenticated={isAuthenticated}
         />
-        <ProvideLabInfoCard />
+        <ProvideLabInfoCard
+          laboratoryId={lab.laboratoryId}
+          canContribute={canContribute}
+        />
         <div className="text-center">
           <ReportLabButton />
         </div>
@@ -205,7 +214,7 @@ export function LabDetailPage({
             </div>
           </header>
           <ResearchProjects lab={lab} />
-          <LabNews lab={displayLab} />
+          <RecentPapers lab={lab} />
           <section className="rounded-[var(--radius-2xl)] bg-bg-primary-subtle px-6 py-5 shadow-[0_4px_16px_var(--color-opacity-black-10)]">
             <h2 className="text-[length:var(--font-size-heading1)] font-semibold leading-[1.5]">
               학부연구생이 말하는 이 랩 · {lab.experience.participantCount}명
@@ -270,10 +279,16 @@ export function LabDetailPage({
           {lab.metrics ? <ResearchMetrics metrics={lab.metrics} /> : null}
           <ProfessorCard lab={lab} />
           <LabContactCard
+            laboratoryId={lab.laboratoryId}
             contact={lab.contact}
             isAuthenticated={isAuthenticated}
           />
-          <ProvideLabInfoCard />
+          <div className="mt-auto pt-12">
+            <ProvideLabInfoCard
+              laboratoryId={lab.laboratoryId}
+              canContribute={canContribute}
+            />
+          </div>
         </aside>
       </main>
       <MobileBottomNav />

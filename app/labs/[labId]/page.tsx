@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { LabDetailPage } from "@/_pages/lab-detail";
 import { getLabById } from "@/entities/lab/api";
 import { getMyBookmarks } from "@/entities/bookmark/api";
+import { getMyMember } from "@/entities/member/api";
 import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
 import { getAuthSession } from "@/shared/lib/auth/session";
 
@@ -44,7 +45,7 @@ export default async function Page({ params, searchParams }: LabPageProps) {
   ]);
   const accessToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
   const query = await searchParams;
-  const [lab, bookmarks] = await Promise.all([
+  const [lab, bookmarks, member] = await Promise.all([
     getLabById(labId, accessToken, {
       projects: getPage(query.projects),
       publications: getPage(query.publications),
@@ -52,6 +53,7 @@ export default async function Page({ params, searchParams }: LabPageProps) {
     isAuthenticated
       ? getMyBookmarks().catch(() => undefined)
       : Promise.resolve([]),
+    isAuthenticated ? getMyMember().catch(() => null) : Promise.resolve(null),
   ]);
 
   if (!lab) notFound();
@@ -60,6 +62,10 @@ export default async function Page({ params, searchParams }: LabPageProps) {
     <LabDetailPage
       isAuthenticated={isAuthenticated}
       lab={lab}
+      canContribute={
+        member?.userType === "RESEARCHER" &&
+        member.researchProfile?.laboratoryId === lab.laboratoryId
+      }
       bookmarkActions={{ initialBookmarks: bookmarks }}
     />
   );

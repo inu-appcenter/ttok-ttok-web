@@ -363,8 +363,10 @@ export function ContactEmailComposer({
 
 export function ContactEmailButton({
   recipient,
+  compact = false,
 }: {
   recipient: EmailRecipient;
+  compact?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const trigger = useRef<HTMLDivElement>(null);
@@ -378,10 +380,26 @@ export function ContactEmailButton({
     <div ref={trigger}>
       <Button
         variant="outline"
-        className="mt-3 w-full"
+        className={
+          compact
+            ? "shrink-0 !h-7 !rounded-[var(--radius-md)] !border-0 !bg-[linear-gradient(90deg,#a7c0db,#d699c5)] !px-2 !text-[12px] !text-white"
+            : "mt-3 w-full"
+        }
         onClick={() => setIsOpen(true)}
       >
-        교수님께 메일 쓰기
+        {compact ? (
+          <>
+            <Image
+              alt=""
+              src="/icons/lab-detail/mail-sparkles.svg"
+              width={12}
+              height={12}
+            />
+            AI 메일 첨삭
+          </>
+        ) : (
+          "교수님께 메일 쓰기"
+        )}
       </Button>
       <ContactEmailComposer
         recipient={recipient}
