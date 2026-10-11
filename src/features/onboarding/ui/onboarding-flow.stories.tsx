@@ -28,6 +28,13 @@ const meta = {
   title: "Features/Onboarding/ResearcherFlow",
   component: OnboardingFlow,
   parameters: { layout: "fullscreen" },
+  decorators: [
+    (Story) => (
+      <main className="flex min-h-screen flex-col bg-bg-default max-md:h-dvh max-md:min-h-0 max-md:overflow-hidden">
+        <Story />
+      </main>
+    ),
+  ],
   args: {
     colleges,
     reviewOptions: {
