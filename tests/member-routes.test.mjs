@@ -73,6 +73,10 @@ before(async () => {
       }
       data = { id: 1, department: body.department };
     } else if (url.pathname === "/api/onboarding") {
+      if (body.purpose !== "PROFESSOR" && !body.department) {
+        response.writeHead(400,{"Content-Type":"application/json"});
+        response.end(JSON.stringify({code:"INVALID_INPUT",message:"학생 학과 필수",data:null}));return;
+      }
       if (onboardingFailure || onboardingDone) {
         response.writeHead(onboardingDone ? 400 : 500, {
           "Content-Type": "application/json",
@@ -199,51 +203,24 @@ const onboardingBody = {
   doings: ["논문 리딩"],
   coffeeChatAllowed: false,
 };
-test("연구생 학과 PATCH 성공 뒤 POST하고 학과 코드와 비허용 연락처를 제외한다", async () => {
-  const response = await request("/api/auth/onboarding", {
-    method: "POST",
-    body: onboardingBody,
-  });
-  assert.equal(response.status, 200);
-  assert.deepEqual(
-    calls.map(({ path, method }) => [path, method]),
-    [
-      ["/api/member", "PATCH"],
-      ["/api/onboarding", "POST"],
-    ],
-  );
-  assert.deepEqual(calls[0].body, {
-    department: "INFORMATION_COMMUNICATION_ENGINEERING",
-  });
-  assert.equal("departmentCode" in calls[1].body, false);
-  assert.equal("contactValue" in calls[1].body, false);
+test("연구생은 department를 포함한 단일 POST로 완료하고 프로필 PATCH를 하지 않는다", async () => {
+ const {departmentCode,...input}=onboardingBody;
+ const response=await request("/api/auth/onboarding",{method:"POST",body:{...input,department:departmentCode}});
+ assert.equal(response.status,200);
+ assert.deepEqual(calls.map(({path,method})=>[path,method]),[["/api/onboarding","POST"]]);
+ assert.equal(calls[0].body.department,departmentCode);
+ assert.equal("departmentCode" in calls[0].body,false);
+ assert.equal("contactValue" in calls[0].body,false);
 });
-test("학과 저장 실패는 완료 POST를 중단하고 재시도는 같은 학과를 저장한다", async () => {
-  departmentFailure = true;
-  assert.equal(
-    (
-      await request("/api/auth/onboarding", {
-        method: "POST",
-        body: onboardingBody,
-      })
-    ).status,
-    400,
-  );
-  assert.deepEqual(
-    calls.map(({ path }) => path),
-    ["/api/member"],
-  );
-  departmentFailure = false;
-  assert.equal(
-    (
-      await request("/api/auth/onboarding", {
-        method: "POST",
-        body: onboardingBody,
-      })
-    ).status,
-    200,
-  );
-  assert.deepEqual(calls[1].body, calls[0].body);
+test("기존 departmentCode 입력도 최신 계약으로 변환하고 탐색자 학과를 포함한다", async () => {
+ const first=await request("/api/auth/onboarding",{method:"POST",body:onboardingBody});
+ assert.equal(first.status,200);
+ assert.equal(calls[0].body.department,onboardingBody.departmentCode);
+ onboardingDone=false;
+ const second=await request("/api/auth/onboarding",{method:"POST",body:{purpose:"FINDER",department:"COMPUTER_ENGINEERING",coffeeChatAllowed:false}});
+ assert.equal(second.status,200);
+ assert.equal(calls[1].body.department,"COMPUTER_ENGINEERING");
+ assert.equal(calls.some(call=>call.path==="/api/member"),false);
 });
 test("온보딩 POST 실패는 완료 처리하지 않고 응답 유실 재시도는 중복 등록 없이 복구한다", async () => {
   onboardingFailure = true;
