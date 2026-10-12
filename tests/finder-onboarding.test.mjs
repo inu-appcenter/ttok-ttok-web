@@ -8,7 +8,6 @@ import {
   completeOnboarding,
   toOnboardingRequest,
 } from "../src/features/onboarding/api/complete-onboarding.ts";
-import { saveOnboardingDepartment } from "../src/features/onboarding/api/save-onboarding-department.ts";
 
 test("탐색자는 학과와 관심 연구를 받고 연구생 질문은 유지한다", () => {
   assert.deepEqual(
@@ -30,7 +29,7 @@ test("탐색자는 학과와 관심 연구를 받고 연구생 질문은 유지�
   );
 });
 
-test("탐색자 학과 코드는 BFF에만 전달하고 관심 연구는 서버에 저장하지 않는다", async (context) => {
+test("탐색자 학과 코드는 온보딩 본문에 포함하고 관심 연구는 저장하지 않는다", async (context) => {
   const answers = {
     purpose: ONBOARDING_PURPOSE.explore,
     department: "컴퓨터공학부",
@@ -39,6 +38,7 @@ test("탐색자 학과 코드는 BFF에만 전달하고 관심 연구는 서버�
   };
   assert.deepEqual(toOnboardingRequest(answers), {
     purpose: "FINDER",
+    department: "COMPUTER_ENGINEERING",
     coffeeChatAllowed: false,
   });
   const fetch = context.mock.method(
@@ -50,27 +50,21 @@ test("탐색자 학과 코드는 BFF에만 전달하고 관심 연구는 서버�
   assert.deepEqual(JSON.parse(fetch.mock.calls[0].arguments[1].body), {
     purpose: "FINDER",
     coffeeChatAllowed: false,
-    departmentCode: "COMPUTER_ENGINEERING",
+    department: "COMPUTER_ENGINEERING",
   });
 });
 
-test("학과 저장은 본인 프로필의 학과만 수정하고 응답 실패를 보존한다", async () => {
-  let request;
-  const result = await saveOnboardingDepartment({
-    baseUrl: "https://api.example/",
-    accessToken: "test-token",
-    department: "COMPUTER_ENGINEERING",
-    fetcher: async (url, options) => {
-      request = { url, ...options };
-      return new Response("{}", { status: 400 });
-    },
-  });
-  assert.equal(request.url, "https://api.example/api/member");
-  assert.equal(request.method, "PATCH");
-  assert.deepEqual(JSON.parse(request.body), {
-    department: "COMPUTER_ENGINEERING",
-  });
-  assert.equal(result.ok, false);
+test("탐색자 학과 누락은 요청 전 차단한다", async (context) => {
+  const fetch = context.mock.method(
+    globalThis,
+    "fetch",
+    async () => new Response("{}"),
+  );
+  assert.equal(
+    (await completeOnboarding({ purpose: ONBOARDING_PURPOSE.explore })).ok,
+    false,
+  );
+  assert.equal(fetch.mock.callCount(), 0);
 });
 
 test("다른 학과 선택 단계와 커피챗 연락처 단계는 확인 답변에 따라 구성한다", () => {
@@ -113,7 +107,7 @@ test("비허용 연구생은 이전 연락처를 보내지 않고 선택 학과�
   );
   assert.equal((await completeOnboarding(answers)).ok, true);
   const body = JSON.parse(fetch.mock.calls[0].arguments[1].body);
-  assert.equal(body.departmentCode, "COMPUTER_ENGINEERING");
+  assert.equal(body.department, "COMPUTER_ENGINEERING");
   assert.equal(body.coffeeChatAllowed, false);
   assert.equal("contactValue" in body, false);
   assert.equal("contactType" in body, false);

@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
-import { saveOnboardingDepartment } from "@/features/onboarding/api/save-onboarding-department";
 
 const API_ERROR_MESSAGE = "온보딩 저장 중 문제가 발생했습니다.";
 
@@ -41,34 +40,19 @@ export async function POST(request: Request) {
       string,
       unknown
     >;
-    if (
-      body.purpose === "RESEARCHER" ||
-      (body.purpose === "FINDER" && departmentCode !== undefined)
-    ) {
+    if (body.purpose === "RESEARCHER" || body.purpose === "FINDER") {
+      // 이전 화면의 departmentCode도 최신 서버 계약의 department로 변환합니다.
+      const department = onboardingBody.department ?? departmentCode;
       if (
-        typeof departmentCode !== "string" ||
-        !/^[A-Z][A-Z_]+$/.test(departmentCode)
+        typeof department !== "string" ||
+        !/^[A-Z][A-Z_]+$/.test(department)
       ) {
         return NextResponse.json(
           { code: "INVALID_INPUT", message: "학과를 다시 선택해주세요." },
           { status: 400 },
         );
       }
-      const departmentResponse = await saveOnboardingDepartment({
-        baseUrl: apiBaseUrl,
-        accessToken,
-        department: departmentCode,
-      });
-      if (!departmentResponse.ok) {
-        return NextResponse.json(
-          { message: "학과를 저장하지 못했습니다. 다시 시도해주세요." },
-          {
-            status: [400, 401, 403, 404].includes(departmentResponse.status)
-              ? departmentResponse.status
-              : 502,
-          },
-        );
-      }
+      onboardingBody.department = department;
     }
     const upstreamResponse = await fetch(
       `${apiBaseUrl.replace(/\/$/, "")}/api/onboarding`,
