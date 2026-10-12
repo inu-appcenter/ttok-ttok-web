@@ -1,6 +1,7 @@
 import type { OnboardingAnswers } from "../model/onboarding-steps";
 
 export type OnboardingRequest = {
+  department: string;
   coffeeChatAllowed?: boolean;
   contactType?: "EMAIL" | "KAKAO_TALK";
   contactValue?: string;
@@ -44,6 +45,7 @@ export function toOnboardingRequest(
       : undefined;
 
   return {
+    department: answers.departmentCode ?? "",
     coffeeChatAllowed: isExplorer ? false : coffeeChatAllowed,
     ...(isExplorer
       ? {}
@@ -66,6 +68,8 @@ export function toOnboardingRequest(
 }
 
 function getRequestValidationError(request: OnboardingRequest) {
+  if (!/^[A-Z][A-Z_]+$/.test(request.department))
+    return "학과를 다시 선택해주세요.";
   if (request.purpose === "FINDER") {
     return null;
   }
@@ -107,14 +111,7 @@ export async function completeOnboarding(
 
   try {
     const response = await fetch("/api/auth/onboarding", {
-      body: JSON.stringify({
-        ...request,
-        ...((request.purpose === "FINDER" ||
-          request.purpose === "RESEARCHER") &&
-        answers.departmentCode
-          ? { departmentCode: answers.departmentCode }
-          : {}),
-      }),
+      body: JSON.stringify(request),
       headers: { "Content-Type": "application/json" },
       method: "POST",
     });
