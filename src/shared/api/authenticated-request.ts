@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 
 import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
 import { clearAuthCookies } from "@/shared/lib/auth/clear-auth-cookies";
+import { isInvalidSessionResponse } from "@/shared/lib/auth/session-status";
 
 export class AuthenticatedApiError extends Error {
   constructor(
@@ -51,7 +52,9 @@ export async function authenticatedRequest(
       typeof body?.message === "string"
         ? body.message
         : "요청을 완료하지 못했어요.",
-      response.status,
+      isInvalidSessionResponse(response.status, body?.code)
+        ? 401
+        : response.status,
     );
   if (!body || typeof body !== "object" || !("data" in body))
     throw new AuthenticatedApiError("서버 응답이 올바르지 않습니다.", 502);
