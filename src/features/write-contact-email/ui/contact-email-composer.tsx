@@ -1,12 +1,19 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import type { DepartmentOption } from "@/entities/lab";
+import { toEmailRequest, type EmailRequest } from "../model/email-contract";
+import {
+  requestEmailDraft,
+  loadEmailDepartments,
+  EmailApiError,
+} from "../model/request-email";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { Button, Dialog, Field, Radio, Textarea, Toast } from "@/shared/ui";
 
 import {
-  createMockEmailDraft,
   EMAIL_PURPOSES,
   EMPTY_EMAIL_INPUT,
   formatPhone,
@@ -24,6 +31,11 @@ export type ContactEmailComposerProps = {
   onClose: () => void;
   initialInput?: EmailInput;
   initialDraft?: EmailDraft;
+  onGenerate?: (
+    input: EmailRequest,
+    signal: AbortSignal,
+  ) => Promise<{ subject: string; body: string }>;
+  onLoadDepartments?: (signal: AbortSignal) => Promise<DepartmentOption[]>;
 };
 const copyClass =
   "shrink-0 cursor-pointer rounded-full border border-[#d4e1f4] bg-bg-primary-subtle px-3 py-1 text-[14px] font-semibold text-text-primary focus-visible:outline-2 focus-visible:outline-border-primary disabled:cursor-not-allowed disabled:opacity-50";
@@ -34,6 +46,8 @@ export function ContactEmailComposer({
   onClose,
   initialInput = EMPTY_EMAIL_INPUT,
   initialDraft,
+  onGenerate = requestEmailDraft,
+  onLoadDepartments = loadEmailDepartments,
 }: ContactEmailComposerProps) {
   const [input, setInput] = useState(initialInput);
   const [draft, setDraft] = useState<EmailDraft | undefined>(initialDraft);
@@ -43,7 +57,35 @@ export function ContactEmailComposer({
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState("");
   const wrapper = useRef<HTMLDivElement>(null);
-  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const request = useRef<AbortController | null>(null);
+  const router = useRouter();
+  const [requestError, setRequestError] = useState("");
+  const [departments, setDepartments] = useState<DepartmentOption[]>([]);
+  const [departmentError, setDepartmentError] = useState("");
+  const [departmentLoading, setDepartmentLoading] = useState(true);
+  const [departmentRetry, setDepartmentRetry] = useState(0);
+  const departmentId = useId();
+  useEffect(() => {
+    if (!isOpen) return;
+    const controller = new AbortController();
+    void onLoadDepartments(controller.signal)
+      .then((options) => {
+        if (!controller.signal.aborted) {
+          setDepartments(options);
+          setDepartmentError(
+            options.length ? "" : "선택할 수 있는 학과가 없어요.",
+          );
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted)
+          setDepartmentError("학과 목록을 불러오지 못했어요.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setDepartmentLoading(false);
+      });
+    return () => controller.abort();
+  }, [isOpen, onLoadDepartments, departmentRetry]);
   const copyVersion = useRef(0);
   const purposeName = useId();
   const yearName = useId();
@@ -57,7 +99,7 @@ export function ContactEmailComposer({
     function trap(event: KeyboardEvent) {
       if (event.key !== "Tab") return;
       const elements = wrapper.current?.querySelectorAll<HTMLElement>(
-        "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), a[href]",
+        "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]",
       );
       if (!elements?.length) return;
       const first = elements[0],
@@ -73,8 +115,8 @@ export function ContactEmailComposer({
     document.addEventListener("keydown", trap);
     return () => {
       document.removeEventListener("keydown", trap);
-      if (timeout.current) clearTimeout(timeout.current);
-      timeout.current = null;
+      request.current?.abort();
+      request.current = null;
       copyVersion.current += 1;
       previousFocus?.focus();
     };
@@ -85,8 +127,8 @@ export function ContactEmailComposer({
     return () => clearTimeout(timer);
   }, [notice]);
   const close = useCallback(() => {
-    if (timeout.current) clearTimeout(timeout.current);
-    timeout.current = null;
+    request.current?.abort();
+    request.current = null;
     setPending(false);
     setNotice("");
     onClose();
@@ -96,19 +138,43 @@ export function ContactEmailComposer({
     setInput((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
   }
-  function generate() {
+  async function handleGenerate() {
+    if (pending) return;
     const nextErrors = validateEmailInput(input);
+    if (!departments.some((option) => option.department === input.department))
+      nextErrors.department = "목록에서 학과를 선택해 주세요.";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
+    request.current?.abort();
+    const controller = new AbortController();
+    request.current = controller;
     setPending(true);
+    setRequestError("");
     setNotice("");
-    // 로컬 목 요청. 입력을 외부 AI 서버에 전송하지 않는다.
-    const nextDraft = createMockEmailDraft(input, recipient);
-    timeout.current = setTimeout(() => {
-      setDraft(nextDraft);
-      setPending(false);
-      timeout.current = null;
-    }, 500);
+    try {
+      const content = await onGenerate(
+        toEmailRequest(input, recipient.laboratoryId),
+        controller.signal,
+      );
+      if (controller.signal.aborted || request.current !== controller) return;
+      setDraft({ ...content, recipient: recipient.email ?? "" });
+    } catch (error) {
+      if (controller.signal.aborted || request.current !== controller) return;
+      if (error instanceof EmailApiError && error.status === 401)
+        router.replace("/login");
+      setRequestError(
+        error instanceof Error
+          ? error.message
+          : "메일을 생성하지 못했어요. 다시 시도해 주세요.",
+      );
+    } finally {
+      if (request.current === controller) setPending(false);
+    }
+  }
+  function handleCancel() {
+    request.current?.abort();
+    request.current = null;
+    setPending(false);
   }
   async function copy(label: string, value: string) {
     const version = ++copyVersion.current;
@@ -122,7 +188,7 @@ export function ContactEmailComposer({
   }
   const expanded = Boolean(draft || pending);
   const inputField = (
-    key: "name" | "department" | "email" | "phone" | "interest",
+    key: "name" | "email" | "phone" | "interest",
     label: string,
     placeholder: string,
   ) => (
@@ -131,7 +197,15 @@ export function ContactEmailComposer({
       placeholder={placeholder}
       value={input[key]}
       error={errors[key]}
-      maxLength={key === "interest" ? 500 : 100}
+      maxLength={
+        key === "interest"
+          ? 300
+          : key === "name"
+            ? 20
+            : key === "phone"
+              ? 13
+              : 254
+      }
       type={key === "email" ? "email" : key === "phone" ? "tel" : "text"}
       onChange={(event) =>
         update(
@@ -145,7 +219,7 @@ export function ContactEmailComposer({
   );
 
   return (
-    <div ref={wrapper}>
+    <div ref={wrapper} className="text-text-default">
       <Dialog
         isOpen={isOpen}
         onClose={close}
@@ -170,10 +244,9 @@ export function ContactEmailComposer({
             noValidate
             onSubmit={(event) => {
               event.preventDefault();
-              generate();
+              void handleGenerate();
             }}
           >
-            <p className="text-[12px] text-text-subtle">예시 초안</p>
             <fieldset disabled={pending}>
               <legend className="mb-1 text-[14px] font-semibold">목적</legend>
               <div className="flex flex-wrap gap-1">
@@ -198,8 +271,62 @@ export function ContactEmailComposer({
             >
               <div className="grid min-w-0 grid-cols-2 gap-2">
                 {inputField("name", "이름", "홍길동")}
-                {inputField("department", "학과", "국어국문학과")}
+                <div className="flex min-w-0 flex-col gap-1">
+                  <label
+                    htmlFor={departmentId}
+                    className="text-[14px] font-semibold"
+                  >
+                    학과
+                  </label>
+                  <select
+                    id={departmentId}
+                    value={input.department}
+                    disabled={departmentLoading || !departments.length}
+                    aria-invalid={Boolean(errors.department)}
+                    aria-describedby={
+                      errors.department ? `${departmentId}-error` : undefined
+                    }
+                    className="min-h-12 w-full min-w-0 rounded-xl border border-border-subtle bg-white px-3 text-[14px] focus-visible:outline-2 focus-visible:outline-border-primary disabled:bg-bg-disabled"
+                    onChange={(event) =>
+                      update("department", event.target.value)
+                    }
+                  >
+                    <option value="">
+                      {departmentLoading ? "학과 불러오는 중" : "학과 선택"}
+                    </option>
+                    {departments.map((option) => (
+                      <option key={option.department} value={option.department}>
+                        {option.departmentName}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.department && (
+                    <p
+                      id={`${departmentId}-error`}
+                      role="alert"
+                      className="text-[12px] text-text-error"
+                    >
+                      {errors.department}
+                    </p>
+                  )}
+                </div>
               </div>
+              {departmentError && (
+                <div role="alert" className="text-[13px] text-text-error">
+                  {departmentError}{" "}
+                  <button
+                    type="button"
+                    className="underline"
+                    disabled={departmentLoading}
+                    onClick={() => {
+                      setDepartmentLoading(true);
+                      setDepartmentRetry((value) => value + 1);
+                    }}
+                  >
+                    다시 불러오기
+                  </button>
+                </div>
+              )}
               <fieldset>
                 <legend className="mb-1 text-[14px] font-semibold">학년</legend>
                 <div className="flex flex-wrap gap-1">
@@ -236,12 +363,12 @@ export function ContactEmailComposer({
               <Textarea
                 label={
                   input.purpose === "교수님께 질문"
-                    ? "구체적으로 궁금한 점"
-                    : "관련해서 해본 일"
+                    ? "구체적으로 궁금한 점 (선택)"
+                    : "관련해서 해본 일 (선택)"
                 }
                 value={input.experience}
                 error={errors.experience}
-                maxLength={3000}
+                maxLength={1200}
                 placeholder={
                   input.purpose === "교수님께 질문"
                     ? "교수님께 전달할 내용을 구체적으로 작성해 주세요."
@@ -253,15 +380,29 @@ export function ContactEmailComposer({
             <Button
               className="w-full"
               variant="outline"
-              disabled={pending}
+              disabled={pending || departmentLoading || !departments.length}
               type="submit"
             >
               {pending
                 ? "메일 생성중"
                 : draft
-                  ? "메일 수정하기"
+                  ? "입력 내용으로 다시 생성"
                   : "AI로 메일 초안 만들기"}
             </Button>
+            {pending && (
+              <button
+                type="button"
+                className="text-[14px] text-text-subtle underline"
+                onClick={handleCancel}
+              >
+                요청 취소
+              </button>
+            )}
+            {requestError && (
+              <p role="alert" className="text-[13px] text-text-error">
+                {requestError}
+              </p>
+            )}
           </form>
           {expanded && (
             <section
