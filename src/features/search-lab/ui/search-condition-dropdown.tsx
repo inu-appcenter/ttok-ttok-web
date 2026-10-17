@@ -137,6 +137,7 @@ export function SearchConditionDropdown({
 
   function handleSelect(nextValue: string) {
     onChange(nextValue, kind === "department" && !nextValue && activeCollege !== "전체" ? activeCollege : "");
+    if (kind === "department" && isMobileSheet) return;
     setIsOpen(false);
     setQuery("");
     triggerRef.current?.focus();
