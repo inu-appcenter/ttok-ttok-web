@@ -21,10 +21,12 @@ let upstream, app, appUrl;
 let onboardingFailure, departmentFailure, onboardingDone;
 let publicationCount;
 let aiFailure, aiMalformed;
+let memberStatus, memberIsNew, memberMalformed;
 let emailStatus, emailMalformed;
 
 beforeEach(() => {
   publicationCount = 7;
+  memberStatus=200;memberIsNew=false;memberMalformed=false;
   aiFailure = false;
   emailStatus = 200;
   emailMalformed = false;
@@ -53,6 +55,14 @@ before(async () => {
         JSON.stringify({ message: "만료된 테스트 인증", data: null }),
       );
       return;
+    }
+    if (!publicRead && token === "fake-deleted") {
+      response.writeHead(404,{"Content-Type":"application/json"});
+      response.end(JSON.stringify({data:null,code:"MEMBER_NOT_FOUND",message:"존재하지 않는 유저"}));return;
+    }
+    if (url.pathname === "/api/member/me" && memberStatus !== 200) {
+      response.writeHead(memberStatus,{"Content-Type":"application/json"});
+      response.end(JSON.stringify({data:null,code:"INTERNAL_ERROR"}));return;
     }
     const chunks = [];
     for await (const chunk of request) chunks.push(chunk);
@@ -115,7 +125,8 @@ before(async () => {
       onboardingDone = true;
       data = { id: 1, isNew: false, userType: "RESEARCHER" };
     } else if (url.pathname === "/api/member/me")
-      data = {
+      data = memberMalformed ? {id:1} : {
+        isNew:memberIsNew,
         id: 1,
         studentNumber: "202501716",
         userType: token === "fake-finder" ? "FINDER" : "RESEARCHER",
@@ -206,10 +217,11 @@ after(async () => {
 
 function request(
   path,
-  { token = "fake-researcher", method = "GET", body } = {},
+  { token = "fake-researcher", method = "GET", body, redirect = "follow" } = {},
 ) {
   return fetch(`${appUrl}${path}`, {
     method,
+    redirect,
     headers: {
       "Content-Type": "application/json",
       ...(token ? { Cookie: `ttok_access_token=${token}` } : {}),
@@ -495,6 +507,31 @@ test("추천 API는 입력 제한, 인증 만료, 서비스 장애 및 비구조
  assert.equal((await request("/api/recommendations",{method:"POST",body:{interest:"촉매",selectedKeywords:[]}})).status,503);
  aiFailure=false; aiMalformed=true;
  assert.equal((await request("/api/recommendations",{method:"POST",body:{interest:"촉매",selectedKeywords:[]}})).status,502);
+});
+
+test("미완료 계정은 마이페이지와 하위 경로를 렌더하기 전에 온보딩으로 이동한다",async()=>{
+ memberIsNew=true;
+ for(const path of ["/mypage","/mypage/bookmarks","/recommendations","/","/login"]){
+  const response=await request(path,{redirect:"manual"});assert.equal(response.status,307);assert.equal(new URL(response.headers.get("location"),appUrl).pathname,"/onboarding");
+ }
+ const lab=await request("/labs/157",{redirect:"manual"});assert.equal(new URL(lab.headers.get("location"),appUrl).searchParams.get("returnTo"),"/labs/157");
+ assert.equal(calls.some(call=>call.path==="/api/bookmark/me"),false);
+});
+test("완료 계정의 온보딩 재진입을 막고 삭제·만료 계정의 쿠키를 모두 제거한다",async()=>{
+ const done=await request("/onboarding",{redirect:"manual"});assert.equal(new URL(done.headers.get("location"),appUrl).pathname,"/");
+ for(const token of ["fake-deleted","fake-expired"]){
+  const response=await request("/mypage/bookmarks",{token,redirect:"manual"});assert.equal(new URL(response.headers.get("location"),appUrl).pathname,"/login");
+  const cookie=response.headers.get("set-cookie");for(const name of ["ttok_access_token","ttok_refresh_token","ttok_member_id"])assert.match(cookie,new RegExp(name+"="));assert.match(cookie,/Max-Age=0/);
+  const api=await request("/api/bookmarks",{token});assert.equal(api.status,401);assert.equal((await api.json()).requiresLogin,true);assert.match(api.headers.get("set-cookie"),/Max-Age=0/);
+ }
+});
+test("회원 조회 장애·잘못된 응답은 로그아웃 대신 재시도 화면으로 처리한다",async()=>{
+ for(const status of [503,404]){
+  memberStatus=status;
+  const response=await request("/mypage",{redirect:"manual"});assert.equal(response.status,503);assert.equal(response.headers.get("set-cookie"),null);assert.match(await response.text(),/회원 정보를 확인하지 못했어요/);
+ }
+ memberStatus=200;memberMalformed=true;
+ const response=await request("/mypage",{redirect:"manual"});assert.equal(response.status,503);assert.equal(response.headers.get("set-cookie"),null);
 });
 
 const emailInput = {
