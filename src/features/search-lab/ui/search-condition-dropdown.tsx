@@ -64,7 +64,8 @@ export function SearchConditionDropdown({
   const [isMobileSheet, setIsMobileSheet] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState("");
-  const [activeCollege, setActiveCollege] = useState(college || colleges.find((group) => group.departments.some((department) => department.departmentName === value))?.collegeName || "전체");
+  const selectedCollege = college || colleges.find((group) => group.departments.some((department) => department.departmentName === value))?.collegeName || "전체";
+  const [activeCollege, setActiveCollege] = useState(selectedCollege);
   useEffect(() => {
     if (!isOpen) return;
     const isMobile = window.matchMedia("(max-width: 767px)").matches;
@@ -126,8 +127,17 @@ export function SearchConditionDropdown({
       : (colleges.find((college) => college.collegeName === activeCollege)
           ?.departments.map((department) => department.departmentName) ?? []);
 
+  function handleOpen() {
+    setActiveCollege(selectedCollege);
+    setIsMobileSheet(window.matchMedia("(max-width: 767px)").matches);
+    setQuery("");
+    setActiveIndex("");
+    setIsOpen(true);
+  }
+
   function handleSelect(nextValue: string) {
     onChange(nextValue, kind === "department" && !nextValue && activeCollege !== "전체" ? activeCollege : "");
+    if (kind === "department" && isMobileSheet) return;
     setIsOpen(false);
     setQuery("");
     triggerRef.current?.focus();
@@ -140,7 +150,8 @@ export function SearchConditionDropdown({
       data-open={isOpen}
       ref={rootRef}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget))
+        // 터치 시 다음 포커스 대상이 없는 blur로 모바일 시트를 닫지 않는다.
+        if (!isMobileSheet && !event.currentTarget.contains(event.relatedTarget))
           setIsOpen(false);
       }}
       onKeyDown={(event) => {
@@ -152,10 +163,7 @@ export function SearchConditionDropdown({
         }
         if (!isOpen && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
           event.preventDefault();
-          setQuery("");
-          setActiveIndex("");
-          setIsMobileSheet(window.matchMedia("(max-width: 767px)").matches);
-          setIsOpen(true);
+          handleOpen();
           return;
         }
         const target = event.target;
@@ -217,10 +225,8 @@ export function SearchConditionDropdown({
           className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-1 rounded-lg pl-2 pr-4 text-left focus-visible:outline-2 focus-visible:outline-border-primary"
           disabled={disabled}
           onClick={() => {
-            setIsMobileSheet(window.matchMedia("(max-width: 767px)").matches);
-            setIsOpen(!isOpen);
-            setQuery("");
-            setActiveIndex("");
+            if (isOpen) setIsOpen(false);
+            else handleOpen();
           }}
           ref={triggerRef}
           type="button"
