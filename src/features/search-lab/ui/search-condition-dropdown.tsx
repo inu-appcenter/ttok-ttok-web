@@ -140,7 +140,8 @@ export function SearchConditionDropdown({
       data-open={isOpen}
       ref={rootRef}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget))
+        // 터치 시 다음 포커스 대상이 없는 blur로 모바일 시트를 닫지 않는다.
+        if (!isMobileSheet && !event.currentTarget.contains(event.relatedTarget))
           setIsOpen(false);
       }}
       onKeyDown={(event) => {
