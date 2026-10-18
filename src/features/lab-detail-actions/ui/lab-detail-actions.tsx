@@ -6,13 +6,12 @@ import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 
 import type { LabDetail } from "@/entities/lab";
+import { EXTERNAL_LINKS } from "@/shared/config";
 import {
   Button,
   Checkbox,
   Dialog,
-  Field,
   Radio,
-  Textarea,
   Toast,
 } from "@/shared/ui";
 
@@ -399,118 +398,15 @@ export function ProvideLabInfoCard({
   );
 }
 
-const REPORT_CATEGORIES = ["허위 정보", "버그 / 오류", "기타"];
-
 export function ReportLabButton() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [toastTitle, setToastTitle] = useState("");
-  const [category, setCategory] = useState("허위 정보");
-  const [detail, setDetail] = useState("");
-  const [email, setEmail] = useState("");
-  const [detailError, setDetailError] = useState("");
-  const [emailError, setEmailError] = useState("");
-
-  function resetForm() {
-    setCategory("허위 정보");
-    setDetail("");
-    setEmail("");
-    setDetailError("");
-    setEmailError("");
-  }
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const nextDetailError = detail.trim() ? "" : "상세 내용을 작성해 주세요.";
-    const nextEmailError =
-      email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-        ? "올바른 이메일 주소를 입력해 주세요."
-        : "";
-
-    setDetailError(nextDetailError);
-    setEmailError(nextEmailError);
-    if (nextDetailError || nextEmailError) return;
-
-    setIsDialogOpen(false);
-    resetForm();
-    setToastTitle("접수가 완료되었습니다");
-  }
-
   return (
-    <>
-      <button
-        className="cursor-pointer text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtlest underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-        onClick={() => setIsDialogOpen(true)}
-        type="button"
-      >
-        이 정보가 잘못되었나요? 제보하기
-      </button>
-
-      <Dialog
-        isOpen={isDialogOpen}
-        mobileBottomSheet
-        onClose={() => {
-          setIsDialogOpen(false);
-          resetForm();
-        }}
-        title="제보하기"
-      >
-        <form
-          className="flex flex-col gap-[19px] px-5 pb-5 pt-[19px]"
-          noValidate
-          onSubmit={handleSubmit}
-        >
-          <fieldset>
-            <legend className="mb-1 text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-default">
-              카테고리
-            </legend>
-            <div className="flex flex-wrap gap-3">
-              {REPORT_CATEGORIES.map((option) => (
-                <Radio
-                  appearance="chip"
-                  checked={category === option}
-                  key={option}
-                  name="reportCategory"
-                  onChange={() => setCategory(option)}
-                  value={option}
-                >
-                  {option}
-                </Radio>
-              ))}
-            </div>
-          </fieldset>
-          <Textarea
-            error={detailError}
-            label="상세 내용"
-            onChange={(event) => {
-              setDetail(event.target.value);
-              if (detailError) setDetailError("");
-            }}
-            placeholder="상세 내용을 작성해 주세요"
-            value={detail}
-          />
-          <Field
-            error={emailError}
-            label="이메일 (선택)"
-            onChange={(event) => {
-              setEmail(event.target.value);
-              if (emailError) setEmailError("");
-            }}
-            placeholder="답변 받을 메일을 작성해 주세요"
-            type="email"
-            value={email}
-          />
-          <Button className="!h-10 w-full !font-semibold" type="submit">
-            접수하기
-          </Button>
-        </form>
-      </Dialog>
-
-      {toastTitle ? (
-        <SubmissionToast
-          onDismiss={() => setToastTitle("")}
-          title={toastTitle}
-        />
-      ) : null}
-    </>
+    <a
+      className="cursor-pointer text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtlest underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
+      href={EXTERNAL_LINKS.report}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      이 정보가 잘못되었나요? 제보하기
+    </a>
   );
 }
