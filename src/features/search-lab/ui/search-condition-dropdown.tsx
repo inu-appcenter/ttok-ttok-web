@@ -150,8 +150,8 @@ export function SearchConditionDropdown({
       data-open={isOpen}
       ref={rootRef}
       onBlur={(event) => {
-        // 터치 시 다음 포커스 대상이 없는 blur로 모바일 시트를 닫지 않는다.
-        if (!isMobileSheet && !event.currentTarget.contains(event.relatedTarget))
+        // 터치나 목록 교체로 다음 포커스 대상이 없는 blur가 발생할 수 있다.
+        if (!isMobileSheet && event.relatedTarget && !event.currentTarget.contains(event.relatedTarget))
           setIsOpen(false);
       }}
       onKeyDown={(event) => {
@@ -222,7 +222,7 @@ export function SearchConditionDropdown({
           aria-expanded={isOpen}
           aria-haspopup="dialog"
           aria-label={`${label}: ${selectedLabel || "전체"}`}
-          className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-1 rounded-lg pl-2 pr-4 text-left focus-visible:outline-2 focus-visible:outline-border-primary"
+          className={`flex h-full min-w-0 flex-1 cursor-pointer items-center gap-1 rounded-lg pl-2 pr-4 text-left focus-visible:outline-2 focus-visible:outline-border-primary ${selectedLabel ? "md:pr-1" : ""}`}
           disabled={disabled}
           onClick={() => {
             if (isOpen) setIsOpen(false);
@@ -233,7 +233,7 @@ export function SearchConditionDropdown({
         >
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-[13px] leading-[1.5] text-text-subtle md:text-[length:var(--font-size-body2)]">
-              {kind === "department" ? <><span className="md:hidden">단과대학 / 학과</span><span className="hidden md:inline">학과</span></> : label}
+              {kind === "department" ? "단과대학 / 학과" : label}
             </span>
             <span
               className={`truncate text-[16px] font-semibold leading-[1.4] md:text-[20px] md:leading-[1.5] tracking-[-0.01em] ${selectedLabel ? "text-text-primary" : "text-text-default"}`}
@@ -243,7 +243,7 @@ export function SearchConditionDropdown({
           </span>
           <Image
             alt=""
-            className={`hidden md:block ${isOpen ? "rotate-180" : ""}`}
+            className={`hidden shrink-0 md:block ${isOpen ? "rotate-180" : ""}`}
             height={18}
             src="/icons/home/search/chevron-down.svg"
             width={18}
@@ -252,7 +252,7 @@ export function SearchConditionDropdown({
         {selectedLabel ? (
           <button
             aria-label={`${label} 초기화`}
-            className="mr-2 rounded px-1 text-text-subtle focus-visible:outline-2 focus-visible:outline-border-primary"
+            className="mr-2 hidden size-8 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-bg-default active:bg-bg-neutral focus-visible:outline-2 focus-visible:outline-border-primary disabled:cursor-not-allowed disabled:hover:bg-transparent md:flex"
             disabled={disabled}
             onClick={() => {
               onChange("", "");
@@ -262,7 +262,7 @@ export function SearchConditionDropdown({
             }}
             type="button"
           >
-            ×
+            <Image alt="" height={18} src="/icons/home/mobile/close.svg" width={18} />
           </button>
         ) : null}
       </div>
@@ -462,7 +462,7 @@ export function SearchConditionDropdown({
                     onClick={() => handleSelect(department)}
                     type="button"
                   >
-                    <span className="min-w-0 break-words">{department || <><span className="md:hidden">{activeCollege === "전체" ? "전체" : `${activeCollege} 전체`}</span><span className="hidden md:inline">전체</span></>}</span>
+                    <span className="min-w-0 break-words">{department || (activeCollege === "전체" ? "전체" : `${activeCollege} 전체`)}</span>
                     {!department && activeCollege !== "전체" ? <span className="shrink-0 text-[11px] text-text-subtlest md:hidden">{departments.length}개 학과</span> : null}
                   </button>
                 ))}

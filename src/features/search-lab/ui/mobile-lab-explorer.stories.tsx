@@ -50,8 +50,15 @@ export const CombinedConditions: Story = {
     await userEvent.type(canvas.getByRole("searchbox", { name: "연구실 검색" }), "김 교수");
     await userEvent.click(canvas.getByRole("button", { name: "검색" }));
     await expect(getRouter().push).toHaveBeenCalledWith("/search?q=%EA%B9%80+%EA%B5%90%EC%88%98&category=AI&department=%EC%BB%B4%ED%93%A8%ED%84%B0%EA%B3%B5%ED%95%99%EB%B6%80");
-    await userEvent.click(canvas.getByRole("button", { name: "분야 초기화" }));
-    await userEvent.click(canvas.getByRole("button", { name: "학과 초기화" }));
+    await expect(canvas.queryByRole("button", { name: "분야 초기화" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("button", { name: "학과 초기화" })).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "분야: AI" }));
+    await userEvent.click(canvas.getByRole("button", { name: "전체" }));
+    await userEvent.click(canvas.getByRole("button", { name: "학과: 컴퓨터공학부" }));
+    await userEvent.click(within(canvas.getByLabelText("단과대학")).getByRole("button", { name: "전체" }));
+    await userEvent.click(within(canvas.getByLabelText("학과 목록")).getByRole("button", { name: "전체" }));
+    await expect(canvas.getByRole("dialog", { name: "학과 선택" })).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: "닫기" }));
     await userEvent.clear(canvas.getByRole("searchbox", { name: "연구실 검색" }));
     await userEvent.click(canvas.getByRole("button", { name: "검색" }));
     await expect(getRouter().push).toHaveBeenLastCalledWith("/search");
