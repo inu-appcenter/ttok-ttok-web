@@ -94,7 +94,7 @@ export function HomeSearchField({
       <form
         aria-label="연구실 검색 조건"
         aria-busy={isPending}
-        className="group/search grid w-full grid-cols-[1fr_1px_1fr] items-center md:grid-cols-2 gap-2 rounded-[var(--radius-xl)] bg-bg-default p-2 md:gap-3 md:p-3 shadow-[0_2px_8px_var(--color-opacity-black-10)] xl:flex xl:h-20"
+        className="grid w-full grid-cols-[1fr_1px_1fr] items-center md:grid-cols-2 gap-2 rounded-[var(--radius-xl)] bg-bg-default p-2 md:gap-3 md:p-3 shadow-[0_2px_8px_var(--color-opacity-black-10)] xl:flex xl:h-20"
         onSubmit={handleSubmit}
       >
         <SearchConditionDropdown
@@ -110,7 +110,7 @@ export function HomeSearchField({
         />
         <div
           aria-hidden="true"
-          className="h-[42px] w-px shrink-0 bg-border-subtle md:hidden xl:block xl:h-[54px] group-has-[[data-condition=category]:is(:hover,[data-open=true])]/search:invisible group-has-[[data-condition=department]:is(:hover,[data-open=true])]/search:invisible"
+          className="h-[42px] w-px shrink-0 bg-border-subtle md:hidden xl:block xl:h-[54px]"
         />
         <SearchConditionDropdown
           disabled={isPending || isDisabled}
@@ -127,7 +127,7 @@ export function HomeSearchField({
         />
         <div
           aria-hidden="true"
-          className="hidden h-[54px] w-px shrink-0 bg-border-subtle xl:block group-has-[[data-condition=department]:is(:hover,[data-open=true])]/search:invisible"
+          className="hidden h-[54px] w-px shrink-0 bg-border-subtle xl:block"
         />
         <div className="col-span-3 flex min-w-0 items-center gap-2 border-t border-border-subtle pt-2 md:col-span-2 md:gap-3 md:border-t-0 md:pt-0 xl:flex-1">
           <input
