@@ -462,7 +462,7 @@ export function SearchConditionDropdown({
                     onClick={() => handleSelect(department)}
                     type="button"
                   >
-                    <span className="min-w-0 break-words">{department || <><span className="md:hidden">{activeCollege === "전체" ? "전체" : `${activeCollege} 전체`}</span><span className="hidden md:inline">전체</span></>}</span>
+                    <span className="min-w-0 break-words">{department || (activeCollege === "전체" ? "전체" : `${activeCollege} 전체`)}</span>
                     {!department && activeCollege !== "전체" ? <span className="shrink-0 text-[11px] text-text-subtlest md:hidden">{departments.length}개 학과</span> : null}
                   </button>
                 ))}
