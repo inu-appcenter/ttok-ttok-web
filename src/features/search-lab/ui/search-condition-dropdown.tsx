@@ -222,7 +222,7 @@ export function SearchConditionDropdown({
           aria-expanded={isOpen}
           aria-haspopup="dialog"
           aria-label={`${label}: ${selectedLabel || "전체"}`}
-          className="flex h-full min-w-0 flex-1 cursor-pointer items-center gap-1 rounded-lg pl-2 pr-4 text-left focus-visible:outline-2 focus-visible:outline-border-primary"
+          className={`flex h-full min-w-0 flex-1 cursor-pointer items-center gap-1 rounded-lg pl-2 pr-4 text-left focus-visible:outline-2 focus-visible:outline-border-primary ${selectedLabel ? "md:pr-1" : ""}`}
           disabled={disabled}
           onClick={() => {
             if (isOpen) setIsOpen(false);
@@ -243,7 +243,7 @@ export function SearchConditionDropdown({
           </span>
           <Image
             alt=""
-            className={`hidden md:block ${isOpen ? "rotate-180" : ""}`}
+            className={`hidden shrink-0 md:block ${isOpen ? "rotate-180" : ""}`}
             height={18}
             src="/icons/home/search/chevron-down.svg"
             width={18}
@@ -252,7 +252,7 @@ export function SearchConditionDropdown({
         {selectedLabel ? (
           <button
             aria-label={`${label} 초기화`}
-            className="mr-2 hidden rounded px-1 text-text-subtle focus-visible:outline-2 focus-visible:outline-border-primary md:block"
+            className="mr-2 hidden size-8 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-bg-default active:bg-bg-neutral focus-visible:outline-2 focus-visible:outline-border-primary disabled:cursor-not-allowed disabled:hover:bg-transparent md:flex"
             disabled={disabled}
             onClick={() => {
               onChange("", "");
@@ -262,7 +262,7 @@ export function SearchConditionDropdown({
             }}
             type="button"
           >
-            ×
+            <Image alt="" height={18} src="/icons/home/mobile/close.svg" width={18} />
           </button>
         ) : null}
       </div>
