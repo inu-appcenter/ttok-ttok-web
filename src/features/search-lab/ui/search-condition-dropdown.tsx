@@ -233,7 +233,7 @@ export function SearchConditionDropdown({
         >
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-[13px] leading-[1.5] text-text-subtle md:text-[length:var(--font-size-body2)]">
-              {kind === "department" ? <><span className="md:hidden">단과대학 / 학과</span><span className="hidden md:inline">학과</span></> : label}
+              {kind === "department" ? "단과대학 / 학과" : label}
             </span>
             <span
               className={`truncate text-[16px] font-semibold leading-[1.4] md:text-[20px] md:leading-[1.5] tracking-[-0.01em] ${selectedLabel ? "text-text-primary" : "text-text-default"}`}
