@@ -252,7 +252,7 @@ export function SearchConditionDropdown({
         {selectedLabel ? (
           <button
             aria-label={`${label} 초기화`}
-            className="mr-2 rounded px-1 text-text-subtle focus-visible:outline-2 focus-visible:outline-border-primary"
+            className="mr-2 hidden rounded px-1 text-text-subtle focus-visible:outline-2 focus-visible:outline-border-primary md:block"
             disabled={disabled}
             onClick={() => {
               onChange("", "");
