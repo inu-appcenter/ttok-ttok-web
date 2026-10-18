@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { CollegeOption } from "@/entities/lab";
+import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
 
 import {
   LabCard,
@@ -78,7 +79,7 @@ export function SearchPage({
     : createSearchHref();
 
   return (
-    <main className="min-h-screen bg-bg-default text-text-default">
+    <main className="min-h-screen bg-bg-default pb-[calc(111px_+_env(safe-area-inset-bottom))] text-text-default md:pb-0">
       <section aria-label="검색 조건" className="px-4 py-6 md:p-10">
         <div className="mx-auto w-full max-w-[1184px]">
           <LaboratorySearchField
@@ -206,6 +207,7 @@ export function SearchPage({
           </div>
         ) : null}
       </section>
+      <MobileBottomNav activeHref="/search" />
     </main>
   );
 }
