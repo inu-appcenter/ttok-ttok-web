@@ -70,6 +70,20 @@ export const SearchResults: Story = {
   },
 };
 
+export const MobileNavigation: Story = {
+  ...SearchResults,
+  parameters: {
+    viewport: { options: { mobile375: { name: "Mobile 375", styles: { width: "375px", height: "812px" }, type: "mobile" } } },
+  },
+  globals: { viewport: { value: "mobile375", isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nav = within(canvas.getByRole("navigation", { name: "모바일 주요 메뉴" }));
+    await expect(nav.getByRole("link", { name: "탐색" })).toHaveAttribute("aria-current", "page");
+    await expect(nav.getByRole("link", { name: "홈" })).toHaveAttribute("href", "/");
+  },
+};
+
 export const EmptySearch: Story = {
   args: {
     alternativeLabs: MOCK_LABS.slice(0, 3),
