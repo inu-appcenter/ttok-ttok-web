@@ -1,6 +1,6 @@
-import Link from "next/link";
 import Image from "next/image";
 
+import { EXTERNAL_LINKS } from "@/shared/config";
 import { Logo } from "@/shared/ui";
 
 export function SiteFooter({ showOnMobile = false }: { showOnMobile?: boolean }) {
@@ -21,7 +21,7 @@ export function SiteFooter({ showOnMobile = false }: { showOnMobile?: boolean })
               <strong className="text-[14px] font-semibold text-text-default md:font-medium">
                 고객지원
               </strong>
-              <a className="text-text-subtle hover:text-text-primary" href="mailto:ttokttok.team@gmail.com">
+              <a className="text-text-subtle hover:text-text-primary" href={EXTERNAL_LINKS.report} target="_blank" rel="noopener noreferrer">
                 제보하기
               </a>
             </div>
@@ -29,12 +29,12 @@ export function SiteFooter({ showOnMobile = false }: { showOnMobile?: boolean })
               <strong className="text-[14px] font-semibold text-text-default md:font-medium">
                 법적고지
               </strong>
-              <Link className="text-text-subtle hover:text-text-primary" href="/terms">
+              <a className="text-text-subtle hover:text-text-primary" href={EXTERNAL_LINKS.terms} target="_blank" rel="noopener noreferrer">
                 이용약관
-              </Link>
-              <Link className="text-text-subtle hover:text-text-primary" href="/privacy">
+              </a>
+              <a className="text-text-subtle hover:text-text-primary" href={EXTERNAL_LINKS.privacy} target="_blank" rel="noopener noreferrer">
                 개인정보처리방침
-              </Link>
+              </a>
             </div>
           </div>
         </div>
