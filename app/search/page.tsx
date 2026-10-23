@@ -1,10 +1,16 @@
+import type { Metadata } from "next";
 import { SearchPage } from "@/_pages/search";
+import { DEFAULT_OPEN_GRAPH } from "@/shared/config";
 import { getResearchCategories, getCollegeOptions } from "@/entities/lab/api";
 import {
   parseSearchConditions,
   type SearchRouteParams,
 } from "@/features/search-lab";
 import { getSearchResults } from "@/features/search-lab/api";
+
+export const metadata: Metadata = {
+  openGraph: { ...DEFAULT_OPEN_GRAPH, url: "/search" },
+};
 
 export default async function Page({
   searchParams,

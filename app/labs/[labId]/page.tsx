@@ -8,6 +8,7 @@ import { getMyBookmarks } from "@/entities/bookmark/api";
 import { getMyMember } from "@/entities/member/api";
 import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
 import { getAuthSession } from "@/shared/lib/auth/session";
+import { DEFAULT_OPEN_GRAPH, DEFAULT_TWITTER } from "@/shared/config";
 
 type LabPageProps = {
   params: Promise<{ labId: string }>;
@@ -22,12 +23,16 @@ export async function generateMetadata({
 }: LabPageProps): Promise<Metadata> {
   const { labId } = await params;
   const lab = await getLabById(labId);
+  const title = lab ? `${lab.name} | 똑똑` : "연구실을 찾을 수 없어요 | 똑똑";
+  const description = lab
+    ? `${lab.professorName} 교수의 ${lab.name} 연구실 정보`
+    : DEFAULT_OPEN_GRAPH.description;
 
   return {
-    title: lab ? `${lab.name} | 똑똑` : "연구실을 찾을 수 없어요 | 똑똑",
-    description: lab
-      ? `${lab.professorName} 교수의 ${lab.name} 연구실 정보`
-      : undefined,
+    title,
+    description,
+    openGraph: { ...DEFAULT_OPEN_GRAPH, title, description, url: `/labs/${encodeURIComponent(labId)}` },
+    twitter: { ...DEFAULT_TWITTER, title, description },
   };
 }
 
