@@ -172,7 +172,7 @@ before(async () => {
       data = {
         page,
         size: 5,
-        totalPages: 2,
+        totalPages: Math.ceil(publicationCount / 5),
         totalElements: publicationCount,
         content: Array.from({ length: Math.min(5, publicationCount - page * 5) }, (_, index) => ({
           title: `논문 ${page * 5 + index + 1}`,
@@ -491,6 +491,35 @@ test("논문 전체보기 재조회는 이전 페이지 캐시 대신 변경된 
   assert.doesNotMatch(html, /논문을 불러오지 못했어요/);
 });
 
+
+test("논문 314편은 각 서버 요청당 20페이지 이하로 나누어 모두 조회한다", async () => {
+  publicationCount = 314;
+  const response = await request("/labs/157/papers");
+  const html = await response.text();
+  assert.doesNotMatch(html, /논문을 불러오지 못했어요/);
+  assert.match(html, /논문 100/);
+  assert.doesNotMatch(html, /논문 101/);
+  assert.equal(calls.filter((call) => call.path.endsWith("/publications")).length, 20);
+  let count = 100;
+  for (const page of [20, 40, 60]) {
+    calls = [];
+    const result = await request(`/api/labs/157/publications?page=${page}`);
+    assert.equal(result.status, 200);
+    const batch = await result.json();
+    count += batch.papers.length;
+    assert.equal(batch.totalElements, 314);
+    assert.equal(batch.nextPage, page === 60 ? null : page + 20);
+    assert.ok(calls.filter((call) => call.path.endsWith("/publications")).length <= 20);
+  }
+  assert.equal(count, 314);
+});
+
+test("논문 추가 조회는 잘못된 페이지를 거부한다", async () => {
+  for (const page of ["-1", "1.5", "x", ""]) {
+    assert.equal((await request(`/api/labs/157/publications?page=${page}`)).status, 400);
+  }
+  assert.equal((await request("/api/labs/157/publications")).status, 400);
+});
 
 test("추천 키워드와 카드 API는 최신 요청 계약과 서버 순위를 매핑한다", async () => {
  const first = await request("/api/recommendations/keywords", {method:"POST",body:{interest:"촉매 연구"}});
