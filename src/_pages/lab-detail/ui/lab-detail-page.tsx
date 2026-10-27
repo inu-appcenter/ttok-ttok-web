@@ -163,12 +163,14 @@ export function LabDetailPage({
           contact={lab.contact}
           isAuthenticated={isAuthenticated}
         />
-        <ProvideLabInfoCard
-          onSave={onProvideInfo}
-          laboratoryId={lab.laboratoryId}
-          canContribute={canContribute}
-          isAuthenticated={isAuthenticated}
-        />
+        {!isAuthenticated && (
+          <ProvideLabInfoCard
+            onSave={onProvideInfo}
+            laboratoryId={lab.laboratoryId}
+            canContribute={canContribute}
+            isAuthenticated={isAuthenticated}
+          />
+        )}
         <div className="text-center">
           <ReportLabButton />
         </div>
@@ -290,14 +292,16 @@ export function LabDetailPage({
             contact={lab.contact}
             isAuthenticated={isAuthenticated}
           />
-          <div className="mt-auto pt-12">
-            <ProvideLabInfoCard
-              onSave={onProvideInfo}
-              laboratoryId={lab.laboratoryId}
-              canContribute={canContribute}
-              isAuthenticated={isAuthenticated}
-            />
-          </div>
+          {!isAuthenticated && (
+            <div className="mt-auto pt-12">
+              <ProvideLabInfoCard
+                onSave={onProvideInfo}
+                laboratoryId={lab.laboratoryId}
+                canContribute={canContribute}
+                isAuthenticated={isAuthenticated}
+              />
+            </div>
+          )}
         </aside>
       </main>
       <MobileBottomNav />
