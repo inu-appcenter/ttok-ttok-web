@@ -4,7 +4,7 @@ import { PapersPage } from "./papers-page";
 const meta = {
   title: "Pages/PapersPage",
   component: PapersPage,
-  parameters: { layout: "fullscreen", siteHeaderAuthenticated: true },
+  parameters: { layout: "fullscreen", authenticated: true },
   args: {
     laboratoryId: 157,
     papers: [

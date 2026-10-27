@@ -160,6 +160,9 @@ export const BookmarkRemoval: Story = {
         name: "지능형 데이터 시스템 연구실 관심 연구실 해제",
       }),
     ).not.toBeInTheDocument();
+    await expect(
+      await canvas.findByText("관심 연구실에서 해제했어요."),
+    ).toBeVisible();
   },
 };
 

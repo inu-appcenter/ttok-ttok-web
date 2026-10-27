@@ -5,7 +5,7 @@ import { BookmarksPage } from "./bookmarks-page";
 const meta = {
   title: "Pages/BookmarksPage",
   component: BookmarksPage,
-  parameters: { layout: "fullscreen", siteHeaderAuthenticated: true },
+  parameters: { layout: "fullscreen", authenticated: true },
   args: {
     initialBookmarks: MOCK_BOOKMARKS,
     onLoad: async () => MOCK_BOOKMARKS,

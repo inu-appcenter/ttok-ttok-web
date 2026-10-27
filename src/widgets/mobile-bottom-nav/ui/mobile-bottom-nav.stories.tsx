@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { expect, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
+
+import { LOGIN_REQUIRED_MESSAGE } from "@/shared/lib/auth/login-required";
 
 import { MobileBottomNav } from "./mobile-bottom-nav";
 
@@ -58,4 +60,32 @@ export const MyPage: Story = {
 export const Bookmarks: Story = {
   parameters: { nextjs: { navigation: { pathname: "/mypage/bookmarks" } } },
   play: async ({ canvasElement }) => verifyActiveLink(canvasElement, "마이"),
+};
+
+export const LoggedOutProtectedEntries: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nav = within(canvas.getByRole("navigation", { name: "모바일 주요 메뉴" }));
+    const aiLink = nav.getByRole("link", { name: "AI추천" });
+    const myLink = nav.getByRole("link", { name: "마이" });
+    await userEvent.click(aiLink);
+    myLink.focus();
+    await userEvent.keyboard("{Enter}");
+    // 어느 보호 메뉴를 눌러도 같은 안내 하나만 보이고, 직접 접근용 href는 유지된다.
+    await expect(canvas.getAllByRole("alert")).toHaveLength(1);
+    await expect(canvas.getByRole("alert")).toHaveTextContent(LOGIN_REQUIRED_MESSAGE);
+    await expect(aiLink).toHaveAttribute("href", "/recommendations");
+    await expect(myLink).toHaveAttribute("href", "/mypage");
+  },
+};
+
+export const AuthenticatedProtectedEntries: Story = {
+  parameters: { authenticated: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nav = within(canvas.getByRole("navigation", { name: "모바일 주요 메뉴" }));
+    await userEvent.click(nav.getByRole("link", { name: "AI추천" }));
+    await userEvent.click(nav.getByRole("link", { name: "마이" }));
+    await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
+  },
 };
