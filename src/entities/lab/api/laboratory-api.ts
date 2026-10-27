@@ -276,7 +276,16 @@ async function requestLaboratoryApi(
       headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
       next: { revalidate: options.revalidate ?? 300 },
     });
-  } catch {
+  } catch (cause) {
+    console.error("[laboratory-api] fetch 실패", {
+      path,
+      page: searchParams.get("page"),
+      name: cause instanceof Error ? cause.name : "UnknownError",
+      message: cause instanceof Error ? cause.message : "Unknown fetch failure",
+      cause: cause instanceof Error && cause.cause instanceof Error
+        ? { name: cause.cause.name, message: cause.cause.message }
+        : undefined,
+    });
     throw new LaboratoryApiError("연구실 정보를 불러오지 못했습니다.", 502);
   }
 
