@@ -86,7 +86,7 @@ export function ContactEmailComposer({
         if (!controller.signal.aborted) {
           setDepartments(options);
           setDepartmentError(
-            options.length ? "" : "선택할 수 있는 학과가 없어요.",
+            options.length ? "" : "등록된 학과 정보가 없어요.",
           );
         }
       })
