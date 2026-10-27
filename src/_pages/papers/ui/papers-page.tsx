@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { LabPaper } from "@/entities/lab";
 import { CollectionHeader } from "@/shared/ui/collection-header";
@@ -8,14 +8,53 @@ export function PapersPage({
   laboratoryId,
   papers,
   error = false,
+  nextPage = null,
+  totalElements,
 }: {
   laboratoryId: number;
   papers: LabPaper[];
   error?: boolean;
+  nextPage?: number | null;
+  totalElements?: number;
 }) {
   const [sort, setSort] = useState<"default" | "name">("default");
   const router = useRouter();
-  const items = [...papers].sort((a, b) =>
+  const [loaded, setLoaded] = useState({ papers, nextPage });
+  const [hasLoadError, setHasLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    if (loaded.nextPage === null) return;
+    const controller = new AbortController();
+    async function load() {
+      try {
+        const response = await fetch(
+          `/api/labs/${laboratoryId}/publications?page=${loaded.nextPage}`,
+          { signal: controller.signal },
+        );
+        const data: unknown = await response.json();
+        if (
+          !response.ok ||
+          !isPublicationBatch(data) ||
+          data.totalElements !== totalElements ||
+          (data.nextPage !== null && data.nextPage <= (loaded.nextPage ?? 0))
+        )
+          throw new Error("논문 목록 응답이 올바르지 않습니다.");
+        const combined = [...loaded.papers, ...data.papers];
+        if (
+          combined.length > data.totalElements ||
+          (data.nextPage === null && combined.length !== data.totalElements)
+        )
+          throw new Error("논문 목록이 변경되었습니다.");
+        if (!controller.signal.aborted)
+          setLoaded({ papers: combined, nextPage: data.nextPage });
+      } catch {
+        if (!controller.signal.aborted) setHasLoadError(true);
+      }
+    }
+    void load();
+    return () => controller.abort();
+  }, [laboratoryId, loaded, retry, totalElements]);
+  const items = [...loaded.papers].sort((a, b) =>
     sort === "name"
       ? a.title.localeCompare(b.title, "ko")
       : (b.year ?? -1) - (a.year ?? -1),
@@ -43,8 +82,30 @@ export function PapersPage({
         ) : (
           <>
             <p className="mt-8 text-base font-bold leading-6 text-text-subtle">
-              총 {papers.length}개
+              총 {totalElements ?? loaded.papers.length}개
             </p>
+            {loaded.nextPage !== null && (
+              <p
+                role={hasLoadError ? "alert" : "status"}
+                className="mt-4 text-sm text-text-subtle"
+              >
+                {hasLoadError
+                  ? "나머지 논문을 불러오지 못했어요."
+                  : `논문을 불러오고 있어요. (${loaded.papers.length}/${totalElements})`}
+                {hasLoadError && (
+                  <button
+                    type="button"
+                    className="ml-2 underline"
+                    onClick={() => {
+                      setHasLoadError(false);
+                      setRetry((value) => value + 1);
+                    }}
+                  >
+                    다시 불러오기
+                  </button>
+                )}
+              </p>
+            )}
             {items.length ? (
               <ul className="mt-8">
                 {items.map((paper, index) => (
@@ -89,5 +150,46 @@ export function PapersPage({
         )}
       </main>
     </div>
+  );
+}
+
+function isPublicationBatch(
+  value: unknown,
+): value is {
+  papers: LabPaper[];
+  nextPage: number | null;
+  totalElements: number;
+} {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !("papers" in value) ||
+    !Array.isArray(value.papers) ||
+    !("totalElements" in value) ||
+    typeof value.totalElements !== "number" ||
+    !Number.isSafeInteger(value.totalElements) ||
+    value.totalElements < 0 ||
+    !("nextPage" in value) ||
+    !(
+      value.nextPage === null ||
+      (typeof value.nextPage === "number" &&
+        Number.isSafeInteger(value.nextPage) &&
+        value.nextPage > 0)
+    )
+  )
+    return false;
+  return value.papers.every(
+    (paper: unknown) =>
+      paper !== null &&
+      typeof paper === "object" &&
+      "title" in paper &&
+      typeof paper.title === "string" &&
+      "venue" in paper &&
+      typeof paper.venue === "string" &&
+      "year" in paper &&
+      (paper.year === null || typeof paper.year === "number") &&
+      "url" in paper &&
+      (paper.url === null ||
+        (typeof paper.url === "string" && /^https?:\/\//.test(paper.url))),
   );
 }
