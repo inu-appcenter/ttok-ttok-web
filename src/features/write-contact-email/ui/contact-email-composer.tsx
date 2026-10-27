@@ -27,6 +27,7 @@ import type {
 
 export type ContactEmailComposerProps = {
   recipient: EmailRecipient;
+  memberDepartmentCode?: string;
   isOpen: boolean;
   onClose: () => void;
   initialInput?: EmailInput;
@@ -42,6 +43,7 @@ const copyClass =
 
 export function ContactEmailComposer({
   recipient,
+  memberDepartmentCode,
   isOpen,
   onClose,
   initialInput = EMPTY_EMAIL_INPUT,
@@ -49,7 +51,8 @@ export function ContactEmailComposer({
   onGenerate = requestEmailDraft,
   onLoadDepartments = loadEmailDepartments,
 }: ContactEmailComposerProps) {
-  const [input, setInput] = useState(initialInput);
+  const [editableInput, setInput] = useState(initialInput);
+  const input = { ...editableInput, department: memberDepartmentCode ?? "" };
   const [draft, setDraft] = useState<EmailDraft | undefined>(initialDraft);
   const [errors, setErrors] = useState<
     Partial<Record<keyof EmailInput, string>>
@@ -64,6 +67,16 @@ export function ContactEmailComposer({
   const [departmentError, setDepartmentError] = useState("");
   const [departmentLoading, setDepartmentLoading] = useState(true);
   const [departmentRetry, setDepartmentRetry] = useState(0);
+  const selectedDepartment = departments.find(
+    (option) => option.department === memberDepartmentCode,
+  );
+  const departmentMessage = departmentError || (!departmentLoading
+    ? !memberDepartmentCode
+      ? "내 학과 정보를 확인하지 못했어요. 다시 불러와 주세요."
+      : !selectedDepartment
+        ? "내 학과와 일치하는 정보를 찾지 못했어요. 다시 불러와 주세요."
+        : ""
+    : "");
   const departmentId = useId();
   useEffect(() => {
     if (!isOpen) return;
@@ -139,10 +152,8 @@ export function ContactEmailComposer({
     setErrors((current) => ({ ...current, [key]: undefined }));
   }
   async function handleGenerate() {
-    if (pending) return;
+    if (pending || departmentLoading || departmentMessage || !selectedDepartment) return;
     const nextErrors = validateEmailInput(input);
-    if (!departments.some((option) => option.department === input.department))
-      nextErrors.department = "목록에서 학과를 선택해 주세요.";
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
     request.current?.abort();
@@ -278,47 +289,29 @@ export function ContactEmailComposer({
                   >
                     학과
                   </label>
-                  <select
+                  <input
                     id={departmentId}
-                    value={input.department}
-                    disabled={departmentLoading || !departments.length}
-                    aria-invalid={Boolean(errors.department)}
+                    value={selectedDepartment?.departmentName ?? ""}
+                    readOnly
+                    aria-busy={departmentLoading}
+                    aria-invalid={Boolean(departmentMessage)}
                     aria-describedby={
-                      errors.department ? `${departmentId}-error` : undefined
+                      departmentMessage ? `${departmentId}-error` : undefined
                     }
                     className="min-h-12 w-full min-w-0 rounded-xl border border-border-subtle bg-white px-3 text-[14px] focus-visible:outline-2 focus-visible:outline-border-primary disabled:bg-bg-disabled"
-                    onChange={(event) =>
-                      update("department", event.target.value)
-                    }
-                  >
-                    <option value="">
-                      {departmentLoading ? "학과 불러오는 중" : "학과 선택"}
-                    </option>
-                    {departments.map((option) => (
-                      <option key={option.department} value={option.department}>
-                        {option.departmentName}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.department && (
-                    <p
-                      id={`${departmentId}-error`}
-                      role="alert"
-                      className="text-[12px] text-text-error"
-                    >
-                      {errors.department}
-                    </p>
-                  )}
+                    placeholder={departmentLoading ? "학과 불러오는 중" : "학과 확인 필요"}
+                  />
                 </div>
               </div>
-              {departmentError && (
-                <div role="alert" className="text-[13px] text-text-error">
-                  {departmentError}{" "}
+              {departmentMessage && (
+                <div id={`${departmentId}-error`} role="alert" className="text-[13px] text-text-error">
+                  {departmentMessage}{" "}
                   <button
                     type="button"
                     className="underline"
                     disabled={departmentLoading}
                     onClick={() => {
+                      router.refresh();
                       setDepartmentLoading(true);
                       setDepartmentRetry((value) => value + 1);
                     }}
@@ -380,7 +373,7 @@ export function ContactEmailComposer({
             <Button
               className="w-full"
               variant="outline"
-              disabled={pending || departmentLoading || !departments.length}
+              disabled={pending || departmentLoading || Boolean(departmentMessage) || !selectedDepartment}
               type="submit"
             >
               {pending
@@ -504,10 +497,12 @@ export function ContactEmailComposer({
 
 export function ContactEmailButton({
   recipient,
+  memberDepartmentCode,
   compact = false,
   isAuthenticated = false,
 }: {
   recipient: EmailRecipient;
+  memberDepartmentCode?: string;
   compact?: boolean;
   isAuthenticated?: boolean;
 }) {
@@ -566,6 +561,7 @@ export function ContactEmailButton({
       ) : null}
       <ContactEmailComposer
         recipient={recipient}
+        memberDepartmentCode={memberDepartmentCode}
         isOpen={isOpen}
         onClose={handleClose}
       />

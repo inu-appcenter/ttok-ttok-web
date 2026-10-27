@@ -23,6 +23,7 @@ import { ResearchMetrics } from "./research-metrics";
 import { MobileAiSummary } from "./mobile-ai-summary";
 
 export type LabDetailPageProps = {
+  memberDepartmentCode?: string;
   isAuthenticated?: boolean;
   lab: LabDetail;
   bookmarkActions?: BookmarkActions;
@@ -43,6 +44,7 @@ function formatMemberCount(count: number | null) {
 }
 
 export function LabDetailPage({
+  memberDepartmentCode,
   isAuthenticated = false,
   lab,
   bookmarkActions,
@@ -123,7 +125,7 @@ export function LabDetailPage({
           </dl>
         </section>
 
-        <ProfessorCard isMobile lab={lab} isAuthenticated={isAuthenticated} />
+        <ProfessorCard isMobile lab={lab} isAuthenticated={isAuthenticated} memberDepartmentCode={memberDepartmentCode} />
 
         <section className="rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)]">
           <h2 className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5]">
@@ -282,7 +284,7 @@ export function LabDetailPage({
             </section>
           ) : null}
           {lab.metrics ? <ResearchMetrics metrics={lab.metrics} /> : null}
-          <ProfessorCard lab={lab} isAuthenticated={isAuthenticated} />
+          <ProfessorCard lab={lab} isAuthenticated={isAuthenticated} memberDepartmentCode={memberDepartmentCode} />
           <LabContactCard
             laboratoryId={lab.laboratoryId}
             contact={lab.contact}
