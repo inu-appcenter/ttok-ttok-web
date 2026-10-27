@@ -1,9 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { getRouter } from "@storybook/nextjs-vite/navigation.mock";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { MOCK_BOOKMARKS, type Bookmark } from "@/entities/bookmark";
-import { LOGIN_REQUIRED_MESSAGE } from "@/shared/lib/auth/login-required";
+import { getLoginPath, LOGIN_REQUIRED_NOTICE } from "@/shared/lib/auth/return-path";
 
 import { BookmarkToggle } from "./bookmark-toggle";
 
@@ -31,18 +30,20 @@ function stubBookmarkPost(respond: () => Promise<Response>) {
 
 export const LoggedOut: Story = {
   args: { isAuthenticated: false, onLoad: fn(async () => []) },
+  parameters: { nextjs: { navigation: { pathname: `/labs/${LAB_ID}` } } },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    getRouter().push.mockClear();
     const link = canvas.getByRole("link", { name: "관심 연구실" });
-    await expect(link).toHaveAttribute("href", "/login");
+    // 로그인 후 같은 연구실 상세로 돌아오도록 안내 값과 복귀 경로를 함께 전달한다.
+    await expect(link).toHaveAttribute(
+      "href",
+      getLoginPath({ notice: LOGIN_REQUIRED_NOTICE, returnTo: `/labs/${LAB_ID}` }),
+    );
     await userEvent.click(link);
     link.focus();
     await userEvent.keyboard("{Enter}");
-    await expect(canvas.getAllByRole("alert")).toHaveLength(1);
-    await expect(canvas.getByRole("alert")).toHaveTextContent(LOGIN_REQUIRED_MESSAGE);
+    await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
     await expect(args.onLoad).not.toHaveBeenCalled();
-    await expect(getRouter().push).not.toHaveBeenCalled();
   },
 };
 

@@ -523,10 +523,31 @@ test("미완료 계정은 마이페이지와 하위 경로를 렌더하기 전�
 test("완료 계정의 온보딩 재진입을 막고 삭제·만료 계정의 쿠키를 모두 제거한다",async()=>{
  const done=await request("/onboarding",{redirect:"manual"});assert.equal(new URL(done.headers.get("location"),appUrl).pathname,"/");
  for(const token of ["fake-deleted","fake-expired"]){
-  const response=await request("/mypage/bookmarks",{token,redirect:"manual"});assert.equal(new URL(response.headers.get("location"),appUrl).pathname,"/login");
+  const response=await request("/mypage/bookmarks",{token,redirect:"manual"});const location=new URL(response.headers.get("location"),appUrl);assert.equal(location.pathname,"/login");assert.equal(location.searchParams.get("notice"),"login-required");assert.equal(location.searchParams.has("returnTo"),false);
   const cookie=response.headers.get("set-cookie");for(const name of ["ttok_access_token","ttok_refresh_token","ttok_member_id"])assert.match(cookie,new RegExp(name+"="));assert.match(cookie,/Max-Age=0/);
   const api=await request("/api/bookmarks",{token});assert.equal(api.status,401);assert.equal((await api.json()).requiresLogin,true);assert.match(api.headers.get("set-cookie"),/Max-Age=0/);
  }
+});
+test("비로그인 보호 경로 직접 접근은 로그인 안내 값과 함께 로그인으로 이동하고 일반 로그인 방문은 그대로 둔다",async()=>{
+ for(const path of ["/recommendations","/mypage","/mypage/bookmarks"]){
+  const response=await request(path,{token:null,redirect:"manual"});assert.equal(response.status,307);
+  const location=new URL(response.headers.get("location"),appUrl);assert.equal(location.pathname,"/login");assert.equal(location.searchParams.get("notice"),"login-required");assert.equal(location.searchParams.has("returnTo"),false);
+ }
+ for(const path of ["/login","/login?notice=login-required&returnTo=%2Flabs%2F157"]){
+  assert.equal((await request(path,{token:null,redirect:"manual"})).status,200);
+ }
+});
+test("만료 세션의 공개 상세 접근은 안내 없이 상세 복귀 경로만 유지하고 로그인 화면의 안내 값은 허용 값만 보존한다",async()=>{
+ const lab=new URL((await request("/labs/157",{token:"fake-expired",redirect:"manual"})).headers.get("location"),appUrl);
+ assert.equal(lab.pathname,"/login");assert.equal(lab.searchParams.get("returnTo"),"/labs/157");assert.equal(lab.searchParams.has("notice"),false);
+ const login=new URL((await request("/login?notice=login-required&returnTo=%2F%2Fexample.com",{token:"fake-expired",redirect:"manual"})).headers.get("location"),appUrl);
+ assert.equal(login.pathname,"/login");assert.equal(login.searchParams.get("notice"),"login-required");assert.equal(login.searchParams.has("returnTo"),false);
+ const forged=new URL((await request("/login?notice=%3Cscript%3E",{token:"fake-expired",redirect:"manual"})).headers.get("location"),appUrl);
+ assert.equal(forged.search,"");
+});
+test("로그인 완료 계정의 안내 로그인 방문은 허용된 연구실 상세로만 돌아간다",async()=>{
+ const lab=await request("/login?notice=login-required&returnTo=%2Flabs%2F157",{redirect:"manual"});assert.equal(new URL(lab.headers.get("location"),appUrl).pathname,"/labs/157");
+ const external=await request("/login?notice=login-required&returnTo=%2F%2Fexample.com",{redirect:"manual"});const location=new URL(external.headers.get("location"),appUrl);assert.equal(location.origin,new URL(appUrl).origin);assert.equal(location.pathname,"/");
 });
 test("회원 조회 장애·잘못된 응답은 로그아웃 대신 재시도 화면으로 처리한다",async()=>{
  for(const status of [503,404]){

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, userEvent, within } from "storybook/test";
 
 import { MOCK_LABS } from "@/entities/lab";
-import { LOGIN_REQUIRED_MESSAGE } from "@/shared/lib/auth/login-required";
+import { getLoginPath, LOGIN_REQUIRED_NOTICE } from "@/shared/lib/auth/return-path";
 
 import { MOCK_DEPARTMENT_DIRECTORY } from "../model/mock-department-directory";
 import { HomeDepartmentDirectory } from "./home-department-directory";
@@ -103,8 +103,11 @@ export const MobileAccordion: Story = {
   },
 };
 
+// 기본 홈 스토리는 비로그인 상태라 AI 추천 진입은 로그인 안내 경로를 가진다.
+const RECOMMENDATION_LOGIN_PATH = getLoginPath({ notice: LOGIN_REQUIRED_NOTICE });
+
 const SERVICE_LINKS = [
-  { name: "추천 받으러 가기", href: "/recommendations" },
+  { name: "추천 받으러 가기", href: RECOMMENDATION_LOGIN_PATH },
   { name: "메일 보낼 연구실 찾기", href: "/search" },
   { name: "커피챗할 연구실 찾기", href: "/search" },
 ];
@@ -129,18 +132,16 @@ export const MobileServiceLinks: Story = {
   play: playServiceLinks,
 };
 
-// 공개 탐색 링크는 막지 않고, AI 추천 진입만 비로그인 안내를 띄운다.
+// 공개 탐색 링크는 그대로 두고, AI 추천 진입만 로그인 화면으로 보낸다. 안내는 로그인 화면에서 띄운다.
 export const LoggedOutRecommendationEntry: Story = {
   ...Mobile,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("link", { name: "메일 보낼 연구실 찾기" }));
-    await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
+    await expect(canvas.getByRole("link", { name: "메일 보낼 연구실 찾기" })).toHaveAttribute("href", "/search");
     const recommendationLink = canvas.getByRole("link", { name: "추천 받으러 가기" });
+    await expect(recommendationLink).toHaveAttribute("href", RECOMMENDATION_LOGIN_PATH);
     await userEvent.click(recommendationLink);
-    await expect(canvas.getAllByRole("alert")).toHaveLength(1);
-    await expect(canvas.getByRole("alert")).toHaveTextContent(LOGIN_REQUIRED_MESSAGE);
-    await expect(recommendationLink).toHaveAttribute("href", "/recommendations");
+    await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
   },
 };
 
@@ -149,7 +150,9 @@ export const AuthenticatedRecommendationEntry: Story = {
   parameters: { ...Mobile.parameters, authenticated: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("link", { name: "추천 받으러 가기" }));
+    const recommendationLink = canvas.getByRole("link", { name: "추천 받으러 가기" });
+    await expect(recommendationLink).toHaveAttribute("href", "/recommendations");
+    await userEvent.click(recommendationLink);
     await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
   },
 };

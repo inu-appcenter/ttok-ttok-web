@@ -6,6 +6,7 @@ import { expect, fn, userEvent, within } from "storybook/test";
 import { MOCK_LAB_DETAILS } from "@/entities/lab";
 import { ProvideLabInfoCard } from "@/features/lab-detail-actions";
 import { LOGIN_REQUIRED_MESSAGE } from "@/shared/lib/auth/login-required";
+import { getLoginPath, LOGIN_REQUIRED_NOTICE } from "@/shared/lib/auth/return-path";
 
 import { LabDetailPage } from "./lab-detail-page";
 
@@ -68,49 +69,51 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const LAB_PATH = `/labs/${DESIGN_LAB.laboratoryId}`;
+const LAB_LOGIN_PATH = getLoginPath({
+  notice: LOGIN_REQUIRED_NOTICE,
+  returnTo: LAB_PATH,
+});
+const visible = (elements: HTMLElement[]) =>
+  elements.find((element) => element.getClientRects().length > 0)!;
+
 export const Default: Story = {
   args: {
     lab: DESIGN_LAB,
     isAuthenticated: false,
     bookmarkActions: { onLoad: fn().mockResolvedValue([]) },
   },
+  parameters: { nextjs: { navigation: { pathname: LAB_PATH } } },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const router = getRouter();
     router.push.mockClear();
-    const visible = (elements: HTMLElement[]) =>
-      elements.find((element) => element.getClientRects().length > 0)!;
-    const expectSingleLoginNotice = async () => {
-      const alerts = canvas.getAllByRole("alert");
-      await expect(alerts).toHaveLength(1);
-      await expect(alerts[0]).toHaveTextContent(LOGIN_REQUIRED_MESSAGE);
+    // 비로그인 기능은 현재 화면에 안내나 모달을 띄우지 않고 상세 복귀 경로와 함께 로그인으로 보낸다.
+    const expectLoginRedirect = async (times: number) => {
+      await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
       await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
+      await expect(router.push).toHaveBeenCalledTimes(times);
+      await expect(router.push).toHaveBeenLastCalledWith(LAB_LOGIN_PATH);
     };
 
     const bookmarkLink = visible(
       canvas.getAllByRole("link", { name: "관심 연구실" }),
     );
-    await expect(bookmarkLink).toHaveAttribute("href", "/login");
-    await userEvent.click(bookmarkLink);
-    await expectSingleLoginNotice();
+    await expect(bookmarkLink).toHaveAttribute("href", LAB_LOGIN_PATH);
     await expect(args.bookmarkActions?.onLoad).not.toHaveBeenCalled();
 
     await userEvent.click(canvas.getByRole("button", { name: "AI 메일 첨삭" }));
-    await expectSingleLoginNotice();
+    await expectLoginRedirect(1);
 
     await userEvent.click(
       visible(canvas.getAllByRole("button", { name: "로그인하고 커피챗 확인하기" })),
     );
-    await expectSingleLoginNotice();
+    await expectLoginRedirect(2);
 
     await userEvent.click(
       visible(canvas.getAllByRole("button", { name: /이 랩 학부연구생이신가요/ })),
     );
-    await expectSingleLoginNotice();
-    await expect(canvas.getByRole("alert")).toHaveTextContent(
-      "소속 학부연구생만 정보를 제공할 수 있어요.",
-    );
-    await expect(router.push).not.toHaveBeenCalled();
+    await expectLoginRedirect(3);
   },
 };
 
@@ -141,21 +144,43 @@ export const NoPublicContact: Story = {
 
 export const LoginRequired: Story = {
   args: { lab: DESIGN_LAB },
+  parameters: { nextjs: { navigation: { pathname: LAB_PATH } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const coffeeChatButton = canvas
-      .getAllByRole("button", { name: "로그인하고 커피챗 확인하기" })
-      .find((button) => button.getClientRects().length > 0)!;
-    // 반복 클릭·키보드 실행에도 토스트는 하나만 유지되고 모달은 열리지 않는다.
-    await userEvent.click(coffeeChatButton);
+    const router = getRouter();
+    router.push.mockClear();
+    const coffeeChatButton = visible(
+      canvas.getAllByRole("button", { name: "로그인하고 커피챗 확인하기" }),
+    );
+    // 키보드 실행도 클릭과 같이 로그인 화면으로 이동하고 현재 화면에는 안내를 띄우지 않는다.
     coffeeChatButton.focus();
     await userEvent.keyboard("{Enter}");
-    await expect(canvas.getAllByRole("alert")).toHaveLength(1);
-    await expect(canvas.getByRole("alert")).toHaveTextContent(
-      LOGIN_REQUIRED_MESSAGE,
-    );
+    await expect(router.push).toHaveBeenCalledTimes(1);
+    await expect(router.push).toHaveBeenCalledWith(LAB_LOGIN_PATH);
+    await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
     await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
-    await expect(coffeeChatButton).toHaveFocus();
+  },
+};
+
+// 로그인했지만 소속 연구생이 아니면 로그인 요구 대신 권한 제한 안내를 유지한다.
+export const ProvideInformationRestricted: Story = {
+  render: (args) => (
+    <ProvideLabInfoCard isAuthenticated canContribute={false} laboratoryId={args.lab.laboratoryId} />
+  ),
+  args: { lab: DESIGN_LAB, isAuthenticated: true },
+  parameters: { nextjs: { navigation: { pathname: LAB_PATH } } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const router = getRouter();
+    router.push.mockClear();
+    await userEvent.click(
+      visible(canvas.getAllByRole("button", { name: /이 랩 학부연구생이신가요/ })),
+    );
+    const alert = await canvas.findByRole("alert");
+    await expect(alert).toHaveTextContent("정보 제공 권한이 없어요.");
+    await expect(alert).not.toHaveTextContent(LOGIN_REQUIRED_MESSAGE);
+    await expect(router.push).not.toHaveBeenCalled();
+    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
   },
 };
 
