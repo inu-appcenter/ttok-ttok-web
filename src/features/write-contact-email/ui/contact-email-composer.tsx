@@ -59,6 +59,9 @@ export function ContactEmailComposer({
   >({});
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState("");
+  const [mobileView, setMobileView] = useState<"input" | "draft">(
+    initialDraft ? "draft" : "input",
+  );
   const wrapper = useRef<HTMLDivElement>(null);
   const request = useRef<AbortController | null>(null);
   const router = useRouter();
@@ -111,10 +114,12 @@ export function ContactEmailComposer({
         : null;
     function trap(event: KeyboardEvent) {
       if (event.key !== "Tab") return;
-      const elements = wrapper.current?.querySelectorAll<HTMLElement>(
-        "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]",
-      );
-      if (!elements?.length) return;
+      const elements = Array.from(
+        wrapper.current?.querySelectorAll<HTMLElement>(
+          "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]",
+        ) ?? [],
+      ).filter((element) => element.getClientRects().length > 0);
+      if (!elements.length) return;
       const first = elements[0],
         last = elements[elements.length - 1];
       if (event.shiftKey && document.activeElement === first) {
@@ -144,8 +149,9 @@ export function ContactEmailComposer({
     request.current = null;
     setPending(false);
     setNotice("");
+    setMobileView(draft ? "draft" : "input");
     onClose();
-  }, [onClose]);
+  }, [onClose, draft]);
 
   function update<K extends keyof EmailInput>(key: K, value: EmailInput[K]) {
     setInput((current) => ({ ...current, [key]: value }));
@@ -160,6 +166,7 @@ export function ContactEmailComposer({
     const controller = new AbortController();
     request.current = controller;
     setPending(true);
+    setMobileView("draft");
     setRequestError("");
     setNotice("");
     try {
@@ -169,10 +176,12 @@ export function ContactEmailComposer({
       );
       if (controller.signal.aborted || request.current !== controller) return;
       setDraft({ ...content, recipient: recipient.email ?? "" });
+      setMobileView("draft");
     } catch (error) {
       if (controller.signal.aborted || request.current !== controller) return;
       if (error instanceof EmailApiError && error.status === 401)
         router.replace("/login");
+      setMobileView("input");
       setRequestError(
         error instanceof Error
           ? error.message
@@ -186,6 +195,7 @@ export function ContactEmailComposer({
     request.current?.abort();
     request.current = null;
     setPending(false);
+    setMobileView(draft ? "draft" : "input");
   }
   async function copy(label: string, value: string) {
     const version = ++copyVersion.current;
@@ -247,11 +257,37 @@ export function ContactEmailComposer({
             />
           </div>
         )}
+        {expanded && (
+          <div className="px-6 pb-2 md:hidden">
+            <div
+              role="group"
+              aria-label="보기 전환"
+              className="flex rounded-full bg-bg-primary-subtle p-1 text-[14px] font-semibold"
+            >
+              <button
+                type="button"
+                aria-pressed={mobileView === "input"}
+                onClick={() => setMobileView("input")}
+                className={`flex-1 rounded-full py-1.5 ${mobileView === "input" ? "bg-white text-text-primary shadow-[0_1px_3px_#0000001a]" : "text-text-subtle"}`}
+              >
+                입력 수정
+              </button>
+              <button
+                type="button"
+                aria-pressed={mobileView === "draft"}
+                onClick={() => setMobileView("draft")}
+                className={`flex-1 rounded-full py-1.5 ${mobileView === "draft" ? "bg-white text-text-primary shadow-[0_1px_3px_#0000001a]" : "text-text-subtle"}`}
+              >
+                메일 초안
+              </button>
+            </div>
+          </div>
+        )}
         <div
           className={`flex flex-col gap-3 p-3 pt-0 ${expanded ? "md:flex-row" : ""}`}
         >
           <form
-            className="flex min-w-0 flex-1 flex-col gap-3 p-3 pt-3 md:p-6 md:pt-3"
+            className={`${mobileView === "draft" ? "hidden md:flex" : "flex"} min-w-0 flex-1 flex-col gap-3 p-3 pt-3 md:p-6 md:pt-3`}
             noValidate
             onSubmit={(event) => {
               event.preventDefault();
@@ -401,10 +437,10 @@ export function ContactEmailComposer({
             <section
               aria-label="메일 초안"
               aria-busy={pending}
-              className="min-w-0 overflow-hidden rounded-xl bg-white shadow-[0_2px_8px_#0000001a] md:mt-[-45px] md:w-[360px] md:shrink-0"
+              className={`${mobileView === "input" ? "hidden md:block" : "block"} min-w-0 overflow-hidden rounded-xl bg-white shadow-[0_2px_8px_#0000001a] md:mt-[-45px] md:w-[360px] md:shrink-0`}
             >
               {pending ? (
-                <div className="flex min-h-[380px] items-center justify-center p-6">
+                <div className="flex min-h-[380px] flex-col items-center justify-center gap-6 p-6">
                   <ol className="space-y-4 text-[16px] font-semibold">
                     <li className="flex items-center gap-[10px] text-text-subtle">
                       <span className="flex size-5 items-center justify-center rounded-full bg-bg-primary">
@@ -432,6 +468,9 @@ export function ContactEmailComposer({
                       정중한 문장으로 다듬기
                     </li>
                   </ol>
+                  <button type="button" className="text-[14px] text-text-subtle underline md:hidden" onClick={handleCancel}>
+                    요청 취소
+                  </button>
                 </div>
               ) : (
                 draft && (
