@@ -12,6 +12,9 @@
 }
 
 :root {
+  /* 디자인 토큰은 단일(라이트) 테마이므로 OS 다크 모드에서도 배경·글자와
+     폼 컨트롤·스크롤바 등 네이티브 UI를 라이트로 고정한다. */
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -21,13 +24,6 @@
   --color-foreground: var(--foreground);
   --font-sans: "Wanted Sans", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-font-pretendard: "Wanted Sans", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 html {
