@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { useState } from "react";
 import { expect, fn, spyOn, userEvent, waitFor, within } from "storybook/test";
 import { createMockEmailDraft } from "../model/email-draft";
 import type { EmailInput } from "../model/email-draft";
-import { ContactEmailComposer } from "./contact-email-composer";
+import { ContactEmailComposer, type ContactEmailComposerProps } from "./contact-email-composer";
 const recipient = {
   laboratoryId: 157,
   professorName: "김다윤",
@@ -32,6 +33,7 @@ const meta = {
   component: ContactEmailComposer,
   args: {
     recipient,
+    memberDepartmentCode: "COMPUTER_ENGINEERING",
     isOpen: true,
     onClose: fn(),
     onLoadDepartments: fn(async () => departments),
@@ -265,5 +267,66 @@ export const DepartmentFailure: Story = {
         canvas.getByRole("button", { name: "AI로 메일 초안 만들기" }),
       ).toBeEnabled(),
     );
+  },
+};
+
+export const ReadOnlyDepartment: Story = {
+  args: { initialInput: { ...input, department: "KOREAN" } },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const department = canvas.getByRole("textbox", { name: "학과" });
+    await waitFor(() => expect(department).toHaveValue("컴퓨터공학부"));
+    await expect(department).toHaveAttribute("readonly");
+    await expect(canvas.queryByRole("combobox", { name: "학과" })).not.toBeInTheDocument();
+    await userEvent.type(department, "국어국문학과");
+    await expect(department).toHaveValue("컴퓨터공학부");
+    await userEvent.click(canvas.getByRole("button", { name: "AI로 메일 초안 만들기" }));
+    await waitFor(() => expect(args.onGenerate).toHaveBeenCalledWith(
+      expect.objectContaining({ department: "COMPUTER_ENGINEERING" }),
+      expect.any(AbortSignal),
+    ));
+  },
+};
+
+export const MissingDepartment: Story = {
+  args: { initialInput: input, memberDepartmentCode: undefined },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole("alert")).toHaveTextContent("내 학과 정보를 확인하지 못했어요");
+    await expect(canvas.getByRole("button", { name: "AI로 메일 초안 만들기" })).toBeDisabled();
+    await expect(canvas.getByRole("textbox", { name: "학과" })).toHaveValue("");
+  },
+};
+
+export const UnmappedDepartment: Story = {
+  ...MissingDepartment,
+  args: { initialInput: input, memberDepartmentCode: "UNKNOWN_DEPARTMENT" },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole("alert")).toHaveTextContent("내 학과와 일치하는 정보를 찾지 못했어요");
+    await expect(canvas.getByRole("button", { name: "AI로 메일 초안 만들기" })).toBeDisabled();
+    await expect(canvas.getByRole("textbox", { name: "학과" })).toHaveValue("");
+  },
+};
+
+function ReopenExample(props: ContactEmailComposerProps) {
+  const [isOpen, setIsOpen] = useState(true);
+  return <>
+    <button onClick={() => setIsOpen(true)}>메일 다시 열기</button>
+    <ContactEmailComposer {...props} isOpen={isOpen} onClose={() => setIsOpen(false)} />
+  </>;
+}
+
+export const Reopen: Story = {
+  render: (args) => <ReopenExample {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByRole("textbox", { name: "학과" })).toHaveValue("컴퓨터공학부"));
+    await userEvent.type(canvas.getByLabelText("이름"), "유지할 이름");
+    await userEvent.click(canvas.getByRole("button", { name: "닫기" }));
+    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "메일 다시 열기" }));
+    await waitFor(() => expect(canvas.getByRole("textbox", { name: "학과" })).toHaveValue("컴퓨터공학부"));
+    await expect(canvas.getByLabelText("이름")).toHaveValue("유지할 이름");
   },
 };

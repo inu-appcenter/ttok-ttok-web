@@ -23,10 +23,12 @@ let publicationCount;
 let aiFailure, aiMalformed;
 let memberStatus, memberIsNew, memberMalformed;
 let emailStatus, emailMalformed;
+let memberDepartment;
 
 beforeEach(() => {
   publicationCount = 7;
   memberStatus=200;memberIsNew=false;memberMalformed=false;
+  memberDepartment = "COMPUTER_ENGINEERING";
   aiFailure = false;
   emailStatus = 200;
   emailMalformed = false;
@@ -129,6 +131,7 @@ before(async () => {
         isNew:memberIsNew,
         id: 1,
         studentNumber: "202501716",
+        department: memberDepartment,
         userType: token === "fake-finder" ? "FINDER" : "RESEARCHER",
         laboratory:
           token === "fake-finder"
@@ -624,4 +627,17 @@ test("메일 API는 입력 경계와 학과를 검증하고 인증·연구실 �
       .status,
     502,
   );
+});
+
+test("메일 API는 회원 학과 누락·불일치와 회원 조회 장애에서 생성을 차단한다", async () => {
+  for (const code of [null, "KOREAN"]) {
+    memberDepartment = code;
+    const response = await request("/api/email-drafts", { method: "POST", body: emailInput });
+    assert.equal(response.status, 400);
+  }
+  memberDepartment = "COMPUTER_ENGINEERING";
+  memberStatus = 503;
+  const unavailable = await request("/api/email-drafts", { method: "POST", body: emailInput });
+  assert.equal(unavailable.status, 503);
+  assert.equal(calls.some((call) => call.path === "/api/chat/email-editor"), false);
 });
