@@ -101,3 +101,29 @@ export const MobileAccordion: Story = {
     await expect(canvas.getByRole("link", { name: "도시공학과 연구실 6개" })).toBeVisible();
   },
 };
+
+const SERVICE_LINKS = [
+  { name: "추천 받으러 가기", href: "/recommendations" },
+  { name: "메일 보낼 연구실 찾기", href: "/search" },
+  { name: "커피챗할 연구실 찾기", href: "/search" },
+];
+
+const playServiceLinks: Story["play"] = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  for (const { name, href } of SERVICE_LINKS) {
+    const link = canvas.getByRole("link", { name });
+    await expect(link).toHaveAttribute("href", href);
+    link.focus();
+    await expect(link).toHaveFocus();
+  }
+};
+
+export const ServiceLinks: Story = {
+  ...Default,
+  play: playServiceLinks,
+};
+
+export const MobileServiceLinks: Story = {
+  ...Mobile,
+  play: playServiceLinks,
+};
