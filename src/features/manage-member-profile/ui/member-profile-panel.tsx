@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type ReactNode } from "react";
 import type { MemberProfile } from "@/entities/member";
+import { notifyAuthChange } from "@/shared/lib/session-store";
 import { Button, Dialog, Tag } from "@/shared/ui";
 import { logout, withdrawMember } from "../api/manage-member";
 import {
@@ -50,6 +51,7 @@ export function MemberProfilePanel({
   async function act(kind: "logout" | "withdraw") {
     if (busy.current) return;
     busy.current = true;
+    notifyAuthChange();
     setPending(kind);
     setError("");
     try {
