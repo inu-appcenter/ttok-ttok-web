@@ -89,9 +89,10 @@ export const CompleteFlow: Story = {
         await canvas.findByRole("button", { name: /결과 보기/ }),
       );
     }
-    await expect(
-      (await canvas.findAllByRole("link", { name: "연구실 보기" }))[0],
-    ).toHaveAttribute("href", "/labs/124");
+    const detailLink = (await canvas.findAllByRole("link", { name: "연구실 보기" }))[0];
+    await expect(detailLink).toHaveAttribute("href", "/labs/124");
+    await expect(detailLink).toHaveAttribute("target", "_blank");
+    await expect(detailLink).toHaveAttribute("rel", "noopener noreferrer");
   },
 };
 // 새로 찾기: 이전 대화는 흐리게 남고 결과 카드는 유지되며, 상세 이동 후 복귀해도 현재 탭에서 복원된다.

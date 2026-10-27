@@ -164,6 +164,8 @@ function ResultCards({
           )}
           <Link
             href={`/labs/${lab.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="mt-2 flex items-center justify-end gap-1 text-[14px] text-text-primary"
           >
             연구실 보기
