@@ -87,13 +87,45 @@ export function toResearchProject(value: unknown): LabResearchProject {
   };
 }
 
+// Map은 &constructor; 같은 상속 속성을 조회하지 않습니다.
+const NAMED_ENTITIES = new Map([
+  ["amp", "&"],
+  ["lt", "<"],
+  ["gt", ">"],
+  ["quot", '"'],
+  ["apos", "'"],
+  ["nbsp", " "],
+]);
+
+/** 서버 문자열의 HTML 엔티티를 한 번만 해석해 일반 텍스트로 만듭니다. 마크업은 해석하지 않습니다. */
+export function decodeHtmlEntities(value: string) {
+  return value.replace(
+    /&(?:#(\d{1,7})|#[xX]([0-9a-fA-F]{1,6})|([a-zA-Z]+));/g,
+    (entity, decimal?: string, hex?: string, name?: string) => {
+      if (name) return NAMED_ENTITIES.get(name.toLowerCase()) ?? entity;
+      const codePoint = Number.parseInt(decimal ?? hex ?? "", decimal ? 10 : 16);
+      return codePoint > 0 &&
+        codePoint <= 0x10ffff &&
+        (codePoint < 0xd800 || codePoint > 0xdfff)
+        ? String.fromCodePoint(codePoint)
+        : entity;
+    },
+  );
+}
+
+function getText(value: unknown) {
+  return decodeHtmlEntities(getString(value)).replace(/\s+/g, " ").trim();
+}
+
 export function toPublication(value: unknown): LabPaper {
   const item = getObject(value);
   const year = getString(item.year);
   const doi = getString(item.doi);
+  const title = getText(item.title);
+  if (!title) throw new Error("상세 목록 항목이 올바르지 않습니다.");
   return {
-    title: getRequiredString(item.title),
-    venue: getString(item.platform),
+    title,
+    venue: getText(item.platform),
     year: /^\d{4}$/.test(year) ? Number(year) : null,
     url:
       getExternalUrl(item.sourceURL) ??

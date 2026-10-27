@@ -193,13 +193,16 @@ export function ResearchProjects({
 export function PaperTitle({ paper }: { paper: LabPaper }) {
   return paper.url ? (
     <a
-      className="block truncate hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
+      className="flex min-w-0 items-center gap-1 hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
       title={paper.title}
       href={paper.url}
       rel="noreferrer"
       target="_blank"
     >
-      {paper.title} ↗
+      <span className="truncate">{paper.title}</span>
+      <span aria-hidden="true" className="shrink-0">
+        ↗
+      </span>
     </a>
   ) : (
     <span className="block truncate" title={paper.title}>

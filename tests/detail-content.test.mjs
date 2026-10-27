@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  decodeHtmlEntities,
   getExternalUrl,
   parseDetailPage,
   toPublication,
@@ -33,6 +34,23 @@ test("논문은 원문 링크 없는 경우 텍스트로 표시하고 DOI가 있
     null,
   );
   assert.equal(getExternalUrl("javascript:alert(1)"), null);
+});
+
+test("논문 제목과 학술지의 HTML 엔티티는 한 번만 해석한 일반 텍스트로 보존한다", () => {
+  const paper = toPublication({
+    title: "Graph &amp; Data &lt;i&gt;Mining&lt;/i&gt; &#8211; &#x2014; &amp;amp;",
+    platform: "IEEE Trans. &quot;KDE&quot;&nbsp;&unknown;",
+    year: "2025",
+  });
+  assert.equal(paper.title, "Graph & Data <i>Mining</i> – — &amp;");
+  assert.equal(paper.venue, 'IEEE Trans. "KDE" &unknown;');
+  assert.equal(decodeHtmlEntities("&#0; &#xD800; &#1114112;"), "&#0; &#xD800; &#1114112;");
+  assert.throws(() => toPublication({ title: "&nbsp;" }));
+  assert.equal(
+    decodeHtmlEntities("&constructor; &toString; &__proto__; &hasOwnProperty;"),
+    "&constructor; &toString; &__proto__; &hasOwnProperty;",
+  );
+  assert.equal(decodeHtmlEntities("&#38;amp; &#x26;lt; &amp;#60;"), "&amp; &lt; &#60;");
 });
 
 test("연구과제는 어노테이션의 기간과 키워드 및 서버 진행 상태를 보존한다", () => {
