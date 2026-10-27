@@ -79,6 +79,67 @@ export function DetailPagination({
   );
 }
 
+const DETAIL_PREVIEW_LIMIT = 3;
+
+function ProjectList({ projects }: { projects: NonNullable<LabDetail["projects"]> }) {
+  return (
+    <ul className="mt-5 flex flex-col gap-5">
+      {projects.map((project) => (
+        <li className="flex min-w-0 flex-col gap-1" key={project.id}>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <Tag
+              className="shrink-0 !font-semibold"
+              size="sm"
+              tone={project.isOngoing ? "primary" : "default"}
+            >
+              {project.isOngoing ? "진행중" : "종료"}
+            </Tag>
+            <p className="min-w-0 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle md:text-[14px]">
+              {[project.period, project.agency]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          </div>
+          <div className="min-w-0 w-full">
+            <h3
+              title={project.title}
+              className={`truncate text-[length:var(--font-size-label1)] font-semibold leading-[1.5] md:text-[length:var(--font-size-heading2)] ${project.isOngoing ? "text-text-primary" : "text-text-default"}`}
+            >
+              {project.url ? (
+                <a
+                  className="block truncate hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
+                  href={project.url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {project.title}
+                </a>
+              ) : (
+                project.title
+              )}
+            </h3>
+            {project.keywords?.length ? (
+              <ul
+                className="mt-1 flex flex-wrap gap-2"
+                aria-label="과제 키워드"
+              >
+                {project.keywords.map((keyword) => (
+                  <li
+                    key={keyword}
+                    className={`max-w-full break-words rounded-[var(--radius-lg)] px-2 py-1 text-[length:var(--font-size-caption1)] ${project.isOngoing ? "bg-bg-primary-subtle text-text-primary" : "bg-bg-neutral text-text-subtle"}`}
+                  >
+                    {keyword}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function ResearchProjects({
   lab,
   isMobile = false,
@@ -102,60 +163,17 @@ export function ResearchProjects({
             <DetailRetryButton />
           </p>
         ) : lab.projects?.length ? (
-          <ul className="mt-5 flex flex-col gap-5">
-            {lab.projects.map((project) => (
-              <li className="flex min-w-0 flex-col gap-1" key={project.id}>
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <Tag
-                    className="shrink-0 !font-semibold"
-                    size="sm"
-                    tone={project.isOngoing ? "primary" : "default"}
-                  >
-                    {project.isOngoing ? "진행중" : "종료"}
-                  </Tag>
-                  <p className="min-w-0 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle md:text-[14px]">
-                    {[project.period, project.agency]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                </div>
-                <div className="min-w-0 w-full">
-                  <h3
-                    title={project.title}
-                    className={`truncate text-[length:var(--font-size-label1)] font-semibold leading-[1.5] md:text-[length:var(--font-size-heading2)] ${project.isOngoing ? "text-text-primary" : "text-text-default"}`}
-                  >
-                    {project.url ? (
-                      <a
-                        className="block truncate hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
-                        href={project.url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {project.title}
-                      </a>
-                    ) : (
-                      project.title
-                    )}
-                  </h3>
-                  {project.keywords?.length ? (
-                    <ul
-                      className="mt-1 flex flex-wrap gap-2"
-                      aria-label="과제 키워드"
-                    >
-                      {project.keywords.map((keyword) => (
-                        <li
-                          key={keyword}
-                          className={`max-w-full break-words rounded-[var(--radius-lg)] px-2 py-1 text-[length:var(--font-size-caption1)] ${project.isOngoing ? "bg-bg-primary-subtle text-text-primary" : "bg-bg-neutral text-text-subtle"}`}
-                        >
-                          {keyword}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </div>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ProjectList projects={lab.projects.slice(0, DETAIL_PREVIEW_LIMIT)} />
+            {lab.projects.length > DETAIL_PREVIEW_LIMIT && (
+              <details key={lab.projectState?.page ?? 0} className="mt-4">
+                <summary className="w-fit cursor-pointer text-[length:var(--font-size-label1)] font-semibold text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-border-primary">
+                  연구과제 더보기
+                </summary>
+                <ProjectList projects={lab.projects.slice(DETAIL_PREVIEW_LIMIT)} />
+              </details>
+            )}
+          </>
         ) : (
           <p className="mt-5 text-[length:var(--font-size-body3)] text-text-subtle">
             등록된 연구과제가 없어요.
@@ -283,7 +301,7 @@ export function RecentPapers({
         </p>
       ) : lab.papers.length ? (
         <ul className="mt-5 flex min-w-0 flex-col gap-3">
-          {lab.papers.map((paper) => (
+          {lab.papers.slice(0, DETAIL_PREVIEW_LIMIT).map((paper) => (
             <li className="min-w-0" key={`${paper.year}-${paper.title}`}>
               <h3 className="min-w-0 text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-primary md:text-[length:var(--font-size-heading2)]">
                 <PaperTitle paper={paper} />
