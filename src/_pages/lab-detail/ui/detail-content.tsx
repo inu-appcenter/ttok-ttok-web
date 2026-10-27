@@ -192,9 +192,11 @@ export function PaperTitle({ paper }: { paper: LabPaper }) {
 
 export function ProfessorCard({
   lab,
+  memberDepartmentCode,
   isAuthenticated = false,
 }: {
   lab: LabDetail;
+  memberDepartmentCode?: string;
   isMobile?: boolean;
   isAuthenticated?: boolean;
 }) {
@@ -213,6 +215,7 @@ export function ProfessorCard({
           ) : null}
         </div>
         <ContactEmailButton
+          memberDepartmentCode={memberDepartmentCode}
           isAuthenticated={isAuthenticated}
           compact
           key={lab.labId}

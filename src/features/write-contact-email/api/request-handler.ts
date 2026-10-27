@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
 import { getCollegeOptions } from "@/entities/lab/api";
+import { getMyMember } from "@/entities/member/api";
 import {
   authenticatedRequest,
   authenticatedErrorResponse,
@@ -36,16 +37,22 @@ export async function handleEmailRequest(request: Request) {
       { status: 400 },
     );
   try {
-    const colleges = await getCollegeOptions();
+    const [colleges, member] = await Promise.all([getCollegeOptions(), getMyMember()]);
+    if (!member.departmentCode || input.department !== member.departmentCode) {
+      return NextResponse.json(
+        { message: "회원 학과 정보를 다시 불러온 후 시도해 주세요." },
+        { status: 400 },
+      );
+    }
     if (
       !colleges.some((college) =>
         college.departments.some(
-          (option) => option.department === input.department,
+          (option) => option.department === member.departmentCode,
         ),
       )
     ) {
       return NextResponse.json(
-        { message: "목록에서 학과를 선택해 주세요." },
+        { message: "회원 학과와 일치하는 정보를 찾지 못했어요." },
         { status: 400 },
       );
     }
@@ -56,7 +63,7 @@ export async function handleEmailRequest(request: Request) {
         purpose: input.purpose,
         laboratoryId: input.laboratoryId,
         name: input.name.trim(),
-        department: input.department,
+        department: member.departmentCode,
         grade: input.grade,
         email: input.email.trim(),
         interest: input.interest.trim(),

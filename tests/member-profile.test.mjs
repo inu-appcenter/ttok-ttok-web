@@ -15,10 +15,13 @@ const base = {
 test("탐색자는 연구생 정보를 생성하지 않고 학과 코드를 표시 이름으로 매핑한다", () => {
   const profile = toMemberProfile(base, "컴퓨터공학부");
   assert.equal(profile.department, "컴퓨터공학부");
+  assert.equal(profile.departmentCode, "COMPUTER_ENGINEERING");
   assert.equal(profile.researchProfile, undefined);
   assert.equal(profile.isUndergraduateResearcher, false);
   assert.equal(profile.hasContributedReview, false);
   assert.equal(toMemberProfile(base).department, undefined);
+  assert.equal(toMemberProfile(base).departmentCode, "COMPUTER_ENGINEERING");
+  assert.equal(toMemberProfile({ ...base, department: null }).departmentCode, undefined);
 });
 test("연구생의 커피챗 예제 값과 저장 enum 차이를 정규화하고 등록일을 만들지 않는다", () => {
   const profile = toMemberProfile({

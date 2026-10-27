@@ -68,6 +68,7 @@ export function toMemberProfile(
     displayName: text(member.nickName),
     email: text(member.email),
     department: departmentName || text(professor?.departmentName) || undefined,
+    departmentCode: text(member.department).trim() || undefined,
     roleLabel: isResearcher
       ? "학부연구생"
       : userType === "PROFESSOR"

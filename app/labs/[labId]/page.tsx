@@ -67,6 +67,7 @@ export default async function Page({ params, searchParams }: LabPageProps) {
     <LabDetailPage
       isAuthenticated={isAuthenticated}
       lab={lab}
+      memberDepartmentCode={member?.departmentCode}
       canContribute={
         member?.userType === "RESEARCHER" &&
         member.researchProfile?.laboratoryId === lab.laboratoryId
