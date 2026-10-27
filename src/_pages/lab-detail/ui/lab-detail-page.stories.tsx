@@ -365,6 +365,37 @@ export const PreviewOne: Story = {
   },
 };
 
+const LONG_LINKED_PAPER_TITLE =
+  "A Very Long Paper Title about Intelligent Data Systems and Large Scale Personalized Recommendation Models with Graph Neural Networks";
+const UNLINKED_PAPER_TITLE = "원문 링크가 없는 논문 제목";
+
+export const PaperLinks: Story = {
+  args: {
+    lab: {
+      ...DESIGN_LAB,
+      papers: [
+        { title: LONG_LINKED_PAPER_TITLE, url: "https://example.com/paper", venue: "ACM", year: 2026 },
+        { title: UNLINKED_PAPER_TITLE, url: null, venue: "학술지", year: 2025 },
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const section = within(canvasElement).getByRole("link", { name: "최근 논문" }).closest("section");
+    if (!section) throw new Error("최근 논문 섹션을 찾을 수 없어요.");
+    const papers = within(section);
+    const link = papers.getByRole("link", { name: LONG_LINKED_PAPER_TITLE });
+    await expect(link).toHaveAttribute("href", "https://example.com/paper");
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", expect.stringContaining("noreferrer"));
+    const title = within(link).getByText(LONG_LINKED_PAPER_TITLE);
+    await expect(title.scrollWidth).toBeGreaterThan(title.clientWidth);
+    await expect(within(link).getByText("↗")).toBeVisible();
+    const unlinked = papers.getByRole("heading", { name: UNLINKED_PAPER_TITLE });
+    await expect(within(unlinked).queryByRole("link")).not.toBeInTheDocument();
+    await expect(unlinked).not.toHaveTextContent("↗");
+  },
+};
+
 export const PreviewEmpty: Story = {
   args: { lab: { ...DESIGN_LAB, projects: [], papers: [] } },
   play: async ({ canvasElement }) => {
