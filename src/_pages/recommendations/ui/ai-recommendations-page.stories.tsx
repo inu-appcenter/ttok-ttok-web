@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { useState } from "react";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import {
   clearSessionStore,
   notifyAuthChange,
@@ -92,6 +92,69 @@ export const CompleteFlow: Story = {
     await expect(
       (await canvas.findAllByRole("link", { name: "연구실 보기" }))[0],
     ).toHaveAttribute("href", "/labs/124");
+  },
+};
+// 새로 찾기: 이전 대화는 흐리게 남고 결과 카드는 유지되며, 상세 이동 후 복귀해도 현재 탭에서 복원된다.
+export const NewSearchKeepsResults: Story = {
+  args: { memberId: 7001, sessionKey: "session-a" },
+  render: function Render(args) {
+    const [visible, setVisible] = useState(true);
+    return (
+      <>
+        <button type="button" onClick={() => setVisible((value) => !value)}>
+          상세 이동 토글
+        </button>
+        {visible && <AiRecommendationsPage {...args} />}
+      </>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    clearSessionStore();
+    const canvas = within(canvasElement);
+    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+    await userEvent.type(
+      canvas.getByRole("textbox", { name: "관심 연구 주제" }),
+      initialPrompt,
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    await userEvent.click(
+      await canvas.findByRole("checkbox", { name: "추천시스템" }),
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    if (isMobile) {
+      await userEvent.click(
+        await canvas.findByRole("button", { name: /결과 보기/ }),
+      );
+    }
+    await userEvent.click(
+      await canvas.findByRole("button", { name: "연구실 추천 다시 받기" }),
+    );
+    await expect(
+      canvas.getByRole("group", { name: "이전 추천 대화" }),
+    ).toHaveTextContent(initialPrompt);
+    await expect(canvas.getByRole("separator")).toBeInTheDocument();
+    await expect(
+      canvas.getByRole("textbox", { name: "관심 연구 주제" }),
+    ).toHaveValue("");
+    if (isMobile) {
+      await expect(
+        canvas.getByRole("button", { name: /이전 추천/ }),
+      ).toBeInTheDocument();
+    } else {
+      await expect(
+        (await canvas.findAllByRole("link", { name: "연구실 보기" }))[0],
+      ).toBeInTheDocument();
+    }
+    const toggle = canvas.getByRole("button", { name: "상세 이동 토글" });
+    await userEvent.click(toggle);
+    await userEvent.click(toggle);
+    await expect(
+      canvas.getByRole("group", { name: "이전 추천 대화" }),
+    ).toHaveTextContent(initialPrompt);
+    await expect(
+      canvas.getByRole("textbox", { name: "관심 연구 주제" }),
+    ).toHaveValue("");
+    clearSessionStore();
   },
 };
 // 상세 이동(언마운트) 후 복귀(재마운트)를 흉내 낸다.
@@ -213,6 +276,57 @@ export const ClearedOnAuthChange: Story = {
     await expect(
       canvas.getByRole("textbox", { name: "관심 연구 주제" }),
     ).toHaveValue("");
+    clearSessionStore();
+  },
+};
+// 이전 대화가 남은 상태에서 인증이 바뀌면 이전 대화까지 모두 비우고 복귀해도 복원하지 않는다.
+export const PastTurnsClearedOnAuthChange: Story = {
+  args: { memberId: 7001, sessionKey: "session-a" },
+  render: function Render(args) {
+    const [visible, setVisible] = useState(true);
+    return (
+      <>
+        <button type="button" onClick={() => setVisible((value) => !value)}>
+          상세 이동 토글
+        </button>
+        {visible && <AiRecommendationsPage {...args} />}
+      </>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    clearSessionStore();
+    const canvas = within(canvasElement);
+    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+    await userEvent.type(
+      canvas.getByRole("textbox", { name: "관심 연구 주제" }),
+      initialPrompt,
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    await userEvent.click(
+      await canvas.findByRole("checkbox", { name: "추천시스템" }),
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    if (isMobile) {
+      await userEvent.click(
+        await canvas.findByRole("button", { name: /결과 보기/ }),
+      );
+    }
+    await userEvent.click(
+      await canvas.findByRole("button", { name: "연구실 추천 다시 받기" }),
+    );
+    await canvas.findByRole("group", { name: "이전 추천 대화" });
+    notifyAuthChange();
+    await waitFor(() =>
+      expect(
+        canvas.queryByRole("group", { name: "이전 추천 대화" }),
+      ).not.toBeInTheDocument(),
+    );
+    const toggle = canvas.getByRole("button", { name: "상세 이동 토글" });
+    await userEvent.click(toggle);
+    await userEvent.click(toggle);
+    await expect(
+      canvas.queryByRole("group", { name: "이전 추천 대화" }),
+    ).not.toBeInTheDocument();
     clearSessionStore();
   },
 };

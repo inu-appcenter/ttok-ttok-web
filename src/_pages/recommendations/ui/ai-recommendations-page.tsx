@@ -34,6 +34,7 @@ import {
   readRecommendationSnapshot,
   saveRecommendationSnapshot,
 } from "../model/recommendation-session";
+import type { PastTurn } from "../model/recommendation-session";
 
 type Step = "interest" | "keywords" | "results";
 export type AiRecommendationsPageProps = {
@@ -70,6 +71,49 @@ function Bubble({
     >
       {children}
     </p>
+  );
+}
+
+type StepStatus = "done" | "loading" | "current" | "waiting";
+
+// 완료는 파란 원+흰 체크, AI 요청 중은 로더, 대기는 빈 원으로 구분한다.
+function StepIcon({ status }: { status: StepStatus }) {
+  if (status === "done") {
+    return (
+      <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-bg-primary">
+        <Image
+          src="/icons/recommendations/step-check.svg"
+          width={12}
+          height={12}
+          alt=""
+        />
+      </span>
+    );
+  }
+  if (status === "loading") {
+    return (
+      <Image
+        className="shrink-0 animate-spin"
+        src="/icons/email-editor/loader.svg"
+        width={20}
+        height={20}
+        alt=""
+      />
+    );
+  }
+  if (status === "current") {
+    return (
+      <Image
+        className="shrink-0"
+        src="/icons/recommendations/step-target.svg"
+        width={20}
+        height={20}
+        alt=""
+      />
+    );
+  }
+  return (
+    <span className="size-5 shrink-0 rounded-full border border-border-subtle" />
   );
 }
 
@@ -189,6 +233,9 @@ export function AiRecommendationsPage({
     (restored ? restored.result : initialResult) !== undefined,
   );
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [pastTurns, setPastTurns] = useState<PastTurn[]>(
+    restored?.pastTurns ?? [],
+  );
   const request = useRef<AbortController | null>(null);
   const end = useRef<HTMLDivElement>(null);
   const sheet = useRef<HTMLDivElement>(null);
@@ -205,6 +252,7 @@ export function AiRecommendationsPage({
       suggestions,
       keywords,
       customKeywords,
+      pastTurns,
       result,
     });
   }, [
@@ -215,24 +263,9 @@ export function AiRecommendationsPage({
     suggestions,
     keywords,
     customKeywords,
+    pastTurns,
     result,
   ]);
-  // 인증 변경(다른 탭 포함)이나 bfcache 복귀 시 화면 상태를 비우고 서버에서
-  // 세션을 다시 확인한다. 유효하지 않으면 서버가 로그인으로 보낸다.
-  const handleSessionUncertain = useEffectEvent(() => {
-    isInvalidated.current = true;
-    clearSessionStore();
-    restart();
-    router.refresh();
-  });
-  useEffect(() => subscribeAuthChange(handleSessionUncertain), []);
-  useEffect(() => {
-    function handlePageShow(event: PageTransitionEvent) {
-      if (event.persisted) handleSessionUncertain();
-    }
-    window.addEventListener("pageshow", handlePageShow);
-    return () => window.removeEventListener("pageshow", handlePageShow);
-  }, []);
   useEffect(() => {
     if (step === "interest") return;
     if (window.matchMedia("(min-width: 1024px)").matches) {
@@ -348,7 +381,41 @@ export function AiRecommendationsPage({
     setCustom("");
     setError("");
     setSheetOpen(false);
+    setPastTurns([]);
   }
+  // 이전 대화를 흐리게 남기고 입력만 비운다. 결과 카드는 새 결과가 오기 전까지 유지한다.
+  function startNew() {
+    cancelRequest();
+    setPastTurns((turns) => [
+      ...turns,
+      { interest: interest.trim(), keywords, title: resultTitle },
+    ]);
+    setStep("interest");
+    setInterest("");
+    setKeywords([]);
+    setSuggestions([]);
+    setCustomKeywords([]);
+    setAdding(false);
+    setCustom("");
+    setError("");
+    setSheetOpen(false);
+  }
+  // 인증 변경(다른 탭 포함)이나 bfcache 복귀 시 화면 상태를 비우고 서버에서
+  // 세션을 다시 확인한다. 유효하지 않으면 서버가 로그인으로 보낸다.
+  const handleSessionUncertain = useEffectEvent(() => {
+    isInvalidated.current = true;
+    clearSessionStore();
+    restart();
+    router.refresh();
+  });
+  useEffect(() => subscribeAuthChange(handleSessionUncertain), []);
+  useEffect(() => {
+    function handlePageShow(event: PageTransitionEvent) {
+      if (event.persisted) handleSessionUncertain();
+    }
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
   const progressLabels = [
     "관심 주제 파악하는 중…",
     "키워드 정리하는 중…",
@@ -365,7 +432,7 @@ export function AiRecommendationsPage({
       <p className="mb-2 text-[13px] text-text-subtle">
         원하는 연구실이 없나요?
       </p>
-      <button type="button" className={action} onClick={restart}>
+      <button type="button" className={action} onClick={startNew}>
         연구실 추천 다시 받기
       </button>
     </div>
@@ -386,12 +453,7 @@ export function AiRecommendationsPage({
           {step !== "results" && (
             <div className="mt-5 rounded-2xl bg-[#f5f5f5] px-4 py-3 lg:hidden">
               <div className="flex items-center gap-2 text-[16px] font-semibold">
-                <Image
-                  src="/icons/recommendations/step-target.svg"
-                  width={20}
-                  height={20}
-                  alt=""
-                />
+                <StepIcon status={pending ? "loading" : "current"} />
                 {progressLabels[stepIndex]}
               </div>
               <div className="mt-2 flex gap-1">
@@ -409,6 +471,38 @@ export function AiRecommendationsPage({
             aria-live="polite"
             aria-busy={pending}
           >
+            {pastTurns.length > 0 && (
+              <>
+                <div
+                  role="group"
+                  aria-label="이전 추천 대화"
+                  className="flex flex-col gap-3 opacity-40 lg:gap-4"
+                >
+                  {pastTurns.map((turn, index) => (
+                    <div key={index} className="flex flex-col gap-3 lg:gap-4">
+                      <Bubble>먼저, 요즘 어떤 연구에 관심이 가세요?</Bubble>
+                      <Bubble subtle>키워드만 적어도 괜찮아요</Bubble>
+                      <Bubble user>{turn.interest}</Bubble>
+                      {turn.keywords.length > 0 && (
+                        <>
+                          <Bubble>좋아요! 적어주신 내용에서 키워드를 뽑아봤어요. 가까운 걸 골라 주세요.</Bubble>
+                          <Bubble user>{turn.keywords.join(", ")}</Bubble>
+                        </>
+                      )}
+                      <Bubble>{turn.title}</Bubble>
+                    </div>
+                  ))}
+                </div>
+                <div
+                  role="separator"
+                  className="flex items-center gap-3 text-[13px] text-text-subtle"
+                >
+                  <span className="h-px flex-1 bg-border-subtle" />
+                  새로운 추천
+                  <span className="h-px flex-1 bg-border-subtle" />
+                </div>
+              </>
+            )}
             <Bubble>연구실 추천을 위해 몇 가지 물어볼게요!</Bubble>
             <Bubble>먼저, 요즘 어떤 연구에 관심이 가세요?</Bubble>
             <Bubble subtle>키워드만 적어도 괜찮아요</Bubble>
@@ -631,16 +725,17 @@ export function AiRecommendationsPage({
                     key={label}
                     className={`flex items-center gap-3 text-[20px] ${index <= stepIndex ? "font-semibold text-text-primary" : "text-text-subtle"}`}
                   >
-                    {index <= stepIndex ? (
-                      <Image
-                        src={`/icons/recommendations/${index < stepIndex ? "step-check" : "step-target"}.svg`}
-                        width={20}
-                        height={20}
-                        alt=""
-                      />
-                    ) : (
-                      <span className="size-5 rounded-full border border-border-subtle" />
-                    )}
+                    <StepIcon
+                      status={
+                        index < stepIndex
+                          ? "done"
+                          : index === stepIndex
+                            ? pending
+                              ? "loading"
+                              : "current"
+                            : "waiting"
+                      }
+                    />
                     {index === stepIndex ? progressLabels[index] : label}
                   </li>
                 ))}
@@ -655,7 +750,7 @@ export function AiRecommendationsPage({
           type="button"
           onClick={() => setSheetOpen(true)}
           aria-haspopup="dialog"
-          className="fixed right-4 bottom-[calc(108px_+_env(safe-area-inset-bottom))] left-4 flex items-center justify-between rounded-2xl bg-white p-4 shadow-[0_4px_16px_#00000026] lg:hidden"
+          className="fixed bottom-[calc(108px_+_env(safe-area-inset-bottom))] left-1/2 flex w-[calc(100%_-_32px)] max-w-[343px] -translate-x-1/2 items-center justify-between rounded-2xl bg-white p-4 shadow-[0_4px_16px_#00000026] lg:hidden"
         >
           <span
             className={`flex items-center gap-2 text-[13px] font-semibold ${gradient}`}
