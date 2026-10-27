@@ -98,10 +98,10 @@ export const DeclinedCoffeeChat: Story = {
     await review(canvas);
     await answer(canvas, "아니요, 괜찮아요");
     await expect(
-      canvas.queryByRole("textbox", { name: "오픈채팅 링크" }),
+      canvas.queryByRole("textbox", { name: "이메일 또는 오픈채팅 링크" }),
     ).not.toBeInTheDocument();
     await expect(
-      canvas.queryByText("연락 가능한 오픈채팅 링크를 남겨주세요"),
+      canvas.queryByText("연락 가능한 이메일 또는 오픈채팅 링크를 남겨주세요"),
     ).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole("button", { name: "시작하기" }));
     await expect(args.onComplete).toHaveBeenCalledWith(
@@ -121,7 +121,7 @@ export const ChangeCoffeeChat: Story = {
     await review(canvas);
     await answer(canvas, "네, 좋아요");
     await userEvent.type(
-      canvas.getByRole("textbox", { name: "오픈채팅 링크" }),
+      canvas.getByRole("textbox", { name: "이메일 또는 오픈채팅 링크" }),
       "https://open.kakao.com/o/test",
     );
     await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
@@ -140,7 +140,7 @@ export const ChangeCoffeeChat: Story = {
     );
     await answer(canvas, "네, 좋아요");
     await expect(
-      canvas.getByRole("textbox", { name: "오픈채팅 링크" }),
+      canvas.getByRole("textbox", { name: "이메일 또는 오픈채팅 링크" }),
     ).toHaveValue("");
     await userEvent.click(
       canvas.getByRole("button", { name: "이전 답변 수정" }),
@@ -186,5 +186,30 @@ export const SaveFailure: Story = {
     await expect(
       canvas.getByRole("button", { name: "시작하기" }),
     ).toBeEnabled();
+  },
+};
+
+export const EmailContact: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await selectLab(canvas);
+    await answer(canvas, "네, 맞아요");
+    await review(canvas);
+    await answer(canvas, "네, 좋아요");
+    const contact = canvas.getByRole("textbox", { name: "이메일 또는 오픈채팅 링크" });
+    await userEvent.type(contact, "잘못된 주소");
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    await expect(canvas.getByText("이메일 또는 카카오 오픈채팅 링크를 확인해주세요.")).toBeInTheDocument();
+    await userEvent.clear(contact);
+    await userEvent.type(contact, "member@example.test");
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    await userEvent.click(canvas.getByRole("button", { name: "이전 답변 수정" }));
+    await expect(canvas.getByRole("textbox", { name: "이메일 또는 오픈채팅 링크" })).toHaveValue("member@example.test");
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    await userEvent.click(canvas.getByRole("button", { name: "시작하기" }));
+    await expect(args.onComplete).toHaveBeenCalledWith(
+      expect.objectContaining({ contact: "member@example.test", coffeeChat: "네, 좋아요" }),
+      "/",
+    );
   },
 };
