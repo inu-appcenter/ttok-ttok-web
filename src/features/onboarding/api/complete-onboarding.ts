@@ -26,13 +26,39 @@ const ERROR_MESSAGES: Record<string, string> = {
   TOKEN_INVALID: "로그인이 만료되었습니다. 다시 로그인해주세요.",
 };
 
+export function parseCoffeeChatContact(value: string):
+  | { contactType: "EMAIL" | "KAKAO_TALK"; contactValue: string }
+  | undefined {
+  const contactValue = value.trim();
+  if (/^[^\s@/]+@[^\s@/]+\.[^\s@/.]+$/.test(contactValue)) {
+    return { contactType: "EMAIL", contactValue };
+  }
+  if (/\s/.test(contactValue)) return undefined;
+  try {
+    const url = new URL(contactValue);
+    if (
+      url.protocol === "https:" &&
+      url.hostname === "open.kakao.com" &&
+      !url.username && !url.password && !url.port &&
+      url.pathname !== "/"
+    ) {
+      return { contactType: "KAKAO_TALK", contactValue };
+    }
+  } catch {
+    // 이메일도 올바른 오픈채팅 링크도 아니다.
+  }
+  return undefined;
+}
+
 export function toOnboardingRequest(
   answers: OnboardingAnswers,
 ): OnboardingRequest {
   const isExplorer = answers.purpose === "연구실을 알아보고 있어요";
   const coffeeChatAllowed = answers.coffeeChat === "네, 좋아요";
-  const contactValue =
-    typeof answers.contact === "string" ? answers.contact.trim() : undefined;
+  const contact =
+    typeof answers.contact === "string"
+      ? parseCoffeeChatContact(answers.contact)
+      : undefined;
   const coreTime =
     typeof answers.coreTime === "string" ? answers.coreTime : undefined;
   const doings = Array.isArray(answers.activities)
@@ -50,14 +76,7 @@ export function toOnboardingRequest(
     ...(isExplorer
       ? {}
       : {
-          ...(coffeeChatAllowed && contactValue
-            ? {
-                contactType: contactValue.startsWith("https://open.kakao.com/")
-                  ? "KAKAO_TALK"
-                  : "EMAIL",
-                contactValue,
-              }
-            : {}),
+          ...(coffeeChatAllowed && contact ? contact : {}),
           coreTime,
           doings,
           laboratoryId,
@@ -83,7 +102,7 @@ function getRequestValidationError(request: OnboardingRequest) {
   }
 
   if (request.coffeeChatAllowed && !request.contactValue) {
-    return "커피챗 연락처를 입력해주세요.";
+    return "이메일 또는 카카오 오픈채팅 링크를 확인해주세요.";
   }
 
   return null;

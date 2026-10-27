@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   completeOnboarding,
+  parseCoffeeChatContact,
   toOnboardingRequest,
 } from "../src/features/onboarding/api/complete-onboarding.ts";
 
@@ -82,4 +83,34 @@ test("연구생 필수 입력 누락은 저장 요청 전에 차단한다", asyn
     false,
   );
   assert.equal(fetch.mock.callCount(), 0);
+});
+
+test("커피챗 연락처는 이메일과 유효한 카카오 오픈채팅 링크만 분류한다", () => {
+  assert.deepEqual(parseCoffeeChatContact(" member@example.test "), {
+    contactType: "EMAIL", contactValue: "member@example.test",
+  });
+  assert.deepEqual(parseCoffeeChatContact("https://open.kakao.com/o/abc"), {
+    contactType: "KAKAO_TALK", contactValue: "https://open.kakao.com/o/abc",
+  });
+  for (const value of ["abc", "member@example", "http://open.kakao.com/o/abc", "https://open.kakao.com/", "https://open.kakao.com.evil.test/o/abc", "https://other.test/foo@bar.test"]) {
+    assert.equal(parseCoffeeChatContact(value), undefined, value);
+  }
+});
+
+test("유효하지 않은 연락처는 요청을 보내지 않고 비허용이면 연락처를 제외한다", async (context) => {
+  const fetch = context.mock.method(globalThis, "fetch", async () => new Response("{}"));
+  assert.equal((await completeOnboarding({ ...researcher, contact: "invalid" })).ok, false);
+  assert.equal(fetch.mock.callCount(), 0);
+  const result = toOnboardingRequest({ ...researcher, coffeeChat: "아니요, 괜찮아요" });
+  assert.equal(result.coffeeChatAllowed, false);
+  assert.equal("contactType" in result, false);
+  assert.equal("contactValue" in result, false);
+});
+
+test("이메일 연락처를 EMAIL로 서버에 전달한다", async (context) => {
+  const fetch = context.mock.method(globalThis, "fetch", async () => new Response("{}"));
+  assert.deepEqual(await completeOnboarding({ ...researcher, contact: " member@example.test " }), { ok: true });
+  const sent = JSON.parse(fetch.mock.calls[0].arguments[1].body);
+  assert.equal(sent.contactType, "EMAIL");
+  assert.equal(sent.contactValue, "member@example.test");
 });
