@@ -28,6 +28,16 @@ const departments = [
   { department: "COMPUTER_ENGINEERING", departmentName: "컴퓨터공학부" },
   { department: "KOREAN", departmentName: "국어국문학과" },
 ];
+const mobileViewport = {
+  parameters: {
+    viewport: {
+      options: {
+        mobile375: { name: "Mobile 375", styles: { width: "375px", height: "812px" }, type: "mobile" },
+      },
+    },
+  },
+  globals: { viewport: { value: "mobile375", isRotated: false } },
+};
 const meta = {
   title: "Features/WriteContactEmail/Composer",
   component: ContactEmailComposer,
@@ -145,6 +155,8 @@ export const Regenerate: Story = {
   args: { initialInput: input, initialDraft: draft },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
+    const editButton = canvas.queryByRole("button", { name: "입력 수정" });
+    if (editButton) await userEvent.click(editButton);
     await waitFor(() =>
       expect(
         canvas.getByRole("button", { name: "입력 내용으로 다시 생성" }),
@@ -187,6 +199,8 @@ export const GenerationFailure: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const editButton = canvas.queryByRole("button", { name: "입력 수정" });
+    if (editButton) await userEvent.click(editButton);
     await waitFor(() =>
       expect(
         canvas.getByRole("button", { name: "입력 내용으로 다시 생성" }),
@@ -224,6 +238,8 @@ export const CancelLateResponse: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const editButton = canvas.queryByRole("button", { name: "입력 수정" });
+    if (editButton) await userEvent.click(editButton);
     await waitFor(() =>
       expect(
         canvas.getByRole("button", { name: "입력 내용으로 다시 생성" }),
@@ -328,5 +344,150 @@ export const Reopen: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "메일 다시 열기" }));
     await waitFor(() => expect(canvas.getByRole("textbox", { name: "학과" })).toHaveValue("컴퓨터공학부"));
     await expect(canvas.getByLabelText("이름")).toHaveValue("유지할 이름");
+  },
+};
+
+export const MobileResult: Story = {
+  ...mobileViewport,
+  args: { initialInput: input },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() =>
+      expect(
+        canvas.getByRole("button", { name: "AI로 메일 초안 만들기" }),
+      ).toBeEnabled(),
+    );
+    // 생성 전에는 모바일에서 초안 패널이 보이지 않는다.
+    await expect(
+      canvas.queryByRole("button", { name: "제목 복사" }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(
+      canvas.getByRole("button", { name: "AI로 메일 초안 만들기" }),
+    );
+    // 성공 시 결과가 바로 표시되고 입력 폼은 가려진다.
+    await waitFor(() =>
+      expect(
+        canvas.getByRole("button", { name: "제목 복사" }),
+      ).toBeInTheDocument(),
+    );
+    await expect(
+      canvas.queryByRole("button", { name: "입력 내용으로 다시 생성" }),
+    ).not.toBeInTheDocument();
+    // 입력으로 돌아가면 입력값이 보존된다.
+    await userEvent.click(canvas.getByRole("button", { name: "입력 수정" }));
+    await expect(canvas.getByLabelText("이름")).toHaveValue(input.name);
+    await expect(canvas.getByLabelText("관심 있는 연구")).toHaveValue(
+      input.interest,
+    );
+    // 이전 초안도 그대로 다시 볼 수 있다.
+    await userEvent.click(canvas.getByRole("button", { name: "메일 초안" }));
+    await expect(
+      canvas.getByRole("button", { name: "제목 복사" }),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText(draft.subject)).toBeInTheDocument();
+  },
+};
+
+export const MobileReopenDraft: Story = {
+  ...mobileViewport,
+  args: { initialInput: input, initialDraft: draft },
+  render: (args) => <ReopenExample {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // 최초 진입부터 모바일에서 초안이 보인다.
+    await expect(
+      await canvas.findByRole("button", { name: "제목 복사" }),
+    ).toBeInTheDocument();
+    await expect(
+      canvas.queryByRole("button", { name: "입력 내용으로 다시 생성" }),
+    ).not.toBeInTheDocument();
+    // 닫았다가 다시 열어도 초안이 보이고 입력도 보존된다.
+    await userEvent.click(canvas.getByRole("button", { name: "닫기" }));
+    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "메일 다시 열기" }));
+    await expect(
+      await canvas.findByRole("button", { name: "제목 복사" }),
+    ).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "입력 수정" }));
+    await expect(canvas.getByLabelText("이름")).toHaveValue(input.name);
+  },
+};
+
+export const MobileRegenerateFailure: Story = {
+  ...mobileViewport,
+  args: {
+    initialInput: input,
+    initialDraft: draft,
+    onGenerate: fn(async () => {
+      throw new Error("메일 초안을 일시적으로 만들 수 없습니다.");
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // 초안 뷰에서 입력으로 전환해 재생성한다.
+    await expect(
+      await canvas.findByRole("button", { name: "제목 복사" }),
+    ).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "입력 수정" }));
+    await waitFor(() =>
+      expect(
+        canvas.getByRole("button", { name: "입력 내용으로 다시 생성" }),
+      ).toBeEnabled(),
+    );
+    await userEvent.click(
+      canvas.getByRole("button", { name: "입력 내용으로 다시 생성" }),
+    );
+    // 실패해도 입력과 기존 초안이 유지된다.
+    await expect(await canvas.findByRole("alert")).toHaveTextContent(
+      "메일 초안을 일시적으로 만들 수 없습니다.",
+    );
+    await expect(canvas.getByLabelText("관심 있는 연구")).toHaveValue(
+      input.interest,
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "메일 초안" }));
+    await expect(canvas.getByText(draft.subject)).toBeInTheDocument();
+  },
+};
+
+export const MobileCancelKeepsDraft: Story = {
+  ...mobileViewport,
+  args: {
+    initialInput: input,
+    initialDraft: draft,
+    onGenerate: fn(
+      (
+        _input: import("../model/email-contract").EmailRequest,
+        signal: AbortSignal,
+      ) =>
+        new Promise<{ subject: string; body: string }>((resolve) =>
+          signal.addEventListener(
+            "abort",
+            () => resolve({ subject: "취소한 응답", body: "취소한 본문" }),
+            { once: true },
+          ),
+        ),
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      await canvas.findByRole("button", { name: "제목 복사" }),
+    ).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "입력 수정" }));
+    await waitFor(() =>
+      expect(
+        canvas.getByRole("button", { name: "입력 내용으로 다시 생성" }),
+      ).toBeEnabled(),
+    );
+    await userEvent.click(
+      canvas.getByRole("button", { name: "입력 내용으로 다시 생성" }),
+    );
+    await userEvent.click(
+      await canvas.findByRole("button", { name: "요청 취소" }),
+    );
+    // 취소 후에도 기존 초안을 다시 볼 수 있고 취소된 응답은 반영되지 않는다.
+    await userEvent.click(canvas.getByRole("button", { name: "메일 초안" }));
+    await expect(canvas.getByText(draft.subject)).toBeInTheDocument();
+    await expect(canvas.queryByText("취소한 응답")).not.toBeInTheDocument();
   },
 };
