@@ -16,5 +16,5 @@ export { SearchResultItem } from "./search-result-item";
 export type { SearchResultItemProps } from "./search-result-item";
 export { SearchField } from "./search-field";
 export type { SearchFieldProps } from "./search-field";
-export { Toast } from "./toast";
-export type { ToastProps, ToastState } from "./toast";
+export { TOAST_DURATION, Toast, ToastProvider, useToast } from "./toast";
+export type { ToastOptions, ToastProps, ToastState } from "./toast";

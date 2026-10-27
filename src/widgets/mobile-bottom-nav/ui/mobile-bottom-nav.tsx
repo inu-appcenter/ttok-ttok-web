@@ -1,8 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+
+import {
+  LoginRequiredLink,
+  useIsAuthenticated,
+} from "@/shared/lib/auth/login-required";
 
 type MobileBottomNavItem = {
   href: string;
@@ -10,6 +14,7 @@ type MobileBottomNavItem = {
   activeIcon: string;
   iconSize: number;
   label: string;
+  requiresLogin?: boolean;
 };
 
 export type MobileBottomNavProps = {
@@ -37,6 +42,7 @@ const items: MobileBottomNavItem[] = [
     activeIcon: "/icons/mobile-bottom-nav/ai-active.svg",
     iconSize: 24,
     label: "AI추천",
+    requiresLogin: true,
   },
   {
     href: "/mypage",
@@ -44,6 +50,7 @@ const items: MobileBottomNavItem[] = [
     activeIcon: "/icons/mobile-bottom-nav/my-active.svg",
     iconSize: 22,
     label: "마이",
+    requiresLogin: true,
   },
 ];
 
@@ -52,6 +59,7 @@ const AI_GRADIENT =
 
 export function MobileBottomNav({ activeHref }: MobileBottomNavProps) {
   const pathname = usePathname() ?? "";
+  const isAuthenticated = useIsAuthenticated();
   const currentPathname = activeHref ?? pathname;
 
   return (
@@ -72,8 +80,9 @@ export function MobileBottomNav({ activeHref }: MobileBottomNavProps) {
             ? "/icons/mobile-bottom-nav/explore-home.svg" : item.icon;
 
         return (
-          <Link
+          <LoginRequiredLink
             aria-current={isActive ? "page" : undefined}
+            isAuthenticated={item.requiresLogin ? isAuthenticated : true}
             className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-[var(--radius-full)] py-2 font-semibold leading-[1.5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary ${isActive ? "bg-bg-default shadow-[0_4px_16px_var(--color-opacity-black-10)]" : ""}`}
             href={item.href}
             key={item.href}
@@ -91,7 +100,7 @@ export function MobileBottomNav({ activeHref }: MobileBottomNavProps) {
             >
               {item.label}
             </span>
-          </Link>
+          </LoginRequiredLink>
         );
       })}
     </nav>

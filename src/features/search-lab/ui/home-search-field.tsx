@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition, type FormEvent } from "react";
 
-import { Button, Toast } from "@/shared/ui";
+import { Button, useToast } from "@/shared/ui";
 
 import type { CollegeOption } from "@/entities/lab";
 import { SearchConditionDropdown } from "./search-condition-dropdown";
@@ -45,8 +45,12 @@ export function HomeSearchField({
   const [category, setCategory] = useState(initialCategory);
   const [college, setCollege] = useState(initialCollege);
   const [department, setDepartment] = useState(initialDepartment);
-  const [message, setMessage] = useState("");
+  const showToast = useToast();
   const [isPending, startTransition] = useTransition();
+  // 검색 조건 오류도 공통 토스트로 띄워 다른 안내와 겹치지 않게 한다.
+  const setMessage = (message: string) => {
+    if (message) showToast({ state: "error", title: message });
+  };
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -82,15 +86,6 @@ export function HomeSearchField({
 
   return (
     <div className="flex w-full flex-col items-center gap-8">
-      {message ? (
-        <div className="fixed inset-x-4 top-20 z-50 flex justify-center">
-          <Toast
-            className="[&>span>span]:whitespace-normal"
-            state="error"
-            title={message}
-          />
-        </div>
-      ) : null}
       <form
         aria-label="연구실 검색 조건"
         aria-busy={isPending}

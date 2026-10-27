@@ -105,6 +105,11 @@ export const Draft: Story = {
       await expect(clipboard).toHaveBeenCalledWith(draft.subject);
       await userEvent.click(canvas.getByRole("button", { name: /^복사$/ }));
       await expect(clipboard).toHaveBeenLastCalledWith(draft.body);
+      // 연속 복사에도 공통 토스트는 하나만 남고, 모달 위에 보인다.
+      await waitFor(() =>
+        expect(canvas.getAllByText(/복사했어요\.$/)).toHaveLength(1),
+      );
+      await expect(canvas.getByText(/복사했어요\.$/)).toBeVisible();
     } finally {
       clipboard.mockRestore();
     }

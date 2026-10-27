@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { LoginRequiredLink } from "@/shared/lib/auth/login-required";
 import { useBookmarks, type BookmarkActions } from "../model/use-bookmarks";
 
 export function BookmarkToggle({
@@ -9,12 +9,13 @@ export function BookmarkToggle({
 }: BookmarkActions & { laboratoryId: number; isAuthenticated: boolean }) {
   if (!isAuthenticated)
     return (
-      <Link
+      <LoginRequiredLink
         href="/login"
-        className="inline-flex rounded-lg border border-border-primary px-3 py-1.5 text-sm text-text-primary"
+        isAuthenticated={false}
+        className="inline-flex cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 text-sm text-text-primary focus-visible:outline-2 focus-visible:outline-border-primary"
       >
         관심 연구실
-      </Link>
+      </LoginRequiredLink>
     );
   return <AuthenticatedBookmarkToggle laboratoryId={laboratoryId} {...props} />;
 }

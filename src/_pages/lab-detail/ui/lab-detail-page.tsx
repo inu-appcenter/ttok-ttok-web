@@ -160,7 +160,6 @@ export function LabDetailPage({
         <RecentPapers isMobile lab={lab} />
         <ResearchMetrics metrics={lab.metrics} />
         <LabContactCard
-          laboratoryId={lab.laboratoryId}
           contact={lab.contact}
           isAuthenticated={isAuthenticated}
         />
@@ -289,7 +288,6 @@ export function LabDetailPage({
           <ResearchMetrics metrics={lab.metrics} />
           <ProfessorCard lab={lab} isAuthenticated={isAuthenticated} memberDepartmentCode={memberDepartmentCode} />
           <LabContactCard
-            laboratoryId={lab.laboratoryId}
             contact={lab.contact}
             isAuthenticated={isAuthenticated}
           />

@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Bookmark } from "@/entities/bookmark";
+import { useToast } from "@/shared/ui";
 
 export type BookmarkActions = {
   initialBookmarks?: Bookmark[];
@@ -30,6 +31,7 @@ export function useBookmarks({
   const busy = useRef(false),
     needsRefreshRef = useRef(false);
   const router = useRouter();
+  const showToast = useToast();
   const read = useCallback(async () => {
     if (onLoad) return onLoad();
     const response = await fetch("/api/bookmarks", { cache: "no-store" });
@@ -105,9 +107,9 @@ export function useBookmarks({
     setPending(true);
     setError("");
     try {
+      let items: Bookmark[];
       if (onToggle) {
-        setBookmarks(await onToggle(laboratoryId));
-        setLoaded(true);
+        items = await onToggle(laboratoryId);
       } else {
         // 응답 유실 시에도 토글을 다시 보내지 않고 먼저 서버 상태를 확인합니다.
         needsRefreshRef.current = true;
@@ -117,30 +119,55 @@ export function useBookmarks({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ laboratoryId }),
         });
-        const body = await response.json();
         if (response.status === 401) router.push("/login");
-        if (!response.ok) {
-          if (response.status >= 400 && response.status < 500) {
-            needsRefreshRef.current = false;
-            setNeedsRefresh(false);
-          }
-          throw new Error(body.message || "관심 연구실을 변경하지 못했어요.");
+        if (!response.ok && response.status >= 400 && response.status < 500) {
+          needsRefreshRef.current = false;
+          setNeedsRefresh(false);
         }
-        setBookmarks(await read());
-        setLoaded(true);
-        needsRefreshRef.current = false;
-        setNeedsRefresh(false);
+        if (!response.ok) {
+          const body: unknown = await response.json().catch(() => null);
+          throw new Error(
+            body && typeof body === "object" && "message" in body &&
+              typeof body.message === "string"
+              ? body.message
+              : "",
+          );
+        }
+        // 서버 목록을 다시 받은 뒤에만 결과를 확정합니다.
+        items = await read();
+      }
+      setBookmarks(items);
+      setLoaded(true);
+      needsRefreshRef.current = false;
+      setNeedsRefresh(false);
+      showToast({
+        state: "success",
+        title: items.some((item) => item.laboratory.laboratoryId === laboratoryId)
+          ? "관심 연구실에 등록했어요."
+          : "관심 연구실에서 해제했어요.",
+      });
+      if (!onToggle) {
         window.dispatchEvent(new Event("ttok:bookmarks-changed"));
         router.refresh();
       }
     } catch (failure) {
-      setError(
-        needsRefreshRef.current
-          ? "변경 후 목록을 확인하지 못했어요. 목록을 다시 불러와주세요."
-          : failure instanceof Error
-            ? failure.message
-            : "관심 연구실을 변경하지 못했어요.",
-      );
+      if (needsRefreshRef.current) {
+        setError("변경 후 목록을 확인하지 못했어요. 목록을 다시 불러와주세요.");
+        showToast({
+          state: "warning",
+          title: "변경 결과를 확인하지 못했어요.",
+          description: "목록을 다시 불러와 확인해주세요.",
+        });
+      } else {
+        showToast({
+          state: "error",
+          title: "관심 연구실을 변경하지 못했어요.",
+          description:
+            failure instanceof Error && failure.message
+              ? failure.message
+              : undefined,
+        });
+      }
     } finally {
       busy.current = false;
       setPending(false);

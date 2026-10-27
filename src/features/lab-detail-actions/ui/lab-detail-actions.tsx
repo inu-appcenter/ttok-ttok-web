@@ -1,138 +1,85 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import type { LabDetail } from "@/entities/lab";
 import { EXTERNAL_LINKS } from "@/shared/config";
+import { useLoginRequiredToast } from "@/shared/lib/auth/login-required";
 import {
   Button,
   Checkbox,
   Dialog,
   Radio,
-  Toast,
+  useToast,
 } from "@/shared/ui";
-
-function SubmissionToast({
-  onDismiss,
-  title,
-  state = "success",
-}: {
-  onDismiss: () => void;
-  title: string;
-  state?: "success" | "warning";
-}) {
-  useEffect(() => {
-    const timeout = window.setTimeout(onDismiss, 3000);
-    return () => window.clearTimeout(timeout);
-  }, [onDismiss]);
-
-  return (
-    <div className="fixed left-1/2 top-3 z-[120] max-w-[calc(100vw-32px)] -translate-x-1/2">
-      <Toast state={state} title={title} />
-    </div>
-  );
-}
 
 export function LabContactCard({
   contact,
-  laboratoryId,
   isAuthenticated = false,
 }: {
   contact: LabDetail["contact"];
-  laboratoryId?: number;
   isAuthenticated?: boolean;
 }) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const showLoginRequired = useLoginRequiredToast();
   const hasContact = Boolean(
     contact.email || contact.openChatUrl || contact.members.length,
   );
 
   return (
-    <>
-      <section className="w-full rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)] md:p-4">
-        <h2 className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-default md:text-[length:var(--font-size-headline2)] md:leading-[1.4]">
-          커피챗
-        </h2>
-        {isAuthenticated && !hasContact ? (
-          <p className="mt-[10px] py-1 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
-            공개된 연락처가 아직 없어요.
-          </p>
-        ) : isAuthenticated ? (
-          <ul className="mt-[10px] flex flex-col text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
-            {contact.members.map((member) => (
-              <li
-                className="flex items-center justify-between gap-4 border-b border-border-subtlest py-1 last:border-0"
-                key={member.id}
-              >
-                <span className="min-w-0 break-words">{member.name}</span>
-                {member.url ? (
-                  <a
-                    className="min-w-0 break-all text-right text-text-primary hover:underline"
-                    href={member.url}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    {member.contact}
-                  </a>
-                ) : (
-                  <span className="min-w-0 break-all text-right text-text-primary">
-                    {member.contact}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="relative mt-[10px] flex min-h-[62px] items-center justify-center overflow-hidden py-[10px]">
-            <div
-              aria-hidden="true"
-              className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-subtle blur-[2px]"
+    <section className="w-full rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)] md:p-4">
+      <h2 className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-default md:text-[length:var(--font-size-headline2)] md:leading-[1.4]">
+        커피챗
+      </h2>
+      {isAuthenticated && !hasContact ? (
+        <p className="mt-[10px] py-1 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
+          공개된 연락처가 아직 없어요.
+        </p>
+      ) : isAuthenticated ? (
+        <ul className="mt-[10px] flex flex-col text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
+          {contact.members.map((member) => (
+            <li
+              className="flex items-center justify-between gap-4 border-b border-border-subtlest py-1 last:border-0"
+              key={member.id}
             >
-              <p>오픈채팅 · 연락처</p>
-              <p>이메일 · 연락처</p>
-            </div>
-            <Button
-              className="absolute !h-8 !rounded-[var(--radius-md)] !px-4 !text-[length:var(--font-size-body3)]"
-              onClick={() => setIsDialogOpen(true)}
-              size="sm"
-            >
-              로그인하고 커피챗 확인하기
-            </Button>
-          </div>
-        )}
-      </section>
-
-      <Dialog
-        className="max-w-[418px]"
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        title="로그인 필요"
-      >
-        <div className="flex flex-col items-center px-6 pb-[30px] pt-[30px] text-center">
-          <p className="text-[24px] font-semibold leading-[1.22] text-text-primary">
-            커피챗 연락처를 보려면
-            <br />
-            로그인이 필요해요
-          </p>
-          <Link
-            className="mt-[34px] inline-flex min-h-10 w-full items-center justify-center rounded-[var(--radius-md)] bg-bg-primary px-4 py-2 text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] text-text-inverse transition-colors hover:bg-bg-primary-hover active:bg-bg-primary-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-            href={
-              laboratoryId
-                ? `/login?returnTo=${encodeURIComponent(`/labs/${laboratoryId}`)}`
-                : "/login"
-            }
+              <span className="min-w-0 break-words">{member.name}</span>
+              {member.url ? (
+                <a
+                  className="min-w-0 break-all text-right text-text-primary hover:underline"
+                  href={member.url}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {member.contact}
+                </a>
+              ) : (
+                <span className="min-w-0 break-all text-right text-text-primary">
+                  {member.contact}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="relative mt-[10px] flex min-h-[62px] items-center justify-center overflow-hidden py-[10px]">
+          <div
+            aria-hidden="true"
+            className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-subtle blur-[2px]"
           >
-            인천대학교 포털 로그인 ↗
-          </Link>
-          <p className="mt-[22px] text-[length:var(--font-size-label1)] font-medium leading-[1.5] text-text-subtle">
-            로그인 후 지금 화면으로 돌아와요.
-          </p>
+            <p>오픈채팅 · 연락처</p>
+            <p>이메일 · 연락처</p>
+          </div>
+          <Button
+            className="absolute !h-8 !rounded-[var(--radius-md)] !px-4 !text-[length:var(--font-size-body3)]"
+            onClick={() => showLoginRequired()}
+            size="sm"
+          >
+            로그인하고 커피챗 확인하기
+          </Button>
         </div>
-      </Dialog>
-    </>
+      )}
+    </section>
   );
 }
 
@@ -168,9 +115,9 @@ export function ProvideLabInfoCard({
   }) => Promise<void>;
 }) {
   const router = useRouter();
+  const showToast = useToast();
+  const showLoginRequired = useLoginRequiredToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [toastTitle, setToastTitle] = useState("");
-  const [accessNotice, setAccessNotice] = useState("");
   const [coreTime, setCoreTime] = useState("");
   const [meetingFrequency, setMeetingFrequency] = useState("");
   const [tasks, setTasks] = useState<string[]>([]);
@@ -221,7 +168,7 @@ export function ProvideLabInfoCard({
       }
       setIsDialogOpen(false);
       resetForm();
-      setToastTitle("정보 제공이 완료되었습니다");
+      showToast({ state: "success", title: "정보 제공이 완료되었습니다" });
       if (!onSave) router.refresh();
     } catch (error) {
       setSaveError(
@@ -237,12 +184,16 @@ export function ProvideLabInfoCard({
       <button
         className="flex w-full cursor-pointer flex-col items-center justify-center rounded-[var(--radius-2xl)] border border-border-primary bg-bg-default px-3 py-2 text-center transition-colors hover:bg-bg-primary-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
         onClick={() => {
-          if (!isAuthenticated || !canContribute) {
-            setAccessNotice(
-              isAuthenticated
-                ? "이 연구실 소속 학부연구생만 정보를 제공할 수 있어요."
-                : "로그인 후 소속 학부연구생만 정보를 제공할 수 있어요.",
-            );
+          if (!isAuthenticated) {
+            showLoginRequired("소속 학부연구생만 정보를 제공할 수 있어요.");
+            return;
+          }
+          if (!canContribute) {
+            showToast({
+              description: "이 연구실 소속 학부연구생만 제공할 수 있어요.",
+              state: "warning",
+              title: "정보 제공 권한이 없어요.",
+            });
             return;
           }
           setIsDialogOpen(true);
@@ -257,13 +208,6 @@ export function ProvideLabInfoCard({
         </strong>
       </button>
 
-      {accessNotice ? (
-        <SubmissionToast
-          state="warning"
-          title={accessNotice}
-          onDismiss={() => setAccessNotice("")}
-        />
-      ) : null}
       <Dialog
         className="max-w-[483px]"
         isOpen={isDialogOpen}
@@ -387,13 +331,6 @@ export function ProvideLabInfoCard({
           </Button>
         </form>
       </Dialog>
-
-      {toastTitle ? (
-        <SubmissionToast
-          onDismiss={() => setToastTitle("")}
-          title={toastTitle}
-        />
-      ) : null}
     </>
   );
 }

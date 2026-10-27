@@ -11,7 +11,8 @@ import {
 } from "../model/request-email";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
-import { Button, Dialog, Field, Radio, Textarea, Toast } from "@/shared/ui";
+import { useLoginRequiredToast } from "@/shared/lib/auth/login-required";
+import { Button, Dialog, Field, Radio, Textarea, useToast } from "@/shared/ui";
 
 import {
   EMAIL_PURPOSES,
@@ -58,7 +59,7 @@ export function ContactEmailComposer({
     Partial<Record<keyof EmailInput, string>>
   >({});
   const [pending, setPending] = useState(false);
-  const [notice, setNotice] = useState("");
+  const showToast = useToast();
   const [mobileView, setMobileView] = useState<"input" | "draft">(
     initialDraft ? "draft" : "input",
   );
@@ -139,16 +140,10 @@ export function ContactEmailComposer({
       previousFocus?.focus();
     };
   }, [isOpen]);
-  useEffect(() => {
-    if (!notice) return;
-    const timer = setTimeout(() => setNotice(""), 3500);
-    return () => clearTimeout(timer);
-  }, [notice]);
   const close = useCallback(() => {
     request.current?.abort();
     request.current = null;
     setPending(false);
-    setNotice("");
     setMobileView(draft ? "draft" : "input");
     onClose();
   }, [onClose, draft]);
@@ -168,7 +163,6 @@ export function ContactEmailComposer({
     setPending(true);
     setMobileView("draft");
     setRequestError("");
-    setNotice("");
     try {
       const content = await onGenerate(
         toEmailRequest(input, recipient.laboratoryId),
@@ -201,10 +195,15 @@ export function ContactEmailComposer({
     const version = ++copyVersion.current;
     try {
       await navigator.clipboard.writeText(value);
-      if (version === copyVersion.current) setNotice(`${label}을 복사했어요.`);
+      if (version === copyVersion.current)
+        showToast({ state: "success", title: `${label}을 복사했어요.` });
     } catch {
       if (version === copyVersion.current)
-        setNotice("복사하지 못했어요. 내용을 선택해 직접 복사해 주세요.");
+        showToast({
+          state: "error",
+          title: "복사하지 못했어요.",
+          description: "내용을 선택해 직접 복사해 주세요.",
+        });
     }
   }
   const expanded = Boolean(draft || pending);
@@ -249,14 +248,6 @@ export function ContactEmailComposer({
         closeIconSrc="/icons/email-editor/close.svg"
         className={`relative !rounded-[24px] !border-0 !bg-[#f5f5f5] [&>header]:px-6 [&>header]:pt-6 md:[&>header]:px-9 md:[&>header]:pt-9 [&_h2]:!text-[22px] [&_h2]:!font-semibold [&_header_button]:!size-6 [&_header_button]:relative [&_header_button]:z-10 ${expanded ? "max-w-[824px]" : "max-w-[460px]"}`}
       >
-        {notice && (
-          <div className="pointer-events-none fixed top-3 left-1/2 z-[120] w-[calc(100%_-_32px)] max-w-[420px] -translate-x-1/2 text-center">
-            <Toast
-              title={notice}
-              state={notice.includes("못") ? "error" : "success"}
-            />
-          </div>
-        )}
         {expanded && (
           <div className="px-6 pb-2 md:hidden">
             <div
@@ -546,12 +537,7 @@ export function ContactEmailButton({
   isAuthenticated?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [accessNotice, setAccessNotice] = useState(false);
-  useEffect(() => {
-    if (!accessNotice) return;
-    const timeout = window.setTimeout(() => setAccessNotice(false), 3000);
-    return () => window.clearTimeout(timeout);
-  }, [accessNotice]);
+  const showLoginRequired = useLoginRequiredToast();
   const trigger = useRef<HTMLDivElement>(null);
   const handleClose = useCallback(() => {
     setIsOpen(false);
@@ -570,7 +556,7 @@ export function ContactEmailButton({
         }
         onClick={() => {
           if (!isAuthenticated) {
-            setAccessNotice(true);
+            showLoginRequired();
             return;
           }
           setIsOpen(true);
@@ -590,14 +576,6 @@ export function ContactEmailButton({
           "교수님께 메일 쓰기"
         )}
       </Button>
-      {accessNotice ? (
-        <div className="fixed left-1/2 top-3 z-[120] max-w-[calc(100vw-32px)] -translate-x-1/2">
-          <Toast
-            state="warning"
-            title="로그인 후 AI 메일 첨삭을 이용할 수 있어요."
-          />
-        </div>
-      ) : null}
       <ContactEmailComposer
         recipient={recipient}
         memberDepartmentCode={memberDepartmentCode}
