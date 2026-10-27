@@ -158,6 +158,7 @@ export function LabDetailPage({
 
         <ResearchProjects isMobile lab={lab} />
         <RecentPapers isMobile lab={lab} />
+        <ResearchMetrics metrics={lab.metrics} />
         <LabContactCard
           laboratoryId={lab.laboratoryId}
           contact={lab.contact}
@@ -285,7 +286,7 @@ export function LabDetailPage({
               </p>
             </section>
           ) : null}
-          {lab.metrics ? <ResearchMetrics metrics={lab.metrics} /> : null}
+          <ResearchMetrics metrics={lab.metrics} />
           <ProfessorCard lab={lab} isAuthenticated={isAuthenticated} memberDepartmentCode={memberDepartmentCode} />
           <LabContactCard
             laboratoryId={lab.laboratoryId}

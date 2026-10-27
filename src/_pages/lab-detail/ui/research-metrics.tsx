@@ -1,88 +1,92 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import type { LabResearchMetrics } from "@/entities/lab";
 
-export function ResearchMetrics({ metrics }: { metrics: LabResearchMetrics }) {
+export function ResearchMetrics({ metrics }: { metrics?: LabResearchMetrics }) {
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
   const tooltipId = useId();
+  const container = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!activeMetric) return;
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") setActiveMetric(null);
     }
+    function handlePointerDown(event: PointerEvent) {
+      if (event.target instanceof Node && !container.current?.contains(event.target)) {
+        setActiveMetric(null);
+      }
+    }
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
   }, [activeMetric]);
   const items = [
     {
       key: "h-index",
       label: "h-index",
-      value: metrics.hIndex,
-      percentile: metrics.hIndexPercentile,
+      value: metrics?.hIndex,
+      percentile: metrics?.hIndexPercentile,
     },
     {
       key: "citations",
       label: "피인용",
-      value: metrics.citations,
-      percentile: metrics.citationPercentile,
+      value: metrics?.citations,
+      percentile: metrics?.citationPercentile,
     },
-    { key: "papers", label: "최근 5년 논문", value: metrics.fiveYearPapers },
+    { key: "papers", label: "최근 5년 논문", value: metrics?.fiveYearPapers },
   ];
 
   return (
     <section
+      ref={container}
       onMouseLeave={() => setActiveMetric(null)}
       className="relative rounded-[var(--radius-2xl)] bg-bg-default p-4 shadow-[0_4px_16px_var(--color-opacity-black-10)]"
     >
       <h2 className="text-[length:var(--font-size-headline2)] font-semibold leading-[1.4]">
         연구 지표
       </h2>
-      <dl className="mt-[10px] grid grid-cols-3 gap-[10px]">
-        {items.map((item) => (
-          <div
-            className="min-w-0 rounded-[var(--radius-2xl)] border border-icon-disabled p-[10px]"
-            key={item.key}
-          >
-            <dt className="flex items-center justify-between gap-1 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
-              {item.label}
-              {item.key !== "papers" ? (
-                <button
-                  aria-label={`${item.label} 설명`}
-                  aria-expanded={activeMetric === item.key}
-                  aria-controls={
-                    activeMetric === item.key ? tooltipId : undefined
-                  }
-                  className="shrink-0 cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                  onMouseEnter={() => setActiveMetric(item.key)}
-                  onFocus={() => setActiveMetric(item.key)}
-                  onBlur={() => setActiveMetric(null)}
-                  onClick={() => setActiveMetric(item.key)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape") {
-                      event.preventDefault();
-                      setActiveMetric(null);
-                    }
-                  }}
-                  type="button"
-                >
-                  <Image
-                    alt=""
-                    src="/icons/lab-detail/metric-help.svg"
-                    width={16}
-                    height={16}
-                  />
-                </button>
-              ) : null}
-            </dt>
-            <dd className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] text-text-primary">
-              {item.value?.toLocaleString("ko-KR") ?? "—"}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <div className="mt-[10px] grid grid-cols-3 gap-[10px]">
+        {items.map((item) => {
+          const content = (
+            <>
+              <span className="flex items-center justify-between gap-1 text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
+                {item.label}
+                {item.key !== "papers" && (
+                  <Image alt="" src="/icons/lab-detail/metric-help.svg" width={16} height={16} />
+                )}
+              </span>
+              <span className="block text-[length:var(--font-size-heading2)] font-semibold leading-[1.5] text-text-primary">
+                {item.value?.toLocaleString("ko-KR") ?? "—"}
+              </span>
+            </>
+          );
+          const className = "min-w-0 rounded-[var(--radius-2xl)] border border-icon-disabled p-[10px] text-left";
+          return item.key === "papers" ? (
+            <div key={item.key} className={className}>{content}</div>
+          ) : (
+            <button
+              key={item.key}
+              type="button"
+              aria-label={`${item.label} 설명`}
+              aria-expanded={activeMetric === item.key}
+              aria-describedby={activeMetric === item.key ? tooltipId : undefined}
+              className={`${className} cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary`}
+              onMouseEnter={() => setActiveMetric(item.key)}
+              onFocus={() => setActiveMetric(item.key)}
+              onBlur={() => setActiveMetric(null)}
+              onClick={() => setActiveMetric(item.key)}
+            >
+              {content}
+            </button>
+          );
+        })}
+      </div>
       {activeMetric ? (
         <div
           className="absolute bottom-[calc(100%_-_24px)] left-0 z-30 w-full rounded-[var(--radius-2xl)] bg-bg-default p-6 shadow-[0_4px_16px_var(--color-opacity-black-10)] xl:-left-[27px] xl:w-[440px]"
@@ -103,9 +107,9 @@ export function ResearchMetrics({ metrics }: { metrics: LabResearchMetrics }) {
           <h3 className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5]">
             {activeMetric === "citations" ? "피인용지수" : "h-index"}
           </h3>
-          {metrics.syncedAt ? (
+          {metrics?.syncedAt ? (
             <p className="mt-1 text-[length:var(--font-size-caption1)] text-text-subtle">
-              기준일 {metrics.syncedAt.slice(0, 10)}
+              기준일 {metrics?.syncedAt.slice(0, 10)}
             </p>
           ) : null}
           {activeMetric === "citations" ? (
@@ -144,10 +148,25 @@ export function ResearchMetrics({ metrics }: { metrics: LabResearchMetrics }) {
               </p>
             </>
           ) : (
-            <p className="mt-3 text-[length:var(--font-size-label1)] leading-[1.5]">
-              h번 이상 인용된 논문이 h편 있다는 뜻이에요. 예를 들어 14번 이상
-              인용된 논문이 14편이면 h-index는 14예요.
-            </p>
+            <>
+              <div aria-label="h-index 계산 예시" className="mt-3 rounded-[var(--radius-2xl)] border border-icon-disabled p-3">
+                <p className="sr-only">다음은 설명을 위한 예시이며 이 연구실의 실제 논문별 인용 횟수가 아닙니다.</p>
+                {[10, 6, 3, 2].map((count, index) => (
+                  <div className={`mb-2 flex items-center gap-[10px] text-[length:var(--font-size-label2)] ${index === 3 ? "text-text-subtlest" : ""}`} key={count}>
+                    <span className="w-12 shrink-0 font-semibold">논문 {String.fromCharCode(65 + index)}</span>
+                    <span className={`h-3 min-w-0 rounded-[var(--radius-md)] ${index === 3 ? "bg-bg-neutral" : "bg-bg-primary"}`} style={{ width: [140, 90, 48, 28][index] }} />
+                    <span className="shrink-0">{count}회</span>
+                    <Image alt="" src={`/icons/lab-detail/metric-example-${index === 3 ? "cross" : "check"}.svg`} width={14} height={14} />
+                  </div>
+                ))}
+                <p className="rounded-[var(--radius-lg)] bg-bg-primary-subtle px-3 py-2 text-center text-[length:var(--font-size-label1)] font-semibold text-text-primary">
+                  3번 이상 인용된 논문이 3편 → h-index는 3
+                </p>
+              </div>
+              <p className="mt-3 text-[length:var(--font-size-label1)] leading-[1.5]">
+                N번 이상 인용된 논문이 N편 있다는 의미예요.<br />여러 논문이 고르게 인용되는지 보여줘요.
+              </p>
+            </>
           )}
         </div>
       ) : null}
