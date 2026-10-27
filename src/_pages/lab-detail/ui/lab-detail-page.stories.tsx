@@ -4,6 +4,7 @@ import { getRouter } from "@storybook/nextjs-vite/navigation.mock";
 import { expect, fn, userEvent, within } from "storybook/test";
 
 import { MOCK_LAB_DETAILS } from "@/entities/lab";
+import { ProvideLabInfoCard } from "@/features/lab-detail-actions";
 
 import { LabDetailPage } from "./lab-detail-page";
 
@@ -98,6 +99,14 @@ export const Authenticated: Story = {
     isAuthenticated: true,
     lab: DESIGN_LAB,
   },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByRole("button", { name: /이 랩 학부연구생이신가요/ })).not.toBeInTheDocument();
+  },
+};
+
+export const AuthenticatedResearcher: Story = {
+  args: { isAuthenticated: true, canContribute: true, lab: DESIGN_LAB },
+  play: Authenticated.play,
 };
 
 export const NoPublicContact: Story = {
@@ -130,6 +139,9 @@ export const LoginRequired: Story = {
 };
 
 export const ProvideInformation: Story = {
+  render: (args) => (
+    <ProvideLabInfoCard isAuthenticated canContribute laboratoryId={args.lab.laboratoryId} onSave={args.onProvideInfo} />
+  ),
   args: {
     lab: DESIGN_LAB,
     isAuthenticated: true,
@@ -161,6 +173,9 @@ export const ProvideInformation: Story = {
 };
 
 export const ProvideInformationSaveFailure: Story = {
+  render: (args) => (
+    <ProvideLabInfoCard isAuthenticated canContribute laboratoryId={args.lab.laboratoryId} onSave={args.onProvideInfo} />
+  ),
   args: {
     lab: DESIGN_LAB,
     isAuthenticated: true,
@@ -262,13 +277,6 @@ export const LongContent: Story = {
 export const ContributionRestricted: Story = {
   args: { lab: DESIGN_LAB, isAuthenticated: true, canContribute: false },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(
-      canvas.getByRole("button", { name: /이 랩 학부연구생이신가요/ }),
-    );
-    await expect(
-      canvas.getByText("이 연구실 소속 학부연구생만 정보를 제공할 수 있어요."),
-    ).toBeVisible();
-    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
+    await expect(within(canvasElement).queryByRole("button", { name: /이 랩 학부연구생이신가요/ })).not.toBeInTheDocument();
   },
 };
