@@ -15,6 +15,7 @@ import {
 } from "../model/onboarding-steps";
 import type { OnboardingAnswers } from "../model/onboarding-steps";
 import type { OnboardingReviewOptions } from "../model/review-options";
+import { parseCoffeeChatContact } from "../api/complete-onboarding";
 import { ChatMessage } from "./chat-message";
 import { DepartmentCombobox } from "./department-combobox";
 import { OnboardingProgress } from "./onboarding-progress";
@@ -147,21 +148,13 @@ export function OnboardingFlow({
     )
       return;
 
-    if (currentQuestion.id === "contact" && typeof nextAnswer === "string") {
-      try {
-        const url = new URL(nextAnswer);
-        if (
-          url.protocol !== "https:" ||
-          url.hostname !== "open.kakao.com" ||
-          url.pathname === "/"
-        )
-          throw new Error();
-      } catch {
-        setContactError(
-          "https://open.kakao.com/으로 시작하는 오픈채팅 링크를 입력해주세요.",
-        );
-        return;
-      }
+    if (
+      currentQuestion.id === "contact" &&
+      typeof nextAnswer === "string" &&
+      !parseCoffeeChatContact(nextAnswer)
+    ) {
+      setContactError("이메일 또는 카카오 오픈채팅 링크를 확인해주세요.");
+      return;
     }
     setContactError("");
 
@@ -505,7 +498,7 @@ export function OnboardingFlow({
                   aria-label={
                     currentQuestion.id === "interest"
                       ? "관심 연구"
-                      : "오픈채팅 링크"
+                      : "이메일 또는 오픈채팅 링크"
                   }
                   className={
                     currentQuestion.id === "interest" ? "text-base" : undefined
@@ -520,9 +513,9 @@ export function OnboardingFlow({
                   placeholder={
                     currentQuestion.id === "interest"
                       ? "예: 추천시스템, 파이썬 크롤링"
-                      : "https://open.kakao.com/..."
+                      : "이메일 또는 https://open.kakao.com/..."
                   }
-                  type={currentQuestion.id === "interest" ? "text" : "url"}
+                  type="text"
                   value={pendingAnswer}
                 />
               </div>

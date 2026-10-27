@@ -85,7 +85,7 @@ const ONBOARDING_QUESTIONS: OnboardingQuestion[] = [
   },
   {
     id: "contact",
-    question: "연락 가능한 오픈채팅 링크를 남겨주세요",
+    question: "연락 가능한 이메일 또는 오픈채팅 링크를 남겨주세요",
     helper: "연구실이 궁금한 후배들이 편하게 연락할 수 있어요",
     type: "text",
   },
