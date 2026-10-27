@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type { ReactNode } from "react";
 
 import {
@@ -16,11 +22,23 @@ import type {
   RecommendationRequest,
 } from "@/features/request-ai-recommendation";
 import { useRouter } from "next/navigation";
+import {
+  clearSessionStore,
+  isSessionScope,
+  notifyAuthChange,
+  subscribeAuthChange,
+} from "@/shared/lib/session-store";
 import { Checkbox, Dialog, Field } from "@/shared/ui";
 import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
+import {
+  readRecommendationSnapshot,
+  saveRecommendationSnapshot,
+} from "../model/recommendation-session";
 
 type Step = "interest" | "keywords" | "results";
 export type AiRecommendationsPageProps = {
+  memberId?: number;
+  sessionKey?: string;
   initialStep?: Step;
   initialPrompt?: string;
   initialKeywords?: string[];
@@ -35,6 +53,7 @@ const gradient =
   "bg-[linear-gradient(90deg,#a7c0db,#b4bade,#c2aed6,#d699c5)] bg-clip-text text-transparent";
 const action =
   "cursor-pointer text-[18px] font-semibold underline underline-offset-4 disabled:cursor-not-allowed disabled:text-text-disabled focus-visible:outline-2 focus-visible:outline-border-primary";
+const subscribeNothing = () => () => {};
 
 function Bubble({
   children,
@@ -118,6 +137,8 @@ function ResultCards({
 }
 
 export function AiRecommendationsPage({
+  memberId,
+  sessionKey,
   initialStep = "interest",
   initialPrompt = "",
   initialKeywords = [],
@@ -125,22 +146,48 @@ export function AiRecommendationsPage({
   onSuggest = suggestKeywords,
   onRecommend = requestRecommendations,
 }: AiRecommendationsPageProps) {
-  const [step, setStep] = useState<Step>(initialStep);
-  const [interest, setInterest] = useState(initialPrompt);
+  // 하이드레이션 중에는 false를 돌려 서버 HTML과 같은 초기 상태로 렌더한다.
+  // 클라이언트 이동으로 새로 마운트될 때만 true다.
+  const isClientMount = useSyncExternalStore(
+    subscribeNothing,
+    () => true,
+    () => false,
+  );
+  // 회원 ID와 검증된 세션 키가 모두 확인되고 클라이언트에서 마운트될 때만 복원한다.
+  const [restored] = useState(() => {
+    const scope = { memberId, sessionKey };
+    return isClientMount && isSessionScope(scope)
+      ? readRecommendationSnapshot(scope)
+      : undefined;
+  });
+  // 인증이 바뀐 뒤에는 이 화면의 상태를 다시 저장하지 않는다.
+  const isInvalidated = useRef(false);
+  const [step, setStep] = useState<Step>(restored?.step ?? initialStep);
+  const [interest, setInterest] = useState(restored?.interest ?? initialPrompt);
   const router = useRouter();
   const [keywords, setKeywords] = useState<string[]>(
-    initialStep === "results" ? initialKeywords.slice(0, 3) : [],
+    restored
+      ? restored.keywords
+      : initialStep === "results"
+        ? initialKeywords.slice(0, 3)
+        : [],
   );
-  const [suggestions, setSuggestions] = useState(initialKeywords);
+  const [suggestions, setSuggestions] = useState(
+    restored?.suggestions ?? initialKeywords,
+  );
   const [result, setResult] = useState<RecommendationResult | undefined>(
-    initialResult,
+    restored ? restored.result : initialResult,
   );
-  const [customKeywords, setCustomKeywords] = useState<string[]>([]);
+  const [customKeywords, setCustomKeywords] = useState<string[]>(
+    restored?.customKeywords ?? [],
+  );
   const [custom, setCustom] = useState("");
   const [adding, setAdding] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  const [hasResults, setHasResults] = useState(initialResult !== undefined);
+  const [hasResults, setHasResults] = useState(
+    (restored ? restored.result : initialResult) !== undefined,
+  );
   const [sheetOpen, setSheetOpen] = useState(false);
   const request = useRef<AbortController | null>(null);
   const end = useRef<HTMLDivElement>(null);
@@ -149,6 +196,43 @@ export function AiRecommendationsPage({
   const stepIndex = ["interest", "keywords", "results"].indexOf(step);
 
   useEffect(() => () => request.current?.abort(), []);
+  useEffect(() => {
+    const scope = { memberId, sessionKey };
+    if (isInvalidated.current || !isSessionScope(scope)) return;
+    saveRecommendationSnapshot(scope, {
+      step,
+      interest,
+      suggestions,
+      keywords,
+      customKeywords,
+      result,
+    });
+  }, [
+    memberId,
+    sessionKey,
+    step,
+    interest,
+    suggestions,
+    keywords,
+    customKeywords,
+    result,
+  ]);
+  // 인증 변경(다른 탭 포함)이나 bfcache 복귀 시 화면 상태를 비우고 서버에서
+  // 세션을 다시 확인한다. 유효하지 않으면 서버가 로그인으로 보낸다.
+  const handleSessionUncertain = useEffectEvent(() => {
+    isInvalidated.current = true;
+    clearSessionStore();
+    restart();
+    router.refresh();
+  });
+  useEffect(() => subscribeAuthChange(handleSessionUncertain), []);
+  useEffect(() => {
+    function handlePageShow(event: PageTransitionEvent) {
+      if (event.persisted) handleSessionUncertain();
+    }
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
   useEffect(() => {
     if (step === "interest") return;
     if (window.matchMedia("(min-width: 1024px)").matches) {
@@ -235,8 +319,12 @@ export function AiRecommendationsPage({
       }
     } catch (cause) {
       if (!controller.signal.aborted && request.current === controller) {
-        if (cause instanceof RecommendationApiError && cause.status === 401)
+        if (cause instanceof RecommendationApiError && cause.status === 401) {
+          isInvalidated.current = true;
+          notifyAuthChange();
           router.replace("/login");
+          return;
+        }
         setError(
           cause instanceof Error
             ? cause.message
