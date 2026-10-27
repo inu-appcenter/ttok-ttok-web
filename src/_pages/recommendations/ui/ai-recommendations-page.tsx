@@ -22,6 +22,7 @@ import type {
   RecommendationRequest,
 } from "@/features/request-ai-recommendation";
 import { useRouter } from "next/navigation";
+import { useLoginRequiredRedirect } from "@/shared/lib/auth/login-required";
 import {
   clearSessionStore,
   isSessionScope,
@@ -211,6 +212,7 @@ export function AiRecommendationsPage({
   const [step, setStep] = useState<Step>(restored?.step ?? initialStep);
   const [interest, setInterest] = useState(restored?.interest ?? initialPrompt);
   const router = useRouter();
+  const redirectToLogin = useLoginRequiredRedirect();
   const [keywords, setKeywords] = useState<string[]>(
     restored
       ? restored.keywords
@@ -357,7 +359,7 @@ export function AiRecommendationsPage({
         if (cause instanceof RecommendationApiError && cause.status === 401) {
           isInvalidated.current = true;
           notifyAuthChange();
-          router.replace("/login");
+          redirectToLogin({ replace: true });
           return;
         }
         setError(

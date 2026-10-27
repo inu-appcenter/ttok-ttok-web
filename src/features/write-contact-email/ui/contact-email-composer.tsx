@@ -11,7 +11,7 @@ import {
 } from "../model/request-email";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
-import { useLoginRequiredToast } from "@/shared/lib/auth/login-required";
+import { useLoginRequiredRedirect } from "@/shared/lib/auth/login-required";
 import { Button, Dialog, Field, Radio, Textarea, useToast } from "@/shared/ui";
 
 import {
@@ -66,6 +66,7 @@ export function ContactEmailComposer({
   const wrapper = useRef<HTMLDivElement>(null);
   const request = useRef<AbortController | null>(null);
   const router = useRouter();
+  const redirectToLogin = useLoginRequiredRedirect();
   const [requestError, setRequestError] = useState("");
   const [departments, setDepartments] = useState<DepartmentOption[]>([]);
   const [departmentError, setDepartmentError] = useState("");
@@ -174,7 +175,7 @@ export function ContactEmailComposer({
     } catch (error) {
       if (controller.signal.aborted || request.current !== controller) return;
       if (error instanceof EmailApiError && error.status === 401)
-        router.replace("/login");
+        redirectToLogin({ replace: true });
       setMobileView("input");
       setRequestError(
         error instanceof Error
@@ -537,7 +538,7 @@ export function ContactEmailButton({
   isAuthenticated?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const showLoginRequired = useLoginRequiredToast();
+  const redirectToLogin = useLoginRequiredRedirect();
   const trigger = useRef<HTMLDivElement>(null);
   const handleClose = useCallback(() => {
     setIsOpen(false);
@@ -556,7 +557,7 @@ export function ContactEmailButton({
         }
         onClick={() => {
           if (!isAuthenticated) {
-            showLoginRequired();
+            redirectToLogin();
             return;
           }
           setIsOpen(true);

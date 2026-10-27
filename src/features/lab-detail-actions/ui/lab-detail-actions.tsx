@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import type { LabDetail } from "@/entities/lab";
 import { EXTERNAL_LINKS } from "@/shared/config";
-import { useLoginRequiredToast } from "@/shared/lib/auth/login-required";
+import { useLoginRequiredRedirect } from "@/shared/lib/auth/login-required";
 import {
   Button,
   Checkbox,
@@ -22,7 +22,7 @@ export function LabContactCard({
   contact: LabDetail["contact"];
   isAuthenticated?: boolean;
 }) {
-  const showLoginRequired = useLoginRequiredToast();
+  const redirectToLogin = useLoginRequiredRedirect();
   const hasContact = Boolean(
     contact.email || contact.openChatUrl || contact.members.length,
   );
@@ -72,7 +72,7 @@ export function LabContactCard({
           </div>
           <Button
             className="absolute !h-8 !rounded-[var(--radius-md)] !px-4 !text-[length:var(--font-size-body3)]"
-            onClick={() => showLoginRequired()}
+            onClick={() => redirectToLogin()}
             size="sm"
           >
             로그인하고 커피챗 확인하기
@@ -116,7 +116,7 @@ export function ProvideLabInfoCard({
 }) {
   const router = useRouter();
   const showToast = useToast();
-  const showLoginRequired = useLoginRequiredToast();
+  const redirectToLogin = useLoginRequiredRedirect();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [coreTime, setCoreTime] = useState("");
   const [meetingFrequency, setMeetingFrequency] = useState("");
@@ -185,7 +185,7 @@ export function ProvideLabInfoCard({
         className="flex w-full cursor-pointer flex-col items-center justify-center rounded-[var(--radius-2xl)] border border-border-primary bg-bg-default px-3 py-2 text-center transition-colors hover:bg-bg-primary-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
         onClick={() => {
           if (!isAuthenticated) {
-            showLoginRequired("소속 학부연구생만 정보를 제공할 수 있어요.");
+            redirectToLogin();
             return;
           }
           if (!canContribute) {

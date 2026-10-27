@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { expect, userEvent, within } from "storybook/test";
 
-import { LOGIN_REQUIRED_MESSAGE } from "@/shared/lib/auth/login-required";
+import { getLoginPath, LOGIN_REQUIRED_NOTICE } from "@/shared/lib/auth/return-path";
 
 import { MobileBottomNav } from "./mobile-bottom-nav";
 
@@ -9,6 +9,8 @@ const meta = {
   title: "Widgets/MobileBottomNav",
   component: MobileBottomNav,
   parameters: {
+    // 활성 메뉴 확인은 로그인 상태 기준이다. 비로그인 이동은 별도 스토리에서 확인한다.
+    authenticated: true,
     layout: "fullscreen",
     nextjs: { navigation: { pathname: "/" } },
     viewport: {
@@ -63,19 +65,23 @@ export const Bookmarks: Story = {
 };
 
 export const LoggedOutProtectedEntries: Story = {
+  parameters: { authenticated: false, nextjs: { navigation: { pathname: "/labs/15" } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const nav = within(canvas.getByRole("navigation", { name: "모바일 주요 메뉴" }));
     const aiLink = nav.getByRole("link", { name: "AI추천" });
     const myLink = nav.getByRole("link", { name: "마이" });
+    // 보호 메뉴는 새 탭에서도 같은 흐름이 되도록 href 자체가 로그인 안내와 상세 복귀 경로를 가진다.
+    const loginPath = getLoginPath({ notice: LOGIN_REQUIRED_NOTICE, returnTo: "/labs/15" });
+    await expect(aiLink).toHaveAttribute("href", loginPath);
+    await expect(myLink).toHaveAttribute("href", loginPath);
+    await expect(nav.getByRole("link", { name: "홈" })).toHaveAttribute("href", "/");
+    await expect(nav.getByRole("link", { name: "탐색" })).toHaveAttribute("href", "/search");
     await userEvent.click(aiLink);
     myLink.focus();
     await userEvent.keyboard("{Enter}");
-    // 어느 보호 메뉴를 눌러도 같은 안내 하나만 보이고, 직접 접근용 href는 유지된다.
-    await expect(canvas.getAllByRole("alert")).toHaveLength(1);
-    await expect(canvas.getByRole("alert")).toHaveTextContent(LOGIN_REQUIRED_MESSAGE);
-    await expect(aiLink).toHaveAttribute("href", "/recommendations");
-    await expect(myLink).toHaveAttribute("href", "/mypage");
+    // 안내는 로그인 화면에서만 띄우므로 현재 화면에는 토스트가 없다.
+    await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
   },
 };
 
