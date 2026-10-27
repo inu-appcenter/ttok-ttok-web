@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { PapersPage } from "@/_pages/papers";
 import {
-  getAllPublications,
+  getPublicationBatch,
   getLaboratoryItem,
   LaboratoryApiError,
 } from "@/entities/lab/api";
@@ -20,7 +20,7 @@ export default async function Page({
     if (error instanceof LaboratoryApiError && error.status === 404) notFound();
     throw error;
   }
-  const papers = await getAllPublications(id).catch((error: unknown) => {
+  const papers = await getPublicationBatch(id).catch((error: unknown) => {
     console.error("[papers] 전체 논문 조회 실패", {
       laboratoryId: id,
       message: error instanceof Error ? error.message : "Unknown error",
@@ -31,7 +31,10 @@ export default async function Page({
   return (
     <PapersPage
       laboratoryId={id}
-      papers={papers ?? []}
+      key={`${id}-${papers?.totalElements}-${papers === null}`}
+      papers={papers?.papers ?? []}
+      nextPage={papers?.nextPage ?? null}
+      totalElements={papers?.totalElements}
       error={papers === null}
     />
   );
