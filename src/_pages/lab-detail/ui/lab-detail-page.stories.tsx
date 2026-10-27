@@ -230,6 +230,30 @@ export const MetricsExplanation: Story = {
   },
 };
 
+export const HIndexExplanation: Story = {
+  args: { lab: DESIGN_LAB, isAuthenticated: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole("button", { name: "h-index 설명" });
+    await userEvent.click(trigger);
+    const tooltip = canvas.getByRole("tooltip");
+    await expect(tooltip).toBeVisible();
+    await expect(within(tooltip).getByLabelText("h-index 계산 예시")).toBeVisible();
+    await expect(within(tooltip).getByText("3번 이상 인용된 논문이 3편 → h-index는 3")).toBeVisible();
+    await userEvent.keyboard("{Escape}");
+    await expect(canvas.queryByRole("tooltip")).not.toBeInTheDocument();
+  },
+};
+
+export const MissingMetrics: Story = {
+  args: { lab: { ...DESIGN_LAB, metrics: undefined }, isAuthenticated: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole("button", { name: "h-index 설명" });
+    await expect(trigger).toHaveTextContent("—");
+  },
+};
+
 export const PartialFailure: Story = {
   args: {
     lab: {
