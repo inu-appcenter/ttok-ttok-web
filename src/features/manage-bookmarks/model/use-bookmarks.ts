@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Bookmark } from "@/entities/bookmark";
+import { useLoginRequiredRedirect } from "@/shared/lib/auth/login-required";
 import { useToast } from "@/shared/ui";
 
 export type BookmarkActions = {
@@ -32,18 +33,19 @@ export function useBookmarks({
     needsRefreshRef = useRef(false);
   const router = useRouter();
   const showToast = useToast();
+  const redirectToLogin = useLoginRequiredRedirect();
   const read = useCallback(async () => {
     if (onLoad) return onLoad();
     const response = await fetch("/api/bookmarks", { cache: "no-store" });
     const body = await response.json();
     if (response.status === 401) {
-      router.push("/login");
+      redirectToLogin();
       throw new Error("로그인이 필요합니다.");
     }
     if (!response.ok || !Array.isArray(body.data))
       throw new Error(body.message || "관심 연구실을 불러오지 못했어요.");
     return body.data as Bookmark[];
-  }, [onLoad, router]);
+  }, [onLoad, redirectToLogin]);
   const refresh = useCallback(async () => {
     if (busy.current) return;
     busy.current = true;
@@ -119,7 +121,7 @@ export function useBookmarks({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ laboratoryId }),
         });
-        if (response.status === 401) router.push("/login");
+        if (response.status === 401) redirectToLogin();
         if (!response.ok && response.status >= 400 && response.status < 500) {
           needsRefreshRef.current = false;
           setNeedsRefresh(false);

@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { MemberResearchProfile } from "@/entities/member";
+import { useLoginRequiredRedirect } from "@/shared/lib/auth/login-required";
 import { Button, Dialog } from "@/shared/ui";
 
 export function ResearchReviewEditor({
@@ -12,6 +13,7 @@ export function ResearchReviewEditor({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const redirectToLogin = useLoginRequiredRedirect();
   const [coreTime, setCoreTime] = useState(research.review?.coreTime ?? "");
   const [weeklyMeeting, setWeeklyMeeting] = useState(
     research.review?.weeklyMeeting ?? "",
@@ -42,7 +44,7 @@ export function ResearchReviewEditor({
         }),
       });
       const body = await response.json();
-      if (response.status === 401) router.push("/login");
+      if (response.status === 401) redirectToLogin();
       if (!response.ok)
         throw new Error(body.message || "연구실 정보를 저장하지 못했어요.");
       router.refresh();

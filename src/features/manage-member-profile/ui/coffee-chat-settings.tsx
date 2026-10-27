@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import type { MemberResearchProfile } from "@/entities/member";
+import { useLoginRequiredRedirect } from "@/shared/lib/auth/login-required";
 import { Button, Dialog, Toggle } from "@/shared/ui";
 
 export type CoffeeContact = {
@@ -21,6 +22,7 @@ export function CoffeeChatSettings({
   mockContacts,
 }: CoffeeChatSettingsProps) {
   const router = useRouter();
+  const redirectToLogin = useLoginRequiredRedirect();
   const [contacts, setContacts] = useState<CoffeeContact[]>(
     mockContacts ??
       (research.coffeeChat
@@ -58,7 +60,7 @@ export function CoffeeChatSettings({
           ...(!remove ? { body: JSON.stringify(contact) } : {}),
         });
         const body = await response.json();
-        if (response.status === 401) router.push("/login");
+        if (response.status === 401) redirectToLogin();
         if (!response.ok)
           throw new Error(body.message || "연락처를 저장하지 못했어요.");
         router.refresh();

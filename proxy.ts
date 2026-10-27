@@ -6,7 +6,29 @@ import {
   getSessionStatus,
   requiresCompleteSession,
 } from "@/shared/lib/auth/session-status";
-import { getLabReturnPath } from "@/shared/lib/auth/return-path";
+import {
+  getLabReturnPath,
+  getLoginNotice,
+  getLoginPath,
+  LOGIN_NOTICE_PARAM,
+  LOGIN_REQUIRED_NOTICE,
+} from "@/shared/lib/auth/return-path";
+
+// 보호 경로에서 보낸 로그인 이동에만 안내 값을 붙이고, 로그인 화면 자체는 기존 허용 값만 유지한다.
+function getLoginRedirect(request: NextRequest, needsSession: boolean) {
+  const { pathname, searchParams } = request.nextUrl;
+  const loginPath =
+    pathname === "/login"
+      ? getLoginPath({
+          notice: getLoginNotice(searchParams.get(LOGIN_NOTICE_PARAM)),
+          returnTo: searchParams.get("returnTo"),
+        })
+      : getLoginPath({
+          notice: needsSession ? LOGIN_REQUIRED_NOTICE : undefined,
+          returnTo: pathname,
+        });
+  return NextResponse.redirect(new URL(loginPath, request.url));
+}
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -14,14 +36,12 @@ export async function proxy(request: NextRequest) {
   const needsSession = requiresCompleteSession(path);
   if (!accessToken) {
     return needsSession
-      ? NextResponse.redirect(new URL("/login", request.url))
+      ? getLoginRedirect(request, needsSession)
       : NextResponse.next();
   }
   const session = await getSessionStatus(accessToken, process.env.API_BASE_URL);
   if (session.state === "invalid") {
-    return clearAuthCookies(
-      NextResponse.redirect(new URL("/login", request.url)),
-    );
+    return clearAuthCookies(getLoginRedirect(request, needsSession));
   }
   if (session.state === "unavailable") {
     if (!needsSession) return NextResponse.next();
