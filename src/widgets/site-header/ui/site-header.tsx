@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { LoginRequiredLink } from "@/shared/lib/auth/login-required";
 import { Logo } from "@/shared/ui";
 
 export type HeaderActiveItem = "ai" | "home" | "search";
@@ -69,10 +70,11 @@ export function SiteHeader({
               const isAi = item.id === "ai";
 
               return (
-                <Link
+                <LoginRequiredLink
                   aria-current={isActive ? "page" : undefined}
                   className="flex cursor-pointer items-center gap-[var(--spacing-spacing-2)] rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
                   href={item.href}
+                  isAuthenticated={isAi ? isAuthenticated : true}
                   key={item.id}
                 >
                   <span
@@ -97,7 +99,7 @@ export function SiteHeader({
                   >
                     {item.label}
                   </span>
-                </Link>
+                </LoginRequiredLink>
               );
             })}
           </nav>
