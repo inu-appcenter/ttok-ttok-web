@@ -304,3 +304,73 @@ export const ContributionRestricted: Story = {
     await expect(within(canvasElement).queryByRole("button", { name: /이 랩 학부연구생이신가요/ })).not.toBeInTheDocument();
   },
 };
+
+const previewProjects = Array.from({ length: 4 }, (_, index) => ({
+  ...DESIGN_LAB.projects[0],
+  id: `preview-${index + 1}`,
+  title: `연구과제 ${index + 1}`,
+}));
+const previewPapers = Array.from({ length: 4 }, (_, index) => ({
+  title: `논문 제목 ${index + 1}`,
+  url: index === 0 ? "https://example.com/paper" : null,
+  venue: "학술지",
+  year: 2026 - index,
+}));
+
+export const PreviewWithMore: Story = {
+  args: {
+    lab: {
+      ...DESIGN_LAB,
+      projects: previewProjects,
+      papers: previewPapers,
+      projectState: { page: 0, totalPages: 2, status: "success" },
+      publicationState: { page: 0, totalPages: 2, status: "success" },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const projectSection = canvas.getByRole("heading", { name: "연구과제" }).closest("section");
+    const paperSection = canvas.getByRole("link", { name: "최근 논문" }).closest("section");
+    if (!projectSection || !paperSection) throw new Error("상세 섹션을 찾을 수 없어요.");
+    const projects = within(projectSection);
+    const papers = within(paperSection);
+    await expect(projects.getByRole("heading", { name: "연구과제 3" })).toBeVisible();
+    await expect(projects.getByText("연구과제 4")).not.toBeVisible();
+    await expect(papers.getByRole("heading", { name: "논문 제목 3" })).toBeVisible();
+    await expect(papers.queryByRole("heading", { name: "논문 제목 4" })).not.toBeInTheDocument();
+    await expect(papers.getByRole("link", { name: "최근 논문" })).toHaveAttribute("href", `/labs/${DESIGN_LAB.laboratoryId}/papers`);
+    await userEvent.click(projects.getByText("연구과제 더보기"));
+    await expect(projects.getByRole("heading", { name: "연구과제 4" })).toBeVisible();
+    await expect(projects.getByRole("link", { name: "다음 연구과제" })).toHaveAttribute("href", expect.stringContaining("projects=1"));
+  },
+};
+
+export const PreviewThree: Story = {
+  args: { lab: { ...DESIGN_LAB, projects: previewProjects.slice(0, 3), papers: previewPapers.slice(0, 3) } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByText("연구과제 더보기")).not.toBeInTheDocument();
+    await expect(canvas.getByRole("heading", { name: "연구과제 3" })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: "논문 제목 3" })).toBeVisible();
+  },
+};
+
+export const PreviewOne: Story = {
+  args: { lab: { ...DESIGN_LAB, projects: previewProjects.slice(0, 1), papers: previewPapers.slice(0, 1) } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByText("연구과제 더보기")).not.toBeInTheDocument();
+    await expect(canvas.getByRole("heading", { name: "연구과제 1" })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: /논문 제목 1/ })).toBeVisible();
+  },
+};
+
+export const PreviewEmpty: Story = {
+  args: { lab: { ...DESIGN_LAB, projects: [], papers: [] } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("heading", { name: "연구과제" }).closest("section")).toHaveTextContent("등록된 연구과제가 없어요.");
+    await expect(canvas.getByRole("link", { name: "최근 논문" }).closest("section")).toHaveTextContent("등록된 논문이 없어요.");
+    await expect(canvas.queryByText("연구과제 더보기")).not.toBeInTheDocument();
+  },
+};
