@@ -89,7 +89,9 @@ export const CompleteFlow: Story = {
         await canvas.findByRole("button", { name: /결과 보기/ }),
       );
     }
-    const detailLink = (await canvas.findAllByRole("link", { name: "연구실 보기" }))[0];
+    const detailLink = (
+      await canvas.findAllByRole("link", { name: "연구실 보기" })
+    )[0];
     await expect(detailLink).toHaveAttribute("href", "/labs/124");
     await expect(detailLink).toHaveAttribute("target", "_blank");
     await expect(detailLink).toHaveAttribute("rel", "noopener noreferrer");
@@ -185,7 +187,9 @@ export const RestoredAfterDetail: Story = {
     );
     await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
     if (window.matchMedia("(max-width: 1023px)").matches) {
-      await userEvent.click(await canvas.findByRole("button", { name: /결과 보기/ }));
+      await userEvent.click(
+        await canvas.findByRole("button", { name: /결과 보기/ }),
+      );
     }
     await canvas.findAllByRole("link", { name: "연구실 보기" });
     const toggle = canvas.getByRole("button", { name: "상세 이동 토글" });
@@ -193,9 +197,13 @@ export const RestoredAfterDetail: Story = {
     await userEvent.click(toggle);
     await expect(canvas.getByText(initialPrompt)).toBeInTheDocument();
     if (window.matchMedia("(max-width: 1023px)").matches) {
-      await userEvent.click(await canvas.findByRole("button", { name: /결과 보기/ }));
+      await userEvent.click(
+        await canvas.findByRole("button", { name: /결과 보기/ }),
+      );
     }
-    await expect((await canvas.findAllByRole("link", { name: "연구실 보기" }))[0]).toHaveAttribute("href", "/labs/124");
+    await expect(
+      (await canvas.findAllByRole("link", { name: "연구실 보기" }))[0],
+    ).toHaveAttribute("href", "/labs/124");
     await expect(args.onSuggest).toHaveBeenCalledTimes(1);
     await expect(args.onRecommend).toHaveBeenCalledTimes(1);
     clearSessionStore();
@@ -221,9 +229,7 @@ export const NotRestoredAfterRelogin: Story = {
         <button type="button" onClick={() => setVisible(true)}>
           다시 열기
         </button>
-        {visible && (
-          <AiRecommendationsPage {...args} sessionKey={sessionKey} />
-        )}
+        {visible && <AiRecommendationsPage {...args} sessionKey={sessionKey} />}
       </>
     );
   },
@@ -404,5 +410,104 @@ export const CanceledRequest: Story = {
     );
     await expect(canvas.getByRole("button", { name: "보내기" })).toBeEnabled();
     await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
+  },
+};
+
+// 취소된 요청이 뒤늦게 성공해도 새 요청의 키워드를 덮어쓰지 않는다.
+export const LateCanceledResponse: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    let resolveCanceled: (keywords: string[]) => void = () => {};
+    if (!args.onSuggest) throw new Error("키워드 요청 mock이 필요합니다.");
+    args.onSuggest.mockImplementationOnce(
+      () =>
+        new Promise<string[]>((resolve) => {
+          resolveCanceled = resolve;
+        }),
+    );
+    await userEvent.type(
+      canvas.getByRole("textbox", { name: "관심 연구 주제" }),
+      initialPrompt,
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    await userEvent.click(
+      await canvas.findByRole("button", { name: "요청 취소" }),
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    await canvas.findByRole("checkbox", { name: "추천시스템" });
+    resolveCanceled(["취소한 요청의 키워드"]);
+    await userEvent.click(canvas.getByRole("checkbox", { name: "추천시스템" }));
+    await expect(
+      canvas.getByRole("checkbox", { name: "추천시스템" }),
+    ).toBeChecked();
+    await waitFor(() =>
+      expect(
+        canvas.getByRole("checkbox", { name: "추천시스템" }),
+      ).toBeInTheDocument(),
+    );
+    await expect(
+      canvas.queryByRole("checkbox", { name: "취소한 요청의 키워드" }),
+    ).not.toBeInTheDocument();
+  },
+};
+
+export const CustomKeywordLimit: Story = {
+  args: { ...Keywords.args },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole("checkbox", { name: KEYWORD_OPTIONS[0] }),
+    );
+    await userEvent.click(
+      canvas.getByRole("checkbox", { name: KEYWORD_OPTIONS[1] }),
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "직접 입력" }));
+    const input = canvas.getByRole("textbox", { name: "직접 입력" });
+    await userEvent.type(input, "나만의 연구 주제{Enter}");
+    await expect(
+      canvas.getByRole("checkbox", { name: "나만의 연구 주제" }),
+    ).toBeChecked();
+    await expect(
+      canvas.getByRole("button", { name: "직접 입력" }),
+    ).toBeDisabled();
+    await expect(
+      canvas.getByRole("checkbox", { name: KEYWORD_OPTIONS[2] }),
+    ).toBeDisabled();
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    await expect(args.onRecommend).toHaveBeenCalledWith(
+      {
+        interest: initialPrompt,
+        selectedKeywords: [
+          KEYWORD_OPTIONS[0],
+          KEYWORD_OPTIONS[1],
+          "나만의 연구 주제",
+        ],
+      },
+      expect.any(AbortSignal),
+    );
+  },
+};
+
+export const MobileResultKeyboard: Story = {
+  args: { ...Result.args },
+  play: async ({ canvasElement }) => {
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole("button", { name: /결과 보기/ });
+    await userEvent.click(trigger);
+    const dialog = within(await canvas.findByRole("dialog"));
+    const close = dialog.getByRole("button", { name: "닫기" });
+    await expect(close).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    await expect(
+      dialog.getByRole("button", { name: "연구실 추천 다시 받기" }),
+    ).toHaveFocus();
+    await userEvent.tab();
+    await expect(close).toHaveFocus();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() =>
+      expect(canvas.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+    await expect(trigger).toHaveFocus();
   },
 };

@@ -1,26 +1,14 @@
-import type { RecommendationResult } from "@/features/request-ai-recommendation";
+import type {
+  PastTurn,
+  RecommendationSnapshot,
+  RecommendationStep,
+} from "@/features/request-ai-recommendation";
 import {
   clearSessionEntry,
   readSessionEntry,
   writeSessionEntry,
 } from "@/shared/lib/session-store";
 import type { SessionScope } from "@/shared/lib/session-store";
-
-export type RecommendationStep = "interest" | "keywords" | "results";
-
-// 새 추천을 시작하며 흐리게 남긴 이전 대화.
-export type PastTurn = { interest: string; keywords: string[]; title: string };
-
-// AI 추천 화면이 연구실 상세로 이동했다 돌아올 때 복원하는 대화 상태.
-export type RecommendationSnapshot = {
-  step: RecommendationStep;
-  interest: string;
-  suggestions: string[];
-  keywords: string[];
-  customKeywords: string[];
-  pastTurns: PastTurn[];
-  result?: RecommendationResult;
-};
 
 function isPastTurn(value: unknown): value is PastTurn {
   if (!value || typeof value !== "object") return false;
@@ -38,7 +26,9 @@ const SESSION_KEY = "recommendations";
 const STEPS: RecommendationStep[] = ["interest", "keywords", "results"];
 
 function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
+  return (
+    Array.isArray(value) && value.every((item) => typeof item === "string")
+  );
 }
 
 function isRecommendationSnapshot(
