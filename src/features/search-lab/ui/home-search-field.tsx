@@ -105,7 +105,7 @@ export function HomeSearchField({
         />
         <div
           aria-hidden="true"
-          className="h-[42px] w-px shrink-0 bg-border-subtle md:h-[54px]"
+          className="h-[42px] w-px shrink-0 bg-border-subtlest md:h-[54px]"
         />
         <SearchConditionDropdown
           disabled={isPending || isDisabled}
@@ -122,9 +122,9 @@ export function HomeSearchField({
         />
         <div
           aria-hidden="true"
-          className="hidden h-[54px] w-px shrink-0 bg-border-subtle xl:block"
+          className="hidden h-[54px] w-px shrink-0 bg-border-subtlest xl:block"
         />
-        <div className="col-span-3 flex min-w-0 items-center gap-2 border-t border-border-subtle pt-2 md:gap-3 xl:flex-1 xl:border-t-0 xl:pt-0">
+        <div className="col-span-3 flex min-w-0 items-center gap-2 border-t border-border-subtlest pt-2 md:gap-3 xl:flex-1 xl:border-t-0 xl:pt-0">
           <input
             aria-label="연구실 검색"
             className="h-[37px] min-w-0 flex-1 md:h-[54px] rounded-sm bg-bg-default px-2 text-[length:var(--font-size-label2)] md:text-[length:var(--font-size-body2)] leading-[1.5] text-text-default outline-none placeholder:text-text-subtle focus-visible:ring-2 focus-visible:ring-border-primary"
