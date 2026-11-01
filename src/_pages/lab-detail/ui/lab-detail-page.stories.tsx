@@ -381,13 +381,11 @@ export const PreviewWithMore: Story = {
     const projects = within(projectSection);
     const papers = within(paperSection);
     await expect(projects.getByRole("heading", { name: "연구과제 3" })).toBeVisible();
-    await expect(projects.getByText("연구과제 4")).not.toBeVisible();
+    await expect(projects.queryByText("연구과제 4")).not.toBeInTheDocument();
     await expect(papers.getByRole("heading", { name: "논문 제목 3" })).toBeVisible();
     await expect(papers.queryByRole("heading", { name: "논문 제목 4" })).not.toBeInTheDocument();
     await expect(papers.getByRole("link", { name: "최근 논문" })).toHaveAttribute("href", `/labs/${DESIGN_LAB.laboratoryId}/papers`);
-    await userEvent.click(projects.getByText("연구과제 더보기"));
-    await expect(projects.getByRole("heading", { name: "연구과제 4" })).toBeVisible();
-    await expect(projects.getByRole("link", { name: "다음 연구과제" })).toHaveAttribute("href", expect.stringContaining("projects=1"));
+    await expect(projects.getByRole("link", { name: "연구과제" })).toHaveAttribute("href", `/labs/${DESIGN_LAB.laboratoryId}/projects`);
   },
 };
 

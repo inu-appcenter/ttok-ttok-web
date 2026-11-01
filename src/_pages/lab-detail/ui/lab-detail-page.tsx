@@ -86,20 +86,20 @@ export function LabDetailPage({
           <h2 className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5]">
             기본 정보
           </h2>
-          <div className="mt-[10px] flex flex-wrap gap-[14px]">
+          <div className="mt-[6px] flex flex-wrap gap-[14px]">
             {lab.tags.map((tag) => (
-              <Tag className="!bg-[#bfd5f3]" key={tag} size="sm" tone="primary">
+              <Tag className="!h-[22px] !text-[length:var(--font-size-caption1)]" key={tag} size="sm" tone="primary">
                 {tag}
               </Tag>
             ))}
           </div>
-          <dl className="mt-[10px] flex flex-col gap-[6px] text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle">
+          <dl className="mt-2 flex flex-col gap-[6px] text-[length:var(--font-size-caption2)] leading-[1.5] text-text-subtle">
             <div className="flex gap-1">
               <dt>위치 ·</dt>
               <dd>{lab.location ?? "정보 없음"}</dd>
             </div>
             <div className="flex gap-1">
-              <dt>홈페이지 ·</dt>
+              <dt className="sr-only">홈페이지</dt>
               <dd>
                 {lab.homepageUrl ? (
                   <a
@@ -108,10 +108,10 @@ export function LabDetailPage({
                     rel="noreferrer"
                     target="_blank"
                   >
-                    {getHomepageLabel(lab.homepageUrl)} ↗
+                    홈페이지 · {getHomepageLabel(lab.homepageUrl)} ↗
                   </a>
                 ) : (
-                  "정보 없음"
+                  "홈페이지 · 정보 없음"
                 )}
               </dd>
             </div>
@@ -125,7 +125,9 @@ export function LabDetailPage({
           </dl>
         </section>
 
-        <ProfessorCard isMobile lab={lab} isAuthenticated={isAuthenticated} memberDepartmentCode={memberDepartmentCode} />
+        <ResearchProjects isMobile lab={lab} />
+        <RecentPapers isMobile lab={lab} />
+        <ResearchMetrics metrics={lab.metrics} />
 
         <section className="rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)]">
           <h2 className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5]">
@@ -156,9 +158,7 @@ export function LabDetailPage({
           )}
         </section>
 
-        <ResearchProjects isMobile lab={lab} />
-        <RecentPapers isMobile lab={lab} />
-        <ResearchMetrics metrics={lab.metrics} />
+        <ProfessorCard isMobile lab={lab} isAuthenticated={isAuthenticated} memberDepartmentCode={memberDepartmentCode} />
         <LabContactCard
           contact={lab.contact}
           isAuthenticated={isAuthenticated}

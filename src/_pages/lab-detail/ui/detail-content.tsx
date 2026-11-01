@@ -1,83 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
 
-import type { LabDetail, LabDetailListState, LabPaper } from "@/entities/lab";
+import type { LabDetail, LabPaper } from "@/entities/lab";
 import { Tag } from "@/shared/ui";
 import { ContactEmailButton } from "@/features/write-contact-email";
 
 import { DetailRetryButton } from "./detail-retry-button";
-
-export function DetailContentCard({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="min-w-0 rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)] md:px-6 md:py-5">
-      <h2 className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5] md:text-[length:var(--font-size-heading1)]">
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
-
-export function DetailPagination({
-  lab,
-  kind,
-  state,
-  anchor,
-}: {
-  lab: LabDetail;
-  kind: "projects" | "publications";
-  state?: LabDetailListState;
-  anchor?: string;
-}) {
-  if (!state || state.status === "error" || state.totalPages < 2) return null;
-  function getHref(page: number) {
-    const params = new URLSearchParams();
-    const projects = kind === "projects" ? page : (lab.projectState?.page ?? 0);
-    const publications =
-      kind === "publications" ? page : (lab.publicationState?.page ?? 0);
-    if (projects) params.set("projects", String(projects));
-    if (publications) params.set("publications", String(publications));
-    return `/labs/${lab.laboratoryId}${params.size ? `?${params}` : ""}#${anchor ?? kind}`;
-  }
-  const label = kind === "projects" ? "연구과제" : "논문";
-  return (
-    <nav
-      aria-label={`${label} 페이지`}
-      className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[length:var(--font-size-caption1)] text-text-primary"
-    >
-      {state.page > 0 ? (
-        <Link
-          className="rounded-sm hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
-          href={getHref(state.page - 1)}
-        >
-          이전 {label}
-        </Link>
-      ) : (
-        <span />
-      )}
-      <span>
-        {state.page + 1} / {state.totalPages}
-      </span>
-      {state.page + 1 < state.totalPages ? (
-        <Link
-          className="rounded-sm hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
-          href={getHref(state.page + 1)}
-        >
-          다음 {label}
-        </Link>
-      ) : (
-        <span />
-      )}
-    </nav>
-  );
-}
 
 const DETAIL_PREVIEW_LIMIT = 3;
 
@@ -152,7 +80,8 @@ export function ResearchProjects({
       className="scroll-mt-24"
       id={isMobile ? "mobile-projects" : "projects"}
     >
-      <DetailContentCard title="연구과제">
+      <section className="min-w-0 rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)] md:px-6 md:py-5">
+        <h2><Link href={`/labs/${lab.laboratoryId}/projects`} className="inline-flex items-center gap-1 text-[length:var(--font-size-label1)] font-semibold leading-[1.5] hover:underline focus-visible:outline-2 focus-visible:outline-border-primary md:text-[length:var(--font-size-heading1)]">연구과제<Image alt="" src="/icons/lab-detail/papers-chevron.svg" width={22} height={21} /></Link></h2>
         {lab.projectState?.status === "error" ? (
           <p
             role="status"
@@ -163,29 +92,13 @@ export function ResearchProjects({
             <DetailRetryButton />
           </p>
         ) : lab.projects?.length ? (
-          <>
-            <ProjectList projects={lab.projects.slice(0, DETAIL_PREVIEW_LIMIT)} />
-            {lab.projects.length > DETAIL_PREVIEW_LIMIT && (
-              <details key={lab.projectState?.page ?? 0} className="mt-4">
-                <summary className="w-fit cursor-pointer text-[length:var(--font-size-label1)] font-semibold text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-border-primary">
-                  연구과제 더보기
-                </summary>
-                <ProjectList projects={lab.projects.slice(DETAIL_PREVIEW_LIMIT)} />
-              </details>
-            )}
-          </>
+          <ProjectList projects={lab.projects.slice(0, DETAIL_PREVIEW_LIMIT)} />
         ) : (
           <p className="mt-5 text-[length:var(--font-size-body3)] text-text-subtle">
             등록된 연구과제가 없어요.
           </p>
         )}
-        <DetailPagination
-          lab={lab}
-          kind="projects"
-          state={lab.projectState}
-          anchor={isMobile ? "mobile-projects" : "projects"}
-        />
-      </DetailContentCard>
+      </section>
     </div>
   );
 }
