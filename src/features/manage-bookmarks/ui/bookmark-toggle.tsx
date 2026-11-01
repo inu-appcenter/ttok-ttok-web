@@ -12,7 +12,7 @@ export function BookmarkToggle({
       <LoginRequiredLink
         href="/login"
         isAuthenticated={false}
-        className="inline-flex cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 text-sm text-text-primary focus-visible:outline-2 focus-visible:outline-border-primary"
+        className="inline-flex shrink-0 cursor-pointer whitespace-nowrap rounded-lg border border-border-primary px-3 py-1.5 text-sm text-text-primary focus-visible:outline-2 focus-visible:outline-border-primary"
       >
         관심 연구실
       </LoginRequiredLink>
@@ -29,13 +29,13 @@ function AuthenticatedBookmarkToggle({
     (item) => item.laboratory.laboratoryId === laboratoryId,
   );
   return (
-    <div>
+    <div className="shrink-0">
       <button
         type="button"
         aria-pressed={selected}
         disabled={state.pending || !state.loaded || state.needsRefresh}
         onClick={() => void state.toggle(laboratoryId)}
-        className={`cursor-pointer rounded-lg border border-border-primary px-3 py-1.5 text-sm text-text-primary disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-border-primary ${selected ? "bg-bg-primary-subtle" : "bg-bg-default"}`}
+        className={`cursor-pointer whitespace-nowrap rounded-lg border border-border-primary px-3 py-1.5 text-sm text-text-primary disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-border-primary ${selected ? "bg-bg-primary-subtle" : "bg-bg-default"}`}
       >
         {selected ? "관심 연구실 ✓" : "관심 연구실"}
       </button>
