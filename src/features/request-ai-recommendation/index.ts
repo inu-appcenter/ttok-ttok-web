@@ -14,3 +14,16 @@ export type {
   RecommendationResult,
   RecommendationRequest,
 } from "./model/recommendation-contract";
+
+export { useRecommendationFlow } from "./model/use-recommendation-flow";
+export type {
+  RecommendationFlow,
+  RecommendationFlowOptions,
+} from "./model/use-recommendation-flow";
+export type {
+  RecommendationStep,
+  RecommendationSnapshot,
+  PastTurn,
+} from "./model/recommendation-conversation";
+export { RecommendationConversation } from "./ui/recommendation-conversation";
+export { RecommendationResultCards } from "./ui/recommendation-result-cards";
