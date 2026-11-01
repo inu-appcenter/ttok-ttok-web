@@ -17,4 +17,4 @@ export { getCollegeOptions } from "./get-college-options";
 export { getLaboratoryItem } from "./laboratory-api";
 export { getPublicationBatch } from "./get-publication-batch";
 
-export { getResearchProjects } from "./get-research-projects";
+export { getResearchProjectBatch } from "./get-research-project-batch";

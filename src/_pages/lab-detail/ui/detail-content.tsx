@@ -9,7 +9,26 @@ import { DetailRetryButton } from "./detail-retry-button";
 
 const DETAIL_PREVIEW_LIMIT = 3;
 
-function ProjectList({ projects }: { projects: NonNullable<LabDetail["projects"]> }) {
+function ProjectList({ projects, isMobile }: { projects: NonNullable<LabDetail["projects"]>; isMobile: boolean }) {
+  if (isMobile) {
+    return (
+      <ul className="mt-[14px] flex flex-col gap-[14px]">
+        {projects.map((project) => (
+          <li className="flex min-w-0 items-center gap-[10px]" key={project.id}>
+            <Tag className="h-[21px] w-[50px] shrink-0 justify-center whitespace-nowrap !text-[length:var(--font-size-caption2)]" tone={project.isOngoing ? "primary" : "default"}>
+              {project.isOngoing ? "진행중" : "종료"}
+            </Tag>
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-primary" title={project.title}>
+                {project.url ? <a className="hover:underline focus-visible:outline-2 focus-visible:outline-border-primary" href={project.url} target="_blank" rel="noopener noreferrer">{project.title}</a> : project.title}
+              </h3>
+              <p className="truncate text-[length:var(--font-size-caption2)] leading-[1.5] text-text-subtlest">{[project.period, project.agency].filter(Boolean).join(" · ")}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    );
+  }
   return (
     <ul className="mt-5 flex flex-col gap-5">
       {projects.map((project) => (
@@ -81,7 +100,7 @@ export function ResearchProjects({
       id={isMobile ? "mobile-projects" : "projects"}
     >
       <section className="min-w-0 rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)] md:px-6 md:py-5">
-        <h2><Link href={`/labs/${lab.laboratoryId}/projects`} className="inline-flex items-center gap-1 text-[length:var(--font-size-label1)] font-semibold leading-[1.5] hover:underline focus-visible:outline-2 focus-visible:outline-border-primary md:text-[length:var(--font-size-heading1)]">연구과제<Image alt="" src="/icons/lab-detail/papers-chevron.svg" width={22} height={21} /></Link></h2>
+        <h2><Link href={`/labs/${lab.laboratoryId}/projects`} className="inline-flex items-center text-[length:var(--font-size-label1)] font-semibold leading-[1.5] hover:underline focus-visible:outline-2 focus-visible:outline-border-primary md:gap-1 md:text-[length:var(--font-size-heading1)]">연구과제{isMobile ? <Image alt="" src="/icons/lab-detail/project-chevron.svg" width={18} height={18} /> : <Image alt="" src="/icons/lab-detail/papers-chevron.svg" width={22} height={21} />}</Link></h2>
         {lab.projectState?.status === "error" ? (
           <p
             role="status"
@@ -92,7 +111,7 @@ export function ResearchProjects({
             <DetailRetryButton />
           </p>
         ) : lab.projects?.length ? (
-          <ProjectList projects={lab.projects.slice(0, DETAIL_PREVIEW_LIMIT)} />
+          <ProjectList isMobile={isMobile} projects={lab.projects.slice(0, DETAIL_PREVIEW_LIMIT)} />
         ) : (
           <p className="mt-5 text-[length:var(--font-size-body3)] text-text-subtle">
             등록된 연구과제가 없어요.

@@ -25,13 +25,16 @@ export function MobileAiSummary({ paragraphs }: { paragraphs: string[] }) {
         </span>
       </button>
       {isExpanded ? (
-        <div className="mt-[10px] rounded-[var(--radius-xl)] border border-[#a7c0db] p-4 text-[length:var(--font-size-label2)] leading-[1.5] text-text-subtle">
-          {paragraphs.map((paragraph) => (
-            <p className="not-last:mb-4" key={paragraph}>
-              {paragraph}
-            </p>
-          ))}
-        </div>
+        <>
+          <div className="mt-[10px] rounded-[var(--radius-xl)] border border-[#a7c0db] p-4 text-[length:var(--font-size-label2)] leading-[1.5] text-text-subtle">
+            {paragraphs.map((paragraph) => (
+              <p className="not-last:mb-4" key={paragraph}>
+                {paragraph}
+              </p>
+            ))}
+          </div>
+          <p className="mt-[10px] text-[length:var(--font-size-caption2)] leading-[1.5] text-text-subtlest">AI가 생성한 요약이에요. 실제 연구실 정보와 다를 수 있어요.</p>
+        </>
       ) : null}
     </section>
   );
