@@ -108,8 +108,6 @@ const RECOMMENDATION_LOGIN_PATH = getLoginPath({ notice: LOGIN_REQUIRED_NOTICE }
 
 const SERVICE_LINKS = [
   { name: "추천 받으러 가기", href: RECOMMENDATION_LOGIN_PATH },
-  { name: "메일 보낼 연구실 찾기", href: "/search" },
-  { name: "커피챗할 연구실 찾기", href: "/search" },
 ];
 
 const playServiceLinks: Story["play"] = async ({ canvasElement }) => {
@@ -132,12 +130,11 @@ export const MobileServiceLinks: Story = {
   play: playServiceLinks,
 };
 
-// 공개 탐색 링크는 그대로 두고, AI 추천 진입만 로그인 화면으로 보낸다. 안내는 로그인 화면에서 띄운다.
+// AI 추천 진입은 로그인 화면으로 보내고, 안내는 로그인 화면에서 띄운다.
 export const LoggedOutRecommendationEntry: Story = {
   ...Mobile,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole("link", { name: "메일 보낼 연구실 찾기" })).toHaveAttribute("href", "/search");
     const recommendationLink = canvas.getByRole("link", { name: "추천 받으러 가기" });
     await expect(recommendationLink).toHaveAttribute("href", RECOMMENDATION_LOGIN_PATH);
     await userEvent.click(recommendationLink);
