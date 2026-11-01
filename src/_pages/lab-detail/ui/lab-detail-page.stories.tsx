@@ -344,6 +344,44 @@ export const LongContent: Story = {
   },
 };
 
+const mobileLongTitleParameters = {
+  viewport: { options: { mobile320: { name: "Mobile 320", styles: { width: "320px", height: "812px" }, type: "mobile" } } },
+};
+
+export const MobileLongTitle: Story = {
+  ...LongContent,
+  args: { ...LongContent.args, isAuthenticated: false },
+  parameters: mobileLongTitleParameters,
+  globals: { viewport: { value: "mobile320", isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const link = visible(canvas.getAllByRole("link", { name: "관심 연구실" }));
+    const header = link.closest("header");
+    const title = header?.querySelector("h1");
+    await expect(header).not.toBeNull();
+    await expect(title).not.toBeNull();
+    await expect(getComputedStyle(link).whiteSpace).toBe("nowrap");
+    await expect(link.getBoundingClientRect().right).toBeLessThanOrEqual(header!.getBoundingClientRect().right);
+    await expect(title!.getBoundingClientRect().right).toBeLessThanOrEqual(link.getBoundingClientRect().left);
+  },
+};
+
+export const MobileLongTitleAuthenticated: Story = {
+  ...MobileLongTitle,
+  args: { ...LongContent.args, isAuthenticated: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = visible(canvas.getAllByRole("button", { name: "관심 연구실" }));
+    const header = button.closest("header");
+    const title = header?.querySelector("h1");
+    await expect(header).not.toBeNull();
+    await expect(title).not.toBeNull();
+    await expect(getComputedStyle(button).whiteSpace).toBe("nowrap");
+    await expect(button.getBoundingClientRect().right).toBeLessThanOrEqual(header!.getBoundingClientRect().right);
+    await expect(title!.getBoundingClientRect().right).toBeLessThanOrEqual(button.getBoundingClientRect().left);
+  },
+};
+
 export const ContributionRestricted: Story = {
   args: { lab: DESIGN_LAB, isAuthenticated: true, canContribute: false },
   play: async ({ canvasElement }) => {
