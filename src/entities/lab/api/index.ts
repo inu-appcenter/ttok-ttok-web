@@ -16,3 +16,5 @@ export { getDepartmentDirectory } from "./get-department-directory";
 export { getCollegeOptions } from "./get-college-options";
 export { getLaboratoryItem } from "./laboratory-api";
 export { getPublicationBatch } from "./get-publication-batch";
+
+export { getResearchProjectBatch } from "./get-research-project-batch";
