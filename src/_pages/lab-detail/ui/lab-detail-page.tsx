@@ -66,8 +66,8 @@ export function LabDetailPage({
           <MobileAiSummary paragraphs={aiSummary} />
         ) : null}
 
-        <header className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+        <header className="mb-1 flex items-start justify-between gap-3">
+          <div className="min-w-0 pl-3">
             <h1 className="text-[length:var(--font-size-headline1)] font-semibold leading-[1.4] tracking-[-0.01em] text-text-default">
               {lab.name}
             </h1>
