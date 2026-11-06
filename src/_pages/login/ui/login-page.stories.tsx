@@ -35,6 +35,12 @@ export const Error: Story = {
   args: {
     initialHasError: true,
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole("alert")).toHaveTextContent("학번 또는 비밀번호가 일치하지 않습니다.");
+    await expect(canvas.getByLabelText("학번")).toHaveAttribute("aria-invalid", "true");
+    await expect(canvas.getByLabelText("비밀번호")).toHaveAttribute("aria-invalid", "true");
+  },
 };
 
 // 로그인 필요 기능에서 이동해 온 경우 도착한 로그인 화면에서 안내를 한 번 띄우고 URL의 안내 값을 지운다.
