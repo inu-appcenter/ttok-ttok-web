@@ -36,6 +36,8 @@ export function LabCard({ lab }: LabCardProps) {
       aria-label={`${lab.name} 상세 보기`}
       className="group block min-w-0 rounded-[var(--radius-xl)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
       href={`/labs/${encodeURIComponent(lab.labId)}`}
+      target="_blank"
+      rel="noopener noreferrer"
     >
       <article className={`${cardClasses} transition-[background-color,border-color,box-shadow] group-hover:border-border-primary group-hover:bg-bg-primary-subtle group-active:border-[color:var(--color-bg-primary-press)]`}>
         <div className="flex min-w-0 flex-col">
