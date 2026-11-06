@@ -50,7 +50,7 @@ export function SiteHeader({
   isAuthenticated = false,
 }: SiteHeaderProps) {
   return (
-    <header className="relative z-50 w-full bg-bg-default shadow-[0_2px_8px_var(--color-opacity-black-10)]">
+    <header className="sticky top-0 z-50 w-full bg-bg-default shadow-[0_2px_8px_var(--color-opacity-black-10)]" data-site-header>
       <div className="mx-auto flex min-h-[53px] w-full max-w-[1440px] min-w-0 items-center justify-between px-4 py-3 md:h-[72px] md:px-[clamp(24px,8.89vw,128px)] md:py-0">
         <div className="flex min-w-0 items-center gap-[clamp(16px,3.33vw,48px)]">
           <Link

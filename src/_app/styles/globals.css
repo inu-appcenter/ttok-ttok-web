@@ -30,6 +30,16 @@ html {
   scrollbar-gutter: stable;
 }
 
+html:has([data-site-header]) {
+  scroll-padding-top: 53px;
+}
+
+@media (min-width: 48rem) {
+  html:has([data-site-header]) {
+    scroll-padding-top: 72px;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
