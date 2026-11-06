@@ -9,7 +9,7 @@ export function BookmarkPreview(props: BookmarkActions) {
   return (
     <section className="min-w-0 rounded-xl bg-bg-default px-5 py-3 shadow-[0_2px_4px_var(--color-opacity-black-10)]">
       <Link
-        className="flex w-full max-w-[342.668px] items-center justify-between gap-1 text-base font-semibold leading-[1.4] text-text-subtle hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
+        className="flex w-full items-center justify-between gap-1 text-base font-semibold leading-[1.4] text-text-subtle hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
         href="/mypage/bookmarks"
       >
         나의 관심 연구실
