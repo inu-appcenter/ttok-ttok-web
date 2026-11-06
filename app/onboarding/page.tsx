@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { getLabReturnPath } from "@/shared/lib/auth/return-path";
+import { getLoginReturnPath } from "@/shared/lib/auth/return-path";
 import { redirect } from "next/navigation";
 
 import { getAuthSession } from "@/shared/lib/auth/session";
@@ -15,7 +15,7 @@ export default async function OnboardingRoute({
 }: {
   searchParams: Promise<{ returnTo?: string | string[] }>;
 }) {
-  const returnTo = getLabReturnPath((await searchParams).returnTo);
+  const returnTo = getLoginReturnPath((await searchParams).returnTo);
   const { isAuthenticated } = await getAuthSession();
 
   if (!isAuthenticated) {

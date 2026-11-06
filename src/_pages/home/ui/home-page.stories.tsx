@@ -104,7 +104,7 @@ export const MobileAccordion: Story = {
 };
 
 // 기본 홈 스토리는 비로그인 상태라 AI 추천 진입은 로그인 안내 경로를 가진다.
-const RECOMMENDATION_LOGIN_PATH = getLoginPath({ notice: LOGIN_REQUIRED_NOTICE });
+const RECOMMENDATION_LOGIN_PATH = getLoginPath({ notice: LOGIN_REQUIRED_NOTICE, returnTo: "/" });
 
 const SERVICE_LINKS = [
   { name: "추천 받으러 가기", href: RECOMMENDATION_LOGIN_PATH },

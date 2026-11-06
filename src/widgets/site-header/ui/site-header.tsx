@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { LoginRequiredLink } from "@/shared/lib/auth/login-required";
+import { LoginEntryLink, LoginRequiredLink } from "@/shared/lib/auth/login-required";
 import { Logo } from "@/shared/ui";
 
 export type HeaderActiveItem = "ai" | "home" | "search";
@@ -120,12 +120,11 @@ export function SiteHeader({
               마이페이지
             </Link>
           ) : (
-            <Link
+            <LoginEntryLink
               className="flex h-[29px] cursor-pointer items-center justify-center rounded-[var(--radius-md)] bg-bg-primary px-3 text-[length:var(--font-size-body3)] font-semibold leading-[1.5] text-text-inverse transition-colors hover:bg-bg-primary-hover active:bg-bg-primary-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary md:h-10 md:px-[var(--spacing-spacing-6)] md:text-[length:var(--font-size-body1)] md:tracking-[-0.01em]"
-              href="/login"
             >
               로그인
-            </Link>
+            </LoginEntryLink>
           )}
         </div>
       </div>
