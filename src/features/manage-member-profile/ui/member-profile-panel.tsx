@@ -150,6 +150,8 @@ export function MemberProfilePanel({
                     <Link
                       className="hover:underline"
                       href={`/labs/${research.laboratoryId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
                       <h2 className="break-words text-xl font-bold leading-[1.5] text-text-default">
                         {research.laboratoryName}

@@ -28,6 +28,8 @@ export function BookmarkPreview(props: BookmarkActions) {
           >
             <Link
               href={`/labs/${lab.laboratoryId}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="min-w-0 hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
             >
               <h3
