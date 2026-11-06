@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   getLabReturnPath,
+  getLoginReturnPath,
   getLoginNotice,
   getLoginPath,
 } from "../src/shared/lib/auth/return-path.ts";
@@ -22,6 +23,17 @@ test("로그인 복귀는 연구실 상세 내부 경로만 허용한다", () =>
   for (const value of UNSAFE_RETURN_PATHS) {
     assert.equal(getLabReturnPath(value), undefined);
   }
+});
+
+test("복귀는 지정된 서비스 화면만 허용한다", () => {
+  for (const path of ["/", "/search", "/recommendations", "/mypage", "/mypage/bookmarks", "/labs/157", "/labs/157/papers", "/labs/157/projects"]) {
+    assert.equal(getLoginReturnPath(path), path);
+  }
+  for (const path of [...UNSAFE_RETURN_PATHS, "/login", "/onboarding", "/api/member", "/%2f%2fevil"]) {
+    assert.equal(getLoginReturnPath(path), undefined);
+  }
+  assert.equal(getLoginReturnPath("/search?q=AI&category=AI"), "/search?q=AI&category=AI");
+  assert.equal(getLoginReturnPath("/search?next=https://example.com"), undefined);
 });
 
 test("로그인 안내는 고정 값만 인정하고 외부 입력을 그대로 쓰지 않는다", () => {
@@ -52,7 +64,7 @@ test("로그인 이동 경로는 안내 값과 허용된 연구실 복귀 경로
   assert.equal(fromLab.searchParams.get("notice"), "login-required");
   assert.equal(fromLab.searchParams.get("returnTo"), "/labs/157");
   // 보호 경로나 변형된 경로는 복귀 대상으로 전달하지 않는다.
-  for (const returnTo of [...UNSAFE_RETURN_PATHS, "/recommendations", "/mypage"]) {
+  for (const returnTo of [...UNSAFE_RETURN_PATHS, "/login", "/onboarding"]) {
     assert.equal(
       getLoginPath({ notice: "login-required", returnTo }),
       "/login?notice=login-required",

@@ -25,12 +25,12 @@ export const LoggedOutAiEntry: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const aiLink = canvas.getByRole("link", { name: "AI 연구실 추천" });
-    await expect(aiLink).toHaveAttribute("href", getLoginPath({ notice: LOGIN_REQUIRED_NOTICE }));
+    await expect(aiLink).toHaveAttribute("href", getLoginPath({ notice: LOGIN_REQUIRED_NOTICE, returnTo: "/" }));
     await userEvent.click(aiLink);
     // 안내는 도착한 로그인 화면에서만 띄운다.
     await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
     // 별도 로그인 버튼은 안내 없이 로그인 화면으로 연결한다.
-    await expect(canvas.getByRole("link", { name: "로그인" })).toHaveAttribute("href", "/login");
+    await expect(canvas.getByRole("link", { name: "로그인" })).toHaveAttribute("href", getLoginPath({ returnTo: "/" }));
   },
 };
 
