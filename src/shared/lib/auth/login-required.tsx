@@ -14,7 +14,7 @@ import {
   LOGIN_REQUIRED_NOTICE,
 } from "./return-path";
 
-export const LOGIN_REQUIRED_MESSAGE = "로그인이 필요한 기능이에요.";
+export const LOGIN_REQUIRED_MESSAGE = "로그인이 필요한 기능입니다.";
 
 const LOGIN_PATH = "/login";
 
@@ -50,7 +50,7 @@ export function LoginEntryLink({ children, ...props }: Omit<ComponentProps<typeo
 function useShowLoginRequiredToast() {
   const showToast = useToast();
   return useCallback(
-    () => showToast({ state: "warning", title: LOGIN_REQUIRED_MESSAGE }),
+    () => showToast({ state: "warning", title: LOGIN_REQUIRED_MESSAGE, description: "인천대 포털 계정으로 로그인 후 이용해주세요." }),
     [showToast],
   );
 }
