@@ -415,7 +415,7 @@ export function SearchConditionDropdown({
             <div className="flex h-[360px] min-h-0 border-t border-border-subtle md:h-auto md:max-h-[400px] md:border-t-0">
               <div
                 aria-label="단과대학"
-                className="w-[33%] shrink-0 overflow-y-auto border-r border-border-subtle bg-bg-subtle px-1 py-2 md:w-[124px] md:border-r-0 md:p-2"
+                className="w-[38%] shrink-0 overflow-y-auto border-r border-border-subtle bg-bg-subtle px-1 py-2 md:w-[144px] md:border-r-0 md:p-2"
               >
                 {[
                   "전체",
@@ -424,18 +424,19 @@ export function SearchConditionDropdown({
                   <button
                     data-option-group="college"
                     aria-pressed={activeCollege === college}
-                    className="flex min-h-[37px] w-full items-center justify-between rounded-lg px-2 py-2 text-left text-[14px] text-text-subtle md:px-3 aria-pressed:bg-bg-default aria-pressed:font-semibold aria-pressed:text-text-primary aria-pressed:shadow-sm focus-visible:outline-2 focus-visible:outline-border-primary"
+                    className="flex min-h-[37px] w-full min-w-0 items-center justify-between gap-1 rounded-lg px-2 py-2 text-left text-[14px] text-text-subtle md:px-3 aria-pressed:bg-bg-default aria-pressed:font-semibold aria-pressed:text-text-primary aria-pressed:shadow-sm focus-visible:outline-2 focus-visible:outline-border-primary"
                     key={college}
                     onClick={() => setActiveCollege(college)}
                     onFocus={() => setActiveCollege(college)}
                     onMouseEnter={() => setActiveCollege(college)}
+                    title={college}
                     type="button"
                   >
-                    {college}
+                    <span className="min-w-0 truncate">{college}</span>
                     {activeCollege === college ? (
                       <Image
                         alt=""
-                        className="-rotate-90"
+                        className="-rotate-90 shrink-0"
                         height={18}
                         src="/icons/home/search/chevron-down.svg"
                         width={18}
@@ -460,9 +461,10 @@ export function SearchConditionDropdown({
                     className="flex min-h-[44px] w-full items-center justify-between gap-2 rounded-lg px-3 py-2 md:min-h-[37px] text-left text-[14px] leading-[1.5] text-text-default hover:bg-bg-primary-subtle aria-pressed:bg-bg-primary-subtle aria-pressed:font-semibold aria-pressed:text-text-primary focus-visible:outline-2 focus-visible:outline-border-primary"
                     key={department}
                     onClick={() => handleSelect(department)}
+                    title={department || (activeCollege === "전체" ? "전체" : `${activeCollege} 전체`)}
                     type="button"
                   >
-                    <span className="min-w-0 break-words">{department || (activeCollege === "전체" ? "전체" : `${activeCollege} 전체`)}</span>
+                    <span className="min-w-0 truncate">{department || (activeCollege === "전체" ? "전체" : `${activeCollege} 전체`)}</span>
                     {!department && activeCollege !== "전체" ? <span className="shrink-0 text-[11px] text-text-subtlest md:hidden">{departments.length}개 학과</span> : null}
                   </button>
                 ))}

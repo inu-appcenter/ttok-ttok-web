@@ -25,6 +25,38 @@ export const CategoriesUnavailable: Story = { args: { categories: [], categories
 export const CollegesUnavailable: Story = { args: { colleges: [], collegesError: "학과 목록을 불러오지 못했어요." } };
 export const Disabled: Story = { args: { isDisabled: true } };
 
+export const LongDepartmentNames: Story = {
+  args: {
+    colleges: [
+      {
+        college: "SOCIAL_SCIENCES",
+        collegeName: "사회과학대학",
+        departments: [
+          { department: "LONG_DEPARTMENT", departmentName: "도시환경공학부(건설환경공학전공) 산학협력융합전공" },
+        ],
+      },
+      {
+        college: "GLOBAL_POLITICS",
+        collegeName: "글로벌정경대학",
+        departments: [
+          { department: "PUBLIC_ADMINISTRATION", departmentName: "행정학과" },
+        ],
+      },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "학과: 전체" }));
+    await userEvent.click(within(canvas.getByLabelText("단과대학")).getByRole("button", { name: "사회과학대학" }));
+    for (const name of ["사회과학대학", "도시환경공학부(건설환경공학전공) 산학협력융합전공"]) {
+      const button = canvas.getByRole("button", { name });
+      const text = button.querySelector("span");
+      await expect(button).toHaveAttribute("title", name);
+      await expect(text).toHaveClass("truncate");
+    }
+  },
+};
+
 export const KeyboardSelection: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
