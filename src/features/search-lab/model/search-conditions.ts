@@ -1,3 +1,5 @@
+export const MAX_SEARCH_QUERY_LENGTH = 30;
+
 export type SearchRouteParams = Record<string, string | string[] | undefined>;
 
 export type SearchConditions = {
@@ -32,6 +34,8 @@ export function parseSearchConditions(
     )
   ) {
     error = "검색 조건은 하나씩 선택해주세요.";
+  } else if (query.length > MAX_SEARCH_QUERY_LENGTH) {
+    error = `검색어는 ${MAX_SEARCH_QUERY_LENGTH}자 이내로 입력해주세요.`;
   }
 
   return {

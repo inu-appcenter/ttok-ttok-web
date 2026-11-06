@@ -102,7 +102,7 @@ export function SearchPage({
         className="mx-auto w-full max-w-[1264px] px-4 pb-[30px] pt-8 md:px-10"
       >
         <h1
-          className="mb-3 break-words text-[length:var(--font-size-headline2)] font-semibold leading-[1.4] tracking-[-0.01em]"
+          className="mb-3 break-all text-[length:var(--font-size-headline2)] font-semibold leading-[1.4] tracking-[-0.01em]"
           id="search-results-heading"
         >
           {status === "ready" ? (
@@ -154,7 +154,7 @@ export function SearchPage({
         {status === "ready" && !labs.length ? (
           <div className="flex flex-col items-center">
             <div className="flex w-full min-w-0 flex-col items-center py-4 text-center">
-              <h2 className="max-w-full break-words text-[length:var(--font-size-title3)] font-bold leading-[1.3] tracking-[-0.02em]">
+              <h2 className="max-w-full break-all text-[length:var(--font-size-title3)] font-bold leading-[1.3] tracking-[-0.02em]">
                 {isEmptyPage
                   ? "이 페이지에 연구실이 없어요"
                   : conditionLabel

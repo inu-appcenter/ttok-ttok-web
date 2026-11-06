@@ -11,6 +11,7 @@ import { SearchConditionDropdown } from "./search-condition-dropdown";
 
 import {
   createSearchHref,
+  MAX_SEARCH_QUERY_LENGTH,
   parseSearchConditions,
 } from "../model/search-conditions";
 
@@ -129,6 +130,7 @@ export function HomeSearchField({
             aria-label="연구실 검색"
             className="h-[37px] min-w-0 flex-1 md:h-[54px] rounded-sm bg-bg-default px-2 text-[length:var(--font-size-label2)] md:text-[length:var(--font-size-body2)] leading-[1.5] text-text-default outline-none placeholder:text-text-subtle focus-visible:ring-2 focus-visible:ring-border-primary"
             disabled={isPending || isDisabled}
+            maxLength={MAX_SEARCH_QUERY_LENGTH}
             onChange={(event) => {
               setQuery(event.target.value);
               setMessage("");
