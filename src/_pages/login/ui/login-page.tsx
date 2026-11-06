@@ -16,7 +16,7 @@ export function LoginPage({
   return (
     <div className="flex min-h-dvh flex-col bg-bg-default">
       {notice ? <LoginRequiredNotice /> : null}
-      <main className="flex flex-1 items-center justify-center px-[var(--spacing-spacing-4)] py-[var(--spacing-spacing-8)]">
+      <main className="flex flex-1 items-start justify-center px-[var(--spacing-spacing-4)] pb-12 pt-[87px] md:items-center md:py-[var(--spacing-spacing-8)]">
         <LoginForm initialHasError={initialHasError} returnTo={returnTo} />
       </main>
     </div>

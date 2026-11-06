@@ -1,10 +1,10 @@
 "use client";
 
 import type { FormEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { Button, Field, Logo } from "@/shared/ui";
+import { Button, Field, Logo, useToast } from "@/shared/ui";
 import { getLabReturnPath } from "@/shared/lib/auth/return-path";
 import { notifyAuthChange } from "@/shared/lib/session-store";
 
@@ -22,10 +22,15 @@ export function LoginForm({
   returnTo,
 }: LoginFormProps) {
   const router = useRouter();
+  const showToast = useToast();
   const [errorMessage, setErrorMessage] = useState(
     initialHasError ? LOGIN_ERROR_MESSAGE : "",
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (initialHasError) showToast({ state: "error", title: LOGIN_ERROR_MESSAGE });
+  }, [initialHasError, showToast]);
 
   const handleChange = () => {
     if (errorMessage) {
@@ -46,6 +51,7 @@ export function LoginForm({
 
     if (typeof studentNumber !== "string" || typeof password !== "string") {
       setErrorMessage("학번과 비밀번호를 모두 입력해주세요.");
+      showToast({ state: "error", title: "학번과 비밀번호를 모두 입력해주세요." });
       return;
     }
 
@@ -56,6 +62,7 @@ export function LoginForm({
 
     if (!result.ok) {
       setErrorMessage(result.message);
+      showToast({ state: "error", title: result.message });
       setIsSubmitting(false);
       return;
     }
@@ -74,17 +81,18 @@ export function LoginForm({
 
   return (
     <form
-      className="flex w-full max-w-[440px] flex-col gap-[var(--spacing-spacing-4)]"
+      className="flex w-full max-w-[275px] flex-col gap-6 md:max-w-[440px] md:gap-[var(--spacing-spacing-4)]"
       noValidate
       onSubmit={handleSubmit}
     >
-      <div className="flex flex-col items-center gap-[var(--spacing-spacing-3)]">
+      <div className="flex flex-col items-center gap-6 md:gap-[var(--spacing-spacing-3)]">
         <Logo priority variant="vertical" />
         <p className="text-center text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle">
           인천대학교 포털 계정으로 로그인해주세요!
         </p>
       </div>
 
+      <div className="flex w-full flex-col gap-2 md:gap-[var(--spacing-spacing-4)]">
       <Field
         autoComplete="username"
         inputMode="numeric"
@@ -105,9 +113,10 @@ export function LoginForm({
         required
         type="password"
       />
+      </div>
 
       <Button
-        className="w-full"
+        className="w-full max-md:!h-[51px] max-md:!text-[length:var(--font-size-body1)]"
         isLoading={isSubmitting}
         size="lg"
         type="submit"
@@ -115,8 +124,10 @@ export function LoginForm({
         로그인
       </Button>
 
+      <div className="-mt-2 text-center text-xs leading-[1.5] text-text-subtlest md:mt-0">
+        비밀번호를 잊어버리셨나요?{" "}
       <a
-        className="self-center rounded-sm text-[length:var(--font-size-label2)] leading-[1.5] text-text-subtle underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-primary"
+        className="rounded-sm font-bold underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-primary"
         href="https://portal.inu.ac.kr:444/enview/user/pwHelp.face"
         rel="noopener noreferrer"
         target="_blank"
@@ -124,13 +135,7 @@ export function LoginForm({
         비밀번호 찾기
         <span className="sr-only"> (새 창에서 열림)</span>
       </a>
-
-      <p
-        aria-live="polite"
-        className={`h-5 text-center text-[length:var(--font-size-label2)] leading-[1.5] text-text-error ${hasError ? "visible" : "invisible"}`}
-      >
-        {errorMessage || LOGIN_ERROR_MESSAGE}
-      </p>
+      </div>
     </form>
   );
 }

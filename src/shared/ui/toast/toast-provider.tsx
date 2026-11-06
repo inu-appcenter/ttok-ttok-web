@@ -46,7 +46,7 @@ export function ToastProvider({ children }: { children?: ReactNode }) {
     <ToastContext.Provider value={showToast}>
       {children}
       {toast ? (
-        <div className="pointer-events-none fixed left-1/2 top-3 z-[120] flex w-max max-w-[calc(100vw-32px)] -translate-x-1/2 justify-center">
+        <div className={`pointer-events-none fixed left-1/2 z-[120] flex w-max max-w-[calc(100vw-32px)] -translate-x-1/2 justify-center ${pathname === "/login" ? "bottom-[calc(80px+env(safe-area-inset-bottom))] md:bottom-auto md:top-3" : "top-3"}`}>
           <Toast
             description={toast.description}
             key={toast.id}
