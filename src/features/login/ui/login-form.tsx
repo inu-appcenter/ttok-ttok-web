@@ -87,7 +87,7 @@ export function LoginForm({
 
       <Field
         autoComplete="username"
-        inputMode="numeric"
+        inputMode="text"
         invalid={hasError}
         label="학번"
         name="studentNumber"
