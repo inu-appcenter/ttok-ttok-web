@@ -196,16 +196,6 @@ export function useRecommendationFlow({
     },
     handleReset,
     handleStartNew,
-    handleEditInterest() {
-      setIsAdding(false);
-      setCustom("");
-      setError("");
-      setStep("interest");
-    },
-    handleEditKeywords() {
-      setError("");
-      setStep("keywords");
-    },
     handleSubmitKeywords() {
       if (isPending) return;
       setIsAdding(false);

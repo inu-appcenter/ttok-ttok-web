@@ -4,7 +4,7 @@ import { Checkbox, Field } from "@/shared/ui";
 import type { RecommendationFlow } from "../model/use-recommendation-flow";
 
 const ACTION_CLASS =
-  "cursor-pointer text-[18px] font-semibold underline underline-offset-4 disabled:cursor-not-allowed disabled:text-text-disabled focus-visible:outline-2 focus-visible:outline-border-primary";
+  "cursor-pointer text-[16px] font-semibold text-text-primary underline underline-offset-4 lg:text-[18px] disabled:cursor-not-allowed disabled:text-text-disabled focus-visible:outline-2 focus-visible:outline-border-primary";
 
 function Bubble({
   children,
@@ -17,7 +17,7 @@ function Bubble({
 }) {
   return (
     <p
-      className={`w-fit max-w-full whitespace-pre-wrap break-words rounded-xl px-4 py-3 leading-[1.5] shadow-[0_2px_4px_#0000001a] lg:px-6 lg:py-4 ${isUser ? "ml-auto max-w-[420px] bg-bg-primary text-[16px] font-semibold text-white" : `bg-[#f5f5f5] ${isSubtle ? "text-[14px] text-text-subtle" : "text-[16px] font-semibold lg:text-[20px]"}`}`}
+      className={`w-fit max-w-full whitespace-pre-wrap break-words rounded-xl px-4 py-3 leading-[1.5] shadow-[0_2px_8px_var(--color-opacity-black-10)] lg:px-6 lg:py-4 ${isUser ? "ml-auto max-w-[420px] bg-bg-primary text-[16px] font-semibold text-white" : `bg-bg-neutral ${isSubtle ? "text-[14px] text-text-subtle" : "text-[16px] font-semibold lg:text-[20px]"}`}`}
     >
       {children}
     </p>
@@ -40,6 +40,7 @@ export function RecommendationConversation({
     isAdding,
     isPending,
     error,
+    result,
     resultTitle,
     setInterest,
     setCustom,
@@ -47,9 +48,6 @@ export function RecommendationConversation({
     handleToggleKeyword,
     handleAddKeyword,
     handleSuggestKeywords,
-    handleCancelRequest,
-    handleEditInterest,
-    handleEditKeywords,
     handleSubmitKeywords,
   } = flow;
   const end = useRef<HTMLDivElement>(null);
@@ -68,7 +66,7 @@ export function RecommendationConversation({
   }, [step]);
   return (
     <div
-      className="mt-7 flex flex-col gap-3 lg:mt-6 lg:max-h-[calc(100dvh-300px)] lg:gap-4 lg:overflow-y-auto lg:pb-4"
+      className="mt-6 flex flex-col gap-3 lg:mt-7 lg:max-h-[calc(100dvh-264px)] lg:gap-4 lg:overflow-y-auto lg:pb-4"
       aria-live="polite"
       aria-busy={isPending}
     >
@@ -110,9 +108,11 @@ export function RecommendationConversation({
       <Bubble>연구실 추천을 위해 몇 가지 물어볼게요!</Bubble>
       <Bubble>먼저, 요즘 어떤 연구에 관심이 가세요?</Bubble>
       <Bubble isSubtle>키워드만 적어도 괜찮아요</Bubble>
-      {step === "interest" ? (
+      {step === "interest" ? isPending ? (
+        <Bubble isUser>{interest}</Bubble>
+      ) : (
         <form
-          className="ml-auto flex w-[300px] max-w-full flex-col items-end gap-3 lg:w-[400px]"
+          className="ml-auto flex w-[300px] max-w-full flex-col items-end gap-3 lg:mt-2 lg:w-[400px]"
           onSubmit={(event) => {
             event.preventDefault();
             handleSuggestKeywords();
@@ -131,7 +131,7 @@ export function RecommendationConversation({
             disabled={!interest.trim() || isPending}
             type="submit"
           >
-            {isPending ? "키워드 찾는 중…" : "보내기"}
+            보내기
           </button>
           {error && (
             <p role="alert" className="text-sm text-text-error">
@@ -144,18 +144,18 @@ export function RecommendationConversation({
           <Bubble isUser>{interest}</Bubble>
           <Bubble>
             {suggestions.length
-              ? "적어주신 내용과 가까운 키워드를 골라주세요."
+              ? "좋아요! 적어주신 내용에서 키워드를 뽑아봤어요. 가까운 걸 골라 주세요."
               : "관련 키워드를 찾지 못했어요. 직접 입력해서 추천받을 수 있어요."}
           </Bubble>
           <Bubble isSubtle>
             최대 3개까지 고를 수 있고, 없으면 직접 입력해도 돼요
           </Bubble>
-          {step === "results" && (
+          {(step === "results" || isPending) && (
             <Bubble isUser>
               {keywords.length ? keywords.join(", ") : "관심 연구로 추천받기"}
             </Bubble>
           )}
-          {step === "keywords" && (
+          {step === "keywords" && !isPending && (
             <form
               className="ml-auto flex w-[400px] max-w-full flex-col items-end gap-3"
               onSubmit={(event) => {
@@ -177,21 +177,20 @@ export function RecommendationConversation({
                       keywords.length >= 3 && !keywords.includes(option)
                     }
                     onChange={() => handleToggleKeyword(option)}
-                    className="text-[16px]"
                   >
                     {option}
                   </Checkbox>
                 ))}
                 <button
                   type="button"
-                  className="flex items-center gap-1 rounded-full border border-border-subtle px-[14px] py-1 text-[16px] disabled:opacity-50"
+                  className="flex min-h-8 items-center gap-1 rounded-full border border-border-subtle px-[14px] py-1 text-[14px] disabled:opacity-50"
                   disabled={keywords.length >= 3}
                   onClick={() => setIsAdding((value) => !value)}
                 >
                   <Image
                     src="/icons/recommendations/plus.svg"
-                    width={16}
-                    height={16}
+                    width={12}
+                    height={12}
                     alt=""
                   />
                   직접 입력
@@ -231,46 +230,30 @@ export function RecommendationConversation({
               )}
               <div className="flex gap-4">
                 <button
-                  type="button"
-                  disabled={isPending}
-                  className="text-[14px] text-text-subtle underline"
-                  onClick={handleEditInterest}
-                >
-                  이전 입력 수정
-                </button>
-                <button
                   type="submit"
                   className={ACTION_CLASS}
                   disabled={isPending}
                 >
-                  {isPending ? "찾는 중…" : "보내기"}
+                  보내기
                 </button>
               </div>
             </form>
           )}
           {step === "results" && (
             <>
-              <Bubble>{resultTitle}</Bubble>
+              <Bubble>
+                {result?.noMatch ? resultTitle : (
+                  <>
+                    찾았어요! 잘 맞을 것 같은 연구실 {result?.recommendations.length ?? 0}곳을{" "}
+                    <span className="lg:hidden">아래에</span>
+                    <span className="hidden lg:inline">오른쪽에</span> 정리했어요.
+                  </>
+                )}
+              </Bubble>
               <Bubble isSubtle>조건을 바꿔서 다시 찾아볼까요?</Bubble>
-              <button
-                type="button"
-                className={`ml-auto ${ACTION_CLASS}`}
-                onClick={handleEditKeywords}
-              >
-                입력 수정
-              </button>
             </>
           )}
         </>
-      )}
-      {isPending && (
-        <button
-          type="button"
-          className="self-end text-sm underline"
-          onClick={handleCancelRequest}
-        >
-          요청 취소
-        </button>
       )}
       <div ref={end} />
     </div>

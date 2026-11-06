@@ -19,7 +19,7 @@ export function AiRecommendationsPage(props: AiRecommendationsPageProps) {
   const flow = useRecommendationsPage(props);
   const { step, isPending, result, resultTitle, handleStartNew } = flow;
   return (
-    <div className="min-h-screen bg-white pb-[calc(180px_+_env(safe-area-inset-bottom))] text-text-default lg:pb-0">
+    <div className="min-h-[calc(100dvh-53px)] bg-white pb-[calc(180px_+_env(safe-area-inset-bottom))] text-text-default md:min-h-[calc(100dvh-72px)] lg:pb-0">
       <main className="mx-auto flex max-w-[1248px] gap-[60px] px-4 pt-5 lg:px-8 lg:py-12">
         <section className="min-w-0 flex-1">
           <h1

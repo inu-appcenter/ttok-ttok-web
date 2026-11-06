@@ -14,7 +14,7 @@ export function RecommendationResultCards({
       {recommendations.map((lab, index) => (
         <article
           key={lab.id}
-          className="rounded-xl bg-white px-4 py-[13px] shadow-[0_2px_4px_#0000001a]"
+          className="rounded-xl border border-transparent bg-white px-4 py-[12px] shadow-[0_4px_16px_var(--color-opacity-black-10)] hover:border-border-primary hover:bg-bg-primary-subtle focus-within:border-border-primary focus-within:bg-bg-primary-subtle"
         >
           {index === 0 && (
             <span className="mb-2 inline-block rounded-full bg-[linear-gradient(90deg,#a7c0db,#c2aed6,#d699c5)] px-3 py-1 text-[14px] font-semibold text-white">
@@ -27,7 +27,7 @@ export function RecommendationResultCards({
           <p className="text-[13px] text-text-subtle">
             {lab.professor} 교수 · {lab.department}
           </p>
-          <div className="my-2 flex flex-wrap gap-1">
+          <div className="mb-0.5 mt-2 flex flex-wrap gap-1">
             {lab.tags.map((tag) => (
               <span
                 key={tag}
