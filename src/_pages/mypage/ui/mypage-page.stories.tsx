@@ -73,6 +73,26 @@ export const Finder: Story = {
     onChangeResearcherStatus: () => {},
   },
 };
+export const FinderStatusDialog: Story = {
+  args: {
+    profile: {
+      ...MOCK_MEMBER_PROFILE,
+      userType: "FINDER",
+      isUndergraduateResearcher: false,
+      researchProfile: undefined,
+      hasContributedReview: false,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "변경" }));
+    const dialog = canvas.getByRole("dialog");
+    await expect(within(dialog).getByRole("combobox")).toBeVisible();
+    await expect(within(dialog).getByRole("button", { name: /^등록$/ })).toBeDisabled();
+    await userEvent.click(within(dialog).getByRole("button", { name: "취소" }));
+    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
+  },
+};
 export const ResearcherStatusMock: Story = {
   render: function Render(args) {
     const [researcher, setResearcher] = useState(false);
