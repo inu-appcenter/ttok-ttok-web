@@ -310,23 +310,17 @@ export function ContactEmailComposer({
             >
               <div className="grid min-w-0 grid-cols-2 gap-2">
                 {inputField("name", "이름", "홍길동")}
-                <div className="flex min-w-0 flex-col gap-1">
-                  <label
-                    htmlFor={departmentId}
-                    className="text-[14px] font-semibold"
-                  >
-                    학과
-                  </label>
-                  <input
+                <div className="min-w-0">
+                  <Field
                     id={departmentId}
+                    label="학과"
                     value={selectedDepartment?.departmentName ?? ""}
                     readOnly
                     aria-busy={departmentLoading}
-                    aria-invalid={Boolean(departmentMessage)}
+                    invalid={Boolean(departmentMessage)}
                     aria-describedby={
                       departmentMessage ? `${departmentId}-error` : undefined
                     }
-                    className="min-h-12 w-full min-w-0 rounded-xl border border-border-subtle bg-white px-3 text-[14px] focus-visible:outline-2 focus-visible:outline-border-primary disabled:bg-bg-disabled"
                     placeholder={departmentLoading ? "학과 불러오는 중" : "학과 확인 필요"}
                   />
                 </div>
