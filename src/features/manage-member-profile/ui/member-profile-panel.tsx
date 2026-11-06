@@ -162,7 +162,7 @@ export function MemberProfilePanel({
                       {research.laboratoryName}
                     </h2>
                   )}
-                  <p className="text-sm font-bold leading-[1.5] text-text-subtle">
+                  <p className="text-xs font-bold leading-[1.5] text-text-subtle">
                     {[
                       research.professorName
                         ? `${research.professorName} 교수`
