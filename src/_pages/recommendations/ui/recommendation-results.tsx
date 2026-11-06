@@ -42,21 +42,19 @@ export function RecommendationResultsSidebar({
   const hasResults = result !== undefined;
   const recommendations = result?.recommendations ?? [];
   return (
-    <aside className="hidden h-[calc(100dvh-168px)] w-[440px] overflow-y-auto shrink-0 rounded-[20px] bg-[#f5f5f5] p-9 shadow-[0_4px_16px_#0000001a] lg:block">
+    <aside className={`hidden h-[calc(100dvh-168px)] w-[440px] shrink-0 overflow-y-auto rounded-[20px] bg-bg-neutral shadow-[0_4px_16px_var(--color-opacity-black-10)] lg:block ${hasResults ? "px-9 pb-9 pt-10" : "p-10"}`}>
       {hasResults ? (
         <>
-          <h2
-            className={`flex items-center gap-2 text-[20px] font-semibold ${GRADIENT_CLASS}`}
-          >
+          <h2 className="flex items-center gap-2 text-[20px] font-semibold">
             <Image
               src="/icons/recommendations/result-sparkles.svg"
               width={24}
               height={24}
               alt=""
             />
-            {resultTitle}
+            <span className={GRADIENT_CLASS}>{resultTitle}</span>
           </h2>
-          <p className="mb-6 mt-2 text-[14px] text-text-subtle">
+          <p className="mb-3 mt-1 text-[14px] text-text-subtle">
             {result?.noMatch
               ? "관심 연구나 키워드를 바꿔 다시 시도해보세요."
               : "나눈 이야기를 바탕으로 골랐어요"}
@@ -66,10 +64,10 @@ export function RecommendationResultsSidebar({
         </>
       ) : (
         <>
-          <h2 className="text-[20px] font-semibold">
+          <h2 className="text-[20px] font-semibold leading-[1.5]">
             어떤 연구실이 잘 맞을까요?
           </h2>
-          <p className="mt-2 text-[14px] text-text-subtle">
+          <p className="mt-1 text-[14px] text-text-subtle">
             나눈 이야기로 잘 맞는 연구실을 찾아볼게요
           </p>
           <RecommendationProgress step={step} isPending={isPending} />
@@ -106,18 +104,18 @@ export function RecommendationResultsSheet({
         aria-haspopup="dialog"
         className="fixed bottom-[calc(108px_+_env(safe-area-inset-bottom))] left-1/2 flex w-[calc(100%_-_32px)] max-w-[343px] -translate-x-1/2 items-center justify-between rounded-2xl bg-white p-4 shadow-[0_4px_16px_#00000026] lg:hidden"
       >
-        <span
-          className={`flex items-center gap-2 text-[13px] font-semibold ${GRADIENT_CLASS}`}
-        >
+        <span className="flex min-w-0 items-center gap-2 text-[13px] font-semibold">
           <Image
-            src="/icons/recommendations/result-sparkles.svg"
+            src="/icons/recommendations/result-sparkles-mobile.svg"
             width={20}
             height={20}
             alt=""
           />
-          {step === "results"
-            ? resultTitle
-            : `이전 추천 ${recommendations.length}곳`}
+          <span className={`${GRADIENT_CLASS} truncate`}>
+            {step === "results"
+              ? resultTitle
+              : `이전 추천 ${recommendations.length}곳`}
+          </span>
         </span>
         <span className="text-[13px]">결과 보기 ⌃</span>
       </button>
