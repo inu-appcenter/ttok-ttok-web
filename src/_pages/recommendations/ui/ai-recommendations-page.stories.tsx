@@ -30,7 +30,15 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 const initialPrompt =
   "추천시스템에 관심이 있고, 파이썬으로 크롤링 프로젝트를 해봤어요.";
-export const Input: Story = {};
+export const Input: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const title = canvas.getByRole("heading", { name: "AI 연구실 추천" });
+    await expect(title.getBoundingClientRect().width).toBeLessThan(300);
+    await expect(getComputedStyle(title).backgroundImage).toContain("linear-gradient");
+    await expect(canvas.queryByRole("button", { name: "요청 취소" })).not.toBeInTheDocument();
+  },
+};
 export const Keywords: Story = {
   args: {
     initialPrompt,
@@ -54,6 +62,34 @@ export const NoMatch: Story = {
 };
 export const EmptyKeywords: Story = {
   args: { ...Keywords.args, initialKeywords: [] },
+};
+export const InterestPending: Story = {
+  args: {
+    onSuggest: fn(() => new Promise<string[]>(() => {})),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByRole("textbox", { name: "관심 연구 주제" }), initialPrompt);
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    await expect(canvas.getByText(initialPrompt)).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: "요청 취소" })).not.toBeInTheDocument();
+    const label = canvas.getAllByText("관심 주제 파악하는 중…").find((element) => element.getClientRects().length);
+    await expect(label).toBeVisible();
+  },
+};
+export const RecommendationPending: Story = {
+  args: {
+    ...Keywords.args,
+    onRecommend: fn(() => new Promise<typeof result>(() => {})),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("checkbox", { name: "추천시스템" }));
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    await expect(canvas.getByText("추천시스템", { selector: "p" })).toBeVisible();
+    const label = canvas.getAllByText("딱 맞는 연구실 찾는 중…").find((element) => element.getClientRects().length);
+    await expect(label).toBeVisible();
+  },
 };
 export const SearchFallback: Story = {
   args: {
@@ -385,7 +421,7 @@ export const Failure: Story = {
     ).toBeChecked();
   },
 };
-export const CanceledRequest: Story = {
+export const RequestInterruptedOnAuthChange: Story = {
   args: {
     onSuggest: fn(
       (_interest: string, signal: AbortSignal) =>
@@ -398,17 +434,18 @@ export const CanceledRequest: Story = {
         ),
     ),
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.type(
       canvas.getByRole("textbox", { name: "관심 연구 주제" }),
       initialPrompt,
     );
     await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
-    await userEvent.click(
-      await canvas.findByRole("button", { name: "요청 취소" }),
-    );
-    await expect(canvas.getByRole("button", { name: "보내기" })).toBeEnabled();
+    await expect(canvas.queryByRole("button", { name: "요청 취소" })).not.toBeInTheDocument();
+    notifyAuthChange();
+    await expect(args.onSuggest).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(canvas.getByRole("textbox", { name: "관심 연구 주제" })).toHaveValue(""));
+    await expect(canvas.getByRole("button", { name: "보내기" })).toBeDisabled();
     await expect(canvas.queryByRole("alert")).not.toBeInTheDocument();
   },
 };
@@ -430,9 +467,9 @@ export const LateCanceledResponse: Story = {
       initialPrompt,
     );
     await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
-    await userEvent.click(
-      await canvas.findByRole("button", { name: "요청 취소" }),
-    );
+    notifyAuthChange();
+    await waitFor(() => expect(canvas.getByRole("textbox", { name: "관심 연구 주제" })).toHaveValue(""));
+    await userEvent.type(canvas.getByRole("textbox", { name: "관심 연구 주제" }), initialPrompt);
     await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
     await canvas.findByRole("checkbox", { name: "추천시스템" });
     resolveCanceled(["취소한 요청의 키워드"]);
