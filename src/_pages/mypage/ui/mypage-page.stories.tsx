@@ -88,7 +88,7 @@ export const FinderStatusDialog: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "변경" }));
     const dialog = canvas.getByRole("dialog");
     await expect(within(dialog).getByRole("combobox")).toBeVisible();
-    await expect(within(dialog).getByRole("button", { name: "등록", exact: true })).toBeDisabled();
+    await expect(within(dialog).getByRole("button", { name: /^등록$/ })).toBeDisabled();
     await userEvent.click(within(dialog).getByRole("button", { name: "취소" }));
     await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
   },
