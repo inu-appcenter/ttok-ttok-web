@@ -14,7 +14,7 @@ export function LoginPage({
   returnTo,
 }: LoginPageProps) {
   return (
-    <div className="flex min-h-dvh flex-col bg-bg-default">
+    <div className="flex min-h-[calc(100dvh-53px)] flex-col bg-bg-default md:min-h-[calc(100dvh-72px)]">
       {notice ? <LoginRequiredNotice /> : null}
       <main className="flex flex-1 items-start justify-center px-[var(--spacing-spacing-4)] pb-12 pt-[87px] md:items-center md:py-[var(--spacing-spacing-8)]">
         <LoginForm initialHasError={initialHasError} returnTo={returnTo} />
