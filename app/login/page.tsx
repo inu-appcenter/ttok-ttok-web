@@ -1,5 +1,5 @@
 import { LoginPage } from "@/_pages/login";
-import { getLabReturnPath, getLoginNotice } from "@/shared/lib/auth/return-path";
+import { getLoginReturnPath, getLoginNotice } from "@/shared/lib/auth/return-path";
 
 export default async function Page({
   searchParams,
@@ -13,7 +13,7 @@ export default async function Page({
   return (
     <LoginPage
       notice={getLoginNotice(notice)}
-      returnTo={getLabReturnPath(returnTo)}
+      returnTo={getLoginReturnPath(returnTo)}
     />
   );
 }

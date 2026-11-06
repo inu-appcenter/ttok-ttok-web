@@ -7,7 +7,7 @@ import {
   requiresCompleteSession,
 } from "@/shared/lib/auth/session-status";
 import {
-  getLabReturnPath,
+  getLoginReturnPath,
   getLoginNotice,
   getLoginPath,
   LOGIN_NOTICE_PARAM,
@@ -51,12 +51,14 @@ export async function proxy(request: NextRequest) {
   }
   if (session.isNew && path !== "/onboarding") {
     const onboarding = new URL("/onboarding", request.url);
-    const returnTo = getLabReturnPath(path);
+    const returnTo = getLoginReturnPath(
+      path === "/login" ? request.nextUrl.searchParams.get("returnTo") : path,
+    );
     if (returnTo) onboarding.searchParams.set("returnTo", returnTo);
     return NextResponse.redirect(onboarding);
   }
   if (!session.isNew && (path === "/onboarding" || path === "/login")) {
-    const returnTo = getLabReturnPath(
+    const returnTo = getLoginReturnPath(
       request.nextUrl.searchParams.get("returnTo"),
     );
     return NextResponse.redirect(new URL(returnTo ?? "/", request.url));

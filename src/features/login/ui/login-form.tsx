@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button, Field, Logo } from "@/shared/ui";
-import { getLabReturnPath } from "@/shared/lib/auth/return-path";
+import { getLoginReturnPath } from "@/shared/lib/auth/return-path";
 import { notifyAuthChange } from "@/shared/lib/session-store";
 
 import { login } from "../api/login";
@@ -61,7 +61,7 @@ export function LoginForm({
     }
 
     notifyAuthChange();
-    const destination = getLabReturnPath(returnTo);
+    const destination = getLoginReturnPath(returnTo);
     router.replace(
       result.isNew
         ? `/onboarding${destination ? `?returnTo=${encodeURIComponent(destination)}` : ""}`

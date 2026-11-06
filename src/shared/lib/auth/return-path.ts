@@ -5,6 +5,21 @@ export function getLabReturnPath(value: unknown): string | undefined {
     : undefined;
 }
 
+/** 검증된 서비스 화면만 로그인 및 온보딩의 복귀 대상으로 허용합니다. */
+export function getLoginReturnPath(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  if (["/", "/search", "/recommendations", "/mypage", "/mypage/bookmarks"].includes(value)) return value;
+  if (value.startsWith("/search?") && !value.includes("#")) {
+    const params = new URLSearchParams(value.slice("/search?".length));
+    if ([...params.keys()].every((key) => ["q", "category", "college", "department", "page"].includes(key))) {
+      const query = params.toString();
+      return query ? `/search?${query}` : "/search";
+    }
+  }
+  if (/^\/labs\/[1-9]\d*(?:\/(?:papers|projects))?$/.test(value)) return value;
+  return undefined;
+}
+
 export const LOGIN_NOTICE_PARAM = "notice";
 export const LOGIN_REQUIRED_NOTICE = "login-required";
 export type LoginNotice = typeof LOGIN_REQUIRED_NOTICE;
@@ -21,7 +36,7 @@ export function getLoginPath({
 }: { notice?: LoginNotice; returnTo?: unknown } = {}): string {
   const params = new URLSearchParams();
   if (getLoginNotice(notice)) params.set(LOGIN_NOTICE_PARAM, LOGIN_REQUIRED_NOTICE);
-  const path = getLabReturnPath(returnTo);
+  const path = getLoginReturnPath(returnTo);
   if (path) params.set("returnTo", path);
   const query = params.toString();
   return query ? `/login?${query}` : "/login";

@@ -39,6 +39,14 @@ export function useIsAuthenticated() {
   return useContext(AuthStatusContext);
 }
 
+/** 일반 로그인 진입에도 현재 서비스 화면을 복귀 대상으로 보존한다. */
+export function LoginEntryLink({ children, ...props }: Omit<ComponentProps<typeof Link>, "href">) {
+  const pathname = usePathname() ?? "";
+  const searchParams = useSearchParams();
+  const query = pathname === "/search" ? searchParams?.toString() : "";
+  return <Link {...props} href={getLoginPath({ returnTo: query ? `${pathname}?${query}` : pathname })}>{children}</Link>;
+}
+
 function useShowLoginRequiredToast() {
   const showToast = useToast();
   return useCallback(
@@ -50,9 +58,11 @@ function useShowLoginRequiredToast() {
 /** 현재 연구실 상세로 돌아올 수 있게 로그인 안내 경로를 만든다. */
 function useLoginRequiredPath() {
   const pathname = usePathname() ?? "";
+  const searchParams = useSearchParams();
+  const query = pathname === "/search" ? searchParams?.toString() : "";
   return {
     isLoginPage: pathname === LOGIN_PATH,
-    loginPath: getLoginPath({ notice: LOGIN_REQUIRED_NOTICE, returnTo: pathname }),
+    loginPath: getLoginPath({ notice: LOGIN_REQUIRED_NOTICE, returnTo: query ? `${pathname}?${query}` : pathname }),
   };
 }
 
