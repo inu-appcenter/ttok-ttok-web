@@ -134,7 +134,7 @@ const FINDER_QUESTIONS: OnboardingQuestion[] = [
   { id: "department", question: "어느 학과에 다니고 계세요?", type: "text" },
   {
     id: "interest",
-    question: "요즘 어떤 연구에 관심이 가세요?",
+    question: "먼저, 요즘 어떤 연구에 관심이 가세요?",
     helper: "키워드만 적어도 괜찮아요",
     type: "text",
   },
