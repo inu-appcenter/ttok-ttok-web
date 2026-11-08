@@ -19,6 +19,17 @@ const colleges = [
     ],
   },
 ];
+const recommendFixture = async () => ({
+  noMatch: false,
+  recommendations: [{
+    id: 157,
+    name: "지능형 데이터 시스템 연구실",
+    professor: "김OO",
+    department: "컴퓨터공학부",
+    tags: ["데이터베이스", "빅데이터"],
+    reasons: ["추천시스템·데이터 분야가 겹쳐요"],
+  }],
+});
 
 const meta = {
   title: "Pages/Onboarding",
@@ -41,7 +52,7 @@ export const Finder: Story = {
       <OnboardingFlow
         colleges={colleges}
         onComplete={async () => {}}
-        renderFinderResults={(props) => <FinderResults {...props} />}
+        renderFinderResults={(props) => <FinderResults {...props} onRecommend={recommendFixture} />}
         renderLabSearch={() => null}
       />
     </main>
@@ -57,7 +68,7 @@ export const CompletionError: Story = {
         onComplete={async () => {
           throw new Error("학과를 저장하지 못했습니다. 다시 시도해주세요.");
         }}
-        renderFinderResults={(props) => <FinderResults {...props} />}
+        renderFinderResults={(props) => <FinderResults {...props} onRecommend={recommendFixture} />}
         renderLabSearch={() => null}
       />
     </main>
