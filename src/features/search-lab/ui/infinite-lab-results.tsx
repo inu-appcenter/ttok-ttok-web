@@ -91,13 +91,12 @@ export function InfiniteLabResults({ conditions, initialResult, loadPage = fetch
         {result.content.map((lab) => <LabCard key={lab.labId} lab={lab} />)}
       </div>
       <div aria-live="polite" className="mt-6 flex min-h-12 flex-col items-center gap-3 pb-24 md:pb-0" ref={sentinelRef}>
-        {status === "loading" ? <p role="status" className="text-sm text-text-subtle">연구실을 불러오는 중</p> : null}
         {status === "error" ? <p role="alert" className="text-sm text-text-subtle">추가 연구실을 불러오지 못했어요.</p> : null}
-        {result.hasNext && !result.isLast ? (
-          <button className="rounded-md border border-border-subtle px-4 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary disabled:text-text-disabled" disabled={status === "loading"} onClick={() => void handleLoadMore()} type="button">
-            {status === "error" ? "다시 시도" : "더 보기"}
+        {status === "error" ? (
+          <button className="rounded-md border border-border-subtle px-4 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary" onClick={() => void handleLoadMore()} type="button">
+            다시 시도
           </button>
-        ) : <span className="sr-only">모든 검색 결과를 표시했어요.</span>}
+        ) : null}
       </div>
     </div>
   );

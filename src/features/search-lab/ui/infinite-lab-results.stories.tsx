@@ -34,7 +34,7 @@ export const AutomaticAppend: Story = {
     await waitFor(() => expect(canvas.getAllByRole("link")).toHaveLength(2));
     await expect(args.loadPage).toHaveBeenCalledTimes(1);
     await expect(canvas.queryByRole("button", { name: "더 보기" })).not.toBeInTheDocument();
-    await expect(canvas.getByText("모든 검색 결과를 표시했어요.")).toBeInTheDocument();
+    await expect(canvas.queryByText("연구실을 불러오는 중")).not.toBeInTheDocument();
   },
 };
 
