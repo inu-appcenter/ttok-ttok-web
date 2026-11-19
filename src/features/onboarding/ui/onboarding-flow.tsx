@@ -24,11 +24,17 @@ import { MultiQuickReplies, QuickReplies } from "./quick-replies";
 
 type OnboardingFlowProps = {
   completionHref?: string;
-  onComplete?: (answers: OnboardingAnswers, href?: string) => Promise<void>;
+  onComplete?: (
+    answers: OnboardingAnswers,
+    href?: string,
+    openInNewTab?: boolean,
+  ) => Promise<void>;
   colleges?: CollegeOption[];
   collegesError?: string;
   renderFinderResults?: (props: {
     onOpen: (href: string) => void;
+    onHome: () => void;
+    interest: string;
     disabled: boolean;
   }) => ReactNode;
   renderLabSearch: (props: {
@@ -238,7 +244,7 @@ export function OnboardingFlow({
     });
   }
 
-  async function handleCompletion(href = completionHref) {
+  async function handleCompletion(href = completionHref, openInNewTab = false) {
     if (!onComplete || isSubmitting) {
       return;
     }
@@ -247,7 +253,7 @@ export function OnboardingFlow({
     setIsSubmitting(true);
 
     try {
-      await onComplete(answers, href);
+      await onComplete(answers, href, openInNewTab);
     } catch (error) {
       setSubmitError(
         error instanceof Error
@@ -295,20 +301,6 @@ export function OnboardingFlow({
             }}
             tabIndex={-1}
           >
-            <ChatMessage sender="bot">
-              찾았어요! 이 연구실이 잘 맞을 것 같아요
-            </ChatMessage>
-            <ChatMessage emphasis="subtle" sender="bot">
-              마음에 드는 곳이 있나요?{" "}
-              <button
-                className="cursor-pointer text-text-primary underline underline-offset-4 disabled:opacity-50"
-                disabled={isSubmitting}
-                onClick={() => handleCompletion()}
-                type="button"
-              >
-                홈에서 더 둘러보기 ›
-              </button>
-            </ChatMessage>
             {submitError ? (
               <p
                 className="text-sm text-text-error focus:outline-none"
@@ -320,24 +312,15 @@ export function OnboardingFlow({
               </p>
             ) : null}
             {renderFinderResults?.({
+              interest: typeof answers.interest === "string" ? answers.interest : "",
+              onHome: () => {
+                void handleCompletion("/");
+              },
               onOpen: (href) => {
-                void handleCompletion(href);
+                void handleCompletion(href, true);
               },
               disabled: isSubmitting,
             })}
-            <button
-              className="w-fit cursor-pointer text-sm text-text-subtle underline disabled:opacity-50"
-              disabled={isSubmitting}
-              onClick={editPreviousAnswer}
-              type="button"
-            >
-              입력 내용 수정
-            </button>
-            {isSubmitting ? (
-              <p role="status" className="text-sm text-text-subtle">
-                온보딩을 저장하고 있어요.
-              </p>
-            ) : null}
           </section>
         ) : isComplete ? (
           <section
@@ -504,7 +487,7 @@ export function OnboardingFlow({
                     currentQuestion.id === "interest" ? "text-base" : undefined
                   }
                   maxLength={
-                    currentQuestion.id === "interest" ? 1000 : undefined
+                    currentQuestion.id === "interest" ? 300 : undefined
                   }
                   onChange={(event) => {
                     setPendingAnswer(event.target.value);
@@ -531,7 +514,7 @@ export function OnboardingFlow({
                 }
               />
             </div>
-            {completedQuestionCount > 0 ? (
+            {completedQuestionCount > 0 && !isFinder ? (
               <button
                 className="w-fit cursor-pointer text-sm text-text-subtle underline"
                 onClick={editPreviousAnswer}

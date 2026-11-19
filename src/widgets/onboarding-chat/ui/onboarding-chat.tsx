@@ -35,15 +35,25 @@ export function OnboardingChat({
   async function handleComplete(
     answers: OnboardingAnswers,
     href = completionHref,
+    openInNewTab = false,
   ) {
-    const result = await completeOnboarding(answers);
+    const labTab = openInNewTab ? window.open("about:blank", "_blank") : null;
+    if (labTab) labTab.opener = null;
+    try {
+      const result = await completeOnboarding(answers);
+      if (!result.ok) throw new Error(result.message);
 
-    if (!result.ok) {
-      throw new Error(result.message);
+      if (labTab) {
+        labTab.location.replace(new URL(href, window.location.origin));
+        router.replace("/");
+      } else {
+        router.replace(href);
+      }
+      router.refresh();
+    } catch (error) {
+      labTab?.close();
+      throw error;
     }
-
-    router.replace(href);
-    router.refresh();
   }
 
   return (
