@@ -273,7 +273,7 @@ export function LabDetailPage({
                   AI 연구실 요약
                 </h2>
               </div>
-              <div className="mt-[6px] rounded-[var(--radius-xl)] border border-[#a7c0db] p-4 text-[length:var(--font-size-body1)] leading-[1.5] text-text-default">
+              <div className="mt-[6px] rounded-[var(--radius-xl)] border border-[#a7c0db] p-4 text-[length:var(--font-size-body2)] leading-[1.5] text-text-default">
                 {aiSummary.map((paragraph) => (
                   <p className="not-last:mb-4" key={paragraph}>
                     {paragraph}
