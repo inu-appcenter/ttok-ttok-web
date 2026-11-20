@@ -5,6 +5,8 @@ import { LabCardTags } from "./lab-card-tags";
 
 export type LabCardProps = {
   lab: LabSummary;
+  /** 홈·탐색 목록은 같은 탭에서 이동하고, 다른 흐름을 유지해야 하는 화면만 새 탭으로 연다. */
+  opensInNewTab?: boolean;
 };
 
 const cardClasses = "flex h-full min-h-[131px] min-w-0 flex-col justify-between rounded-[var(--radius-xl)] border border-bg-default bg-bg-default p-3 shadow-[0_2px_4px_var(--color-opacity-black-10)] md:min-h-[140px] md:shadow-[0_4px_8px_var(--color-opacity-black-10)]";
@@ -26,14 +28,13 @@ export function LabCardSkeleton() {
   );
 }
 
-export function LabCard({ lab }: LabCardProps) {
+export function LabCard({ lab, opensInNewTab = false }: LabCardProps) {
   return (
     <Link
       aria-label={`${lab.name} 상세 보기`}
       className="group block min-w-0 rounded-[var(--radius-xl)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
       href={`/labs/${encodeURIComponent(lab.labId)}`}
-      target="_blank"
-      rel="noopener noreferrer"
+      {...(opensInNewTab ? { rel: "noopener noreferrer", target: "_blank" } : {})}
     >
       <article className={`${cardClasses} transition-[background-color,border-color,box-shadow] group-hover:border-border-primary group-hover:bg-bg-primary-subtle group-active:border-[color:var(--color-bg-primary-press)]`}>
         <div className="flex min-w-0 flex-col">

@@ -57,7 +57,7 @@ export function BookmarksPage(props: BookmarkActions) {
         ) : (
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => (
-              <LabCard key={item.id} lab={item.laboratory} />
+              <LabCard key={item.id} lab={item.laboratory} opensInNewTab />
             ))}
           </div>
         )}
