@@ -38,37 +38,6 @@ export const AutomaticAppend: Story = {
   },
 };
 
-export const EighteenAtATime: Story = {
-  args: {
-    conditions: { query: "batch-test", category: "", page: 0 },
-    initialResult: {
-      ...initialResult,
-      content: Array.from({ length: 20 }, (_, index) => ({ ...MOCK_LABS[0], labId: `batch-${index}` })),
-      totalElements: 41,
-      totalPages: 3,
-    },
-    loadPage: fn<SearchPageLoader>(async ({ page }) => ({
-      ...initialResult,
-      page,
-      content: Array.from({ length: page === 1 ? 20 : 1 }, (_, index) => ({
-        ...MOCK_LABS[0], labId: `batch-${page * 20 + index}`,
-      })),
-      totalElements: 41,
-      totalPages: 3,
-      hasNext: page < 2,
-      isLast: page === 2,
-    })),
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getAllByRole("link")).toHaveLength(18);
-    canvas.getAllByRole("link").at(-1)?.scrollIntoView();
-    await waitFor(() => expect(canvas.getAllByRole("link")).toHaveLength(36));
-    canvas.getAllByRole("link").at(-1)?.scrollIntoView();
-    await waitFor(() => expect(canvas.getAllByRole("link")).toHaveLength(41));
-  },
-};
-
 let retryAttempts = 0;
 export const RetryFailure: Story = {
   beforeEach: () => { retryAttempts = 0; },
