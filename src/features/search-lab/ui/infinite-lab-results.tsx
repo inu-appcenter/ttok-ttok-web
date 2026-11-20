@@ -14,7 +14,9 @@ async function fetchSearchPage(conditions: SearchConditions, signal: AbortSignal
   return response.json();
 }
 
-type SavedResults = { result: LabSummaryPage; scrollY: number; savedAt: number };
+const DISPLAY_BATCH_SIZE = 18;
+
+type SavedResults = { result: LabSummaryPage; visibleCount: number; scrollY: number; savedAt: number };
 // 상세 화면 복귀에만 사용하는 제한된 메모리 기록입니다. 새로고침하면 초기화합니다.
 const savedResults = new Map<string, SavedResults>();
 
@@ -31,8 +33,10 @@ export function InfiniteLabResults({ conditions, initialResult, loadPage = fetch
     return saved && Date.now() - saved.savedAt < 5 * 60_000 ? saved : undefined;
   });
   const [result, setResult] = useState(restored?.result ?? initialResult);
+  const [visibleCount, setVisibleCount] = useState(restored?.visibleCount ?? DISPLAY_BATCH_SIZE);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
   const resultRef = useRef(result);
+  const visibleCountRef = useRef(visibleCount);
   const requestRef = useRef<AbortController | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -49,17 +53,22 @@ export function InfiniteLabResults({ conditions, initialResult, loadPage = fetch
   }, [restored]);
 
   const handleLoadMore = useCallback(async () => {
-    const current = resultRef.current;
-    if (requestRef.current || !current.hasNext || current.isLast) return;
+    let current = resultRef.current;
+    const targetCount = visibleCountRef.current + DISPLAY_BATCH_SIZE;
+    if (requestRef.current || (current.content.length <= visibleCountRef.current && (!current.hasNext || current.isLast))) return;
     const controller = new AbortController();
     requestRef.current = controller;
     setStatus("loading");
     try {
-      const next = await loadPage({ ...conditions, page: current.page + 1 }, controller.signal);
-      if (controller.signal.aborted) return;
-      const combined = appendSearchPage(current, next);
-      resultRef.current = combined;
-      setResult(combined);
+      while (current.content.length < targetCount && current.hasNext && !current.isLast) {
+        const next = await loadPage({ ...conditions, page: current.page + 1 }, controller.signal);
+        if (controller.signal.aborted) return;
+        current = appendSearchPage(current, next);
+        resultRef.current = current;
+        setResult(current);
+      }
+      visibleCountRef.current = targetCount;
+      setVisibleCount(targetCount);
       setStatus("idle");
     } catch {
       if (!controller.signal.aborted) setStatus("error");
@@ -70,17 +79,18 @@ export function InfiniteLabResults({ conditions, initialResult, loadPage = fetch
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel || status !== "idle" || !result.hasNext || result.isLast || !window.IntersectionObserver) return;
+    const hasMore = result.content.length > visibleCount || (result.hasNext && !result.isLast);
+    if (!sentinel || status !== "idle" || !hasMore || !window.IntersectionObserver) return;
     const observer = new IntersectionObserver((entries) => {
       if (entries.some((entry) => entry.isIntersecting)) void handleLoadMore();
     }, { rootMargin: "200px" });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [handleLoadMore, result.hasNext, result.isLast, result.page, status]);
+  }, [handleLoadMore, result.content.length, result.hasNext, result.isLast, result.page, status, visibleCount]);
 
   function handleSavePosition() {
     savedResults.delete(searchKey);
-    savedResults.set(searchKey, { result: resultRef.current, scrollY: window.scrollY, savedAt: Date.now() });
+    savedResults.set(searchKey, { result: resultRef.current, visibleCount: visibleCountRef.current, scrollY: window.scrollY, savedAt: Date.now() });
     const oldestKey = savedResults.keys().next().value;
     if (savedResults.size > 5 && oldestKey) savedResults.delete(oldestKey);
   }
@@ -88,7 +98,7 @@ export function InfiniteLabResults({ conditions, initialResult, loadPage = fetch
   return (
     <div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" onClickCapture={handleSavePosition}>
-        {result.content.map((lab) => <LabCard key={lab.labId} lab={lab} />)}
+        {result.content.slice(0, visibleCount).map((lab) => <LabCard key={lab.labId} lab={lab} />)}
       </div>
       <div aria-live="polite" className="mt-6 flex min-h-12 flex-col items-center gap-3 pb-24 md:pb-0" ref={sentinelRef}>
         {status === "error" ? <p role="alert" className="text-sm text-text-subtle">추가 연구실을 불러오지 못했어요.</p> : null}
