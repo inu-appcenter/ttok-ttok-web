@@ -40,7 +40,7 @@ export function LabSearchResultItem({
           {selected ? (
             <span className="flex max-w-full gap-[var(--spacing-spacing-1-5)] overflow-hidden">
               {lab.tags.map((tag) => (
-                <Tag key={tag}>{tag}</Tag>
+                <Tag key={tag} tone="primary">{tag}</Tag>
               ))}
             </span>
           ) : null}
@@ -48,7 +48,7 @@ export function LabSearchResultItem({
         {selected ? (
           <span
             aria-hidden="true"
-            className="size-5 shrink-0 rounded-full bg-bg-primary"
+            className="size-5 shrink-0 rounded-full border-[5px] border-bg-primary bg-bg-default"
           />
         ) : null}
       </button>

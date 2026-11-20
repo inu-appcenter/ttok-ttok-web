@@ -26,7 +26,7 @@ export function Radio({
     <label
       className={`group inline-flex cursor-pointer items-center text-text-default has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50 ${
         isChip
-          ? "min-h-8 rounded-[var(--radius-full)] border border-border-subtle bg-bg-default px-[14px] py-[var(--spacing-spacing-1)] text-text-subtle hover:border-border-primary hover:bg-bg-primary-subtle hover:text-text-disabled has-[:checked]:border-bg-primary has-[:checked]:bg-bg-primary has-[:checked]:text-text-inverse"
+          ? "min-h-8 rounded-[var(--radius-full)] border border-border-subtle bg-bg-default px-[14px] py-[var(--spacing-spacing-1)] text-text-subtle hover:border-border-primary hover:bg-bg-primary-subtle hover:text-text-disabled has-[:checked]:border-bg-primary has-[:checked]:bg-bg-primary has-[:checked]:text-text-inverse has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-border-primary"
           : "h-[60px] w-[340px] justify-between rounded-[var(--radius-md)] border border-border-subtle bg-bg-default p-[var(--spacing-spacing-4)] has-[:checked]:border-border-primary"
       }`}
     >
