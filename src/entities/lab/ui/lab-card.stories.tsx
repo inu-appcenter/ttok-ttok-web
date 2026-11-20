@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { useState } from "react";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import { MOCK_LABS } from "../model/mock-labs";
 
@@ -14,7 +16,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const card = within(canvasElement).getByRole("link");
+    const tag = within(card).getByText(MOCK_LABS[0].tags[0]);
+    const container = tag.parentElement?.parentElement;
+    await waitFor(() => expect(getComputedStyle(container!).maskImage).toBe("none"));
+  },
+};
 
 export const LongContent: Story = {
   args: {
@@ -33,7 +42,41 @@ export const NoTags: Story = {
 };
 
 export const ManyTags: Story = {
-  args: { lab: { ...MOCK_LABS[0], tags: ["데이터베이스", "빅데이터", "딥러닝", "머신러닝", "AI"] } },
+  args: { lab: { ...MOCK_LABS[0], tags: ["데이터베이스", "빅데이터", "인공지능연구", "머신러닝시스템", "AI"] } },
+  play: async ({ canvasElement }) => {
+    const card = within(canvasElement).getByRole("link");
+    const tag = within(card).getByText("AI");
+    const row = tag.parentElement;
+    const container = row?.parentElement;
+    await expect(within(card).queryByText(/외 \d+개/)).not.toBeInTheDocument();
+    await expect(row?.children).toHaveLength(5);
+    await waitFor(() => expect(getComputedStyle(container!).maskImage).toContain("linear-gradient"));
+    await expect(getComputedStyle(row!).flexWrap).toBe("nowrap");
+  },
+};
+
+export const LongTag: Story = {
+  args: { lab: { ...MOCK_LABS[0], tags: ["매우긴연구분야태그".repeat(8)] } },
+};
+
+export const ResizableTags: Story = {
+  render: function ResizableCard(args) {
+    const [isWide, setIsWide] = useState(false);
+    return (
+      <div>
+        <button onClick={() => setIsWide(!isWide)} type="button">너비 변경</button>
+        <div style={{ width: isWide ? 600 : 180 }}><LabCard {...args} /></div>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const card = canvas.getByRole("link");
+    const container = within(card).getByText(MOCK_LABS[0].tags[0]).parentElement?.parentElement;
+    await waitFor(() => expect(getComputedStyle(container!).maskImage).toContain("linear-gradient"));
+    await userEvent.click(canvas.getByRole("button", { name: "너비 변경" }));
+    await waitFor(() => expect(getComputedStyle(container!).maskImage).toBe("none"));
+  },
 };
 
 export const Skeleton: Story = {

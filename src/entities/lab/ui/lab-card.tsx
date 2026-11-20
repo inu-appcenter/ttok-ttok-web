@@ -1,8 +1,7 @@
 import Link from "next/link";
 
-import { Tag } from "@/shared/ui";
-
 import type { LabSummary } from "../model/lab";
+import { LabCardTags } from "./lab-card-tags";
 
 export type LabCardProps = {
   lab: LabSummary;
@@ -28,9 +27,6 @@ export function LabCardSkeleton() {
 }
 
 export function LabCard({ lab }: LabCardProps) {
-  const visibleTags = lab.tags.slice(0, 3);
-  const hiddenTagCount = lab.tags.length - visibleTags.length;
-
   return (
     <Link
       aria-label={`${lab.name} 상세 보기`}
@@ -51,14 +47,7 @@ export function LabCard({ lab }: LabCardProps) {
             {lab.description}
           </p>
         </div>
-        <div className="mt-1 flex min-w-0 flex-wrap gap-[var(--spacing-spacing-2)]">
-          {visibleTags.map((tag) => (
-            <Tag className="max-w-full truncate" key={tag} size="sm" tone="primary">
-              {tag}
-            </Tag>
-          ))}
-          {hiddenTagCount > 0 ? <Tag size="sm" tone="primary">외 {hiddenTagCount}개</Tag> : null}
-        </div>
+        <LabCardTags tags={lab.tags} />
       </article>
     </Link>
   );
