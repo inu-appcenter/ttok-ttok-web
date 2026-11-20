@@ -24,11 +24,14 @@ let aiFailure, aiMalformed;
 let memberStatus, memberIsNew, memberMalformed;
 let emailStatus, emailMalformed;
 let memberDepartment;
+let finderRegistered, reviewFailure;
 
 beforeEach(() => {
   publicationCount = 7;
   memberStatus=200;memberIsNew=false;memberMalformed=false;
   memberDepartment = "COMPUTER_ENGINEERING";
+  finderRegistered = false;
+  reviewFailure = false;
   aiFailure = false;
   emailStatus = 200;
   emailMalformed = false;
@@ -132,9 +135,9 @@ before(async () => {
         id: 1,
         studentNumber: "202501716",
         department: memberDepartment,
-        userType: token === "fake-finder" ? "FINDER" : "RESEARCHER",
+        userType: token === "fake-finder" && !finderRegistered ? "FINDER" : "RESEARCHER",
         laboratory:
-          token === "fake-finder"
+          token === "fake-finder" && !finderRegistered
             ? null
             : { id: 157, labName: "테스트 연구실" },
         labReview: review,
@@ -163,7 +166,17 @@ before(async () => {
         coffee = { ...coffee, ...body };
         data = coffee;
       }
+    } else if (url.pathname === "/api/lab-review/options") {
+      data = { coreTime: ["있음", "없음"], weeklyMeeting: ["주 1회", "격주"], works: ["논문 리딩"] };
+    } else if (url.pathname === "/api/researcher" && request.method === "POST") {
+      finderRegistered = true;
+      data = { id: 3, laboratoryId: body.laboratoryId };
     } else if (url.pathname === "/api/lab-review") {
+      if (reviewFailure) {
+        response.writeHead(500, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ code: "INTERNAL_ERROR", data: null }));
+        return;
+      }
       review = { id: 12, laboratoryId: 157, ...body };
       data = review;
     } else if (url.pathname === "/api/laboratory/157") data = laboratory;
@@ -442,6 +455,50 @@ test("연구실 리뷰는 제공 이력에 따라 생성과 수정을 구분한�
       .map((call) => call.method),
     ["POST", "PATCH"],
   );
+});
+const researcherBody = { laboratoryId: 157, coreTime: "있음", weeklyMeeting: "격주" };
+const writeCalls = () =>
+  calls
+    .filter((call) => call.method !== "GET")
+    .map(({ path, method, body }) => [path, method, body]);
+test("학부연구생 등록은 연구생 등록 후 코어타임·미팅을 리뷰로 저장한다", async () => {
+  const response = await request("/api/member/researcher", { token: "fake-finder", method: "POST", body: researcherBody });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("cache-control"), "private, no-store");
+  assert.deepEqual(writeCalls(), [
+    ["/api/researcher", "POST", { laboratoryId: 157 }],
+    ["/api/lab-review", "POST", { coreTime: "있음", weeklyMeeting: "격주", doings: [] }],
+  ]);
+});
+test("학부연구생 등록은 누락·서버 선택지 밖 값과 탐색자가 아닌 회원을 등록 전에 거부한다", async () => {
+  for (const body of [
+    { laboratoryId: 157 },
+    { ...researcherBody, laboratoryId: "157" },
+    { ...researcherBody, coreTime: "자율" },
+    { ...researcherBody, weeklyMeeting: "매일" },
+  ]) {
+    const response = await request("/api/member/researcher", { token: "fake-finder", method: "POST", body });
+    assert.equal(response.status, 400, JSON.stringify(body));
+  }
+  const researcher = await request("/api/member/researcher", { method: "POST", body: researcherBody });
+  assert.equal(researcher.status, 403);
+  assert.deepEqual(writeCalls(), []);
+});
+test("학부연구생 등록 후 리뷰 저장 실패는 등록 상태와 재입력 안내를 함께 반환한다", async () => {
+  reviewFailure = true;
+  const response = await request("/api/member/researcher", { token: "fake-finder", method: "POST", body: researcherBody });
+  assert.equal(response.status, 502);
+  const body = await response.json();
+  assert.equal(body.registered, true);
+  assert.match(body.message, /정보 수정하기/);
+  assert.deepEqual(writeCalls().map(([path]) => path), ["/api/researcher", "/api/lab-review"]);
+});
+test("마이페이지는 탐색자에게만 학부연구생 등록 선택지를 전달한다", async () => {
+  // 선택지 조회는 Next 데이터 캐시를 쓰므로 호출 횟수 대신 렌더 결과로 확인한다.
+  const finder = await (await request("/mypage", { token: "fake-finder" })).text();
+  assert.match(finder, /격주/);
+  const researcher = await (await request("/mypage")).text();
+  assert.doesNotMatch(researcher, /격주/);
 });
 test("상세의 정보 제공은 현재 상세와 본인 소속 연구실이 일치해야 저장한다", async () => {
   const body = {

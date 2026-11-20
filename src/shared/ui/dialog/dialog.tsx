@@ -7,8 +7,11 @@ import { useEffect, useId, useRef } from "react";
 export type DialogProps = {
   children: ReactNode;
   className?: string;
+  /** 제목 아래 보조 설명. headerLayout="form"에서 표시한다. */
+  description?: ReactNode;
   isOpen: boolean;
-  headerLayout?: "default" | "inline";
+  /** form: 왼쪽 정렬 제목·설명과 오른쪽 닫기 버튼을 쓰는 입력형 모달 머리글 */
+  headerLayout?: "default" | "form" | "inline";
   closeIconSrc?: string;
   mobileBottomSheet?: boolean;
   onClose: () => void;
@@ -19,6 +22,7 @@ export type DialogProps = {
 export function Dialog({
   children,
   className,
+  description,
   isOpen,
   headerLayout = "default",
   closeIconSrc = "/icons/home/mobile/close.svg",
@@ -90,6 +94,7 @@ export function Dialog({
 
   const isConfirmation = variant === "confirmation";
   const inlineHeader = headerLayout === "inline";
+  const formHeader = headerLayout === "form";
 
   return (
     <div
@@ -106,7 +111,31 @@ export function Dialog({
         className={`max-h-[calc(100dvh-32px)] w-full overflow-y-auto bg-bg-default shadow-[0_8px_32px_var(--color-opacity-black-10)] ${isConfirmation ? "max-w-[320px] rounded-[var(--radius-xl)] p-[var(--spacing-spacing-6)]" : mobileBottomSheet ? "rounded-t-[var(--radius-2xl)] md:max-w-[483px] md:rounded-[var(--radius-2xl)] md:border md:border-border-subtle" : "rounded-[var(--radius-2xl)] border border-border-subtle"} ${className ?? (isConfirmation || mobileBottomSheet ? "" : "max-w-[483px]")}`}
         role="dialog"
       >
-        {isConfirmation ? (
+        {formHeader ? (
+          <header className="flex items-start gap-[var(--spacing-spacing-2)] px-6 pt-6 md:px-9 md:pt-9">
+            <div className="flex min-w-0 flex-1 flex-col gap-[var(--spacing-spacing-1)]">
+              <h2
+                className="text-[length:var(--font-size-heading1)] font-semibold leading-[1.5] tracking-[-0.01em] text-text-default"
+                id={titleId}
+              >
+                {title}
+              </h2>
+              {description ? (
+                <p className="text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle">
+                  {description}
+                </p>
+              ) : null}
+            </div>
+            <button
+              aria-label="닫기"
+              className="relative size-6 shrink-0 cursor-pointer rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
+              onClick={onClose}
+              type="button"
+            >
+              <Image alt="" fill src={closeIconSrc} />
+            </button>
+          </header>
+        ) : isConfirmation ? (
           <h2
             className="text-center text-[length:var(--font-size-headline1)] font-semibold leading-[1.4] tracking-[-0.01em] text-text-default"
             id={titleId}

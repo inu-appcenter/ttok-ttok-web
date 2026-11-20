@@ -1,10 +1,13 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MyPage } from "@/_pages/mypage";
 import { getMyMember } from "@/entities/member/api";
 import { getMyBookmarks } from "@/entities/bookmark/api";
 import { getCollegeOptions, getLaboratoryItem } from "@/entities/lab/api";
+import { getOnboardingReviewOptions } from "@/features/onboarding/api";
 import { AuthenticatedApiError } from "@/shared/api/authenticated-request";
+import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
 import { getAuthSession } from "@/shared/lib/auth/session";
 
 export default async function MyPageRoute() {
@@ -50,9 +53,19 @@ export default async function MyPageRoute() {
         department: lab.departmentName,
       };
   }
+  // 탐색자만 학부연구생 등록 모달에서 코어타임·미팅 빈도 선택지를 사용한다.
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
+  const reviewOptionsResult =
+    profile.userType === "FINDER" && accessToken
+      ? await getOnboardingReviewOptions(accessToken).then(
+          (value) => ({ value }),
+          () => ({ value: undefined }),
+        )
+      : { value: undefined };
   return (
     <MyPage
       profile={profile}
+      reviewOptions={reviewOptionsResult.value}
       initialBookmarks={
         bookmarkResult.status === "fulfilled" ? bookmarkResult.value : undefined
       }
