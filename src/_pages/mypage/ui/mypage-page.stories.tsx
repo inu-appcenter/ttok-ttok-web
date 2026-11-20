@@ -222,6 +222,61 @@ export const FinderRegistrationOptionsUnavailable: Story = {
   },
 };
 
+// 등록 해제(DELETE)만 대체한다.
+function stubUnregisterFetch(respond: () => Promise<Response>) {
+  const originalFetch = window.fetch;
+  const remove = fn(respond);
+  window.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
+    String(input) === "/api/member/researcher" && init?.method === "DELETE"
+      ? remove()
+      : originalFetch(input, init)) as typeof fetch;
+  return { remove, restore: () => (window.fetch = originalFetch) };
+}
+
+async function openUnregisterDialog(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement);
+  await userEvent.click(canvas.getByRole("button", { name: "변경" }));
+  return within(canvas.getByRole("dialog", { name: "학부연구생 등록을 해제하시겠어요?" }));
+}
+
+export const ResearcherUnregisterDialog: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { remove, restore } = stubUnregisterFetch(async () => Response.json({ ok: true }));
+    try {
+      const dialog = await openUnregisterDialog(canvasElement);
+      await expect(dialog.getByText(/커피챗 정보가 삭제됩니다\./)).toBeVisible();
+      await expect(dialog.getByText(/익명으로 남습니다\./)).toBeVisible();
+      await userEvent.click(dialog.getByRole("button", { name: "취소" }));
+      await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
+      await expect(remove).not.toHaveBeenCalled();
+
+      const reopened = await openUnregisterDialog(canvasElement);
+      await userEvent.click(reopened.getByRole("button", { name: "등록 해제" }));
+      await waitFor(() => expect(remove).toHaveBeenCalledTimes(1));
+      await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
+    } finally {
+      restore();
+    }
+  },
+};
+
+export const ResearcherUnregisterFailure: Story = {
+  play: async ({ canvasElement }) => {
+    const { restore } = stubUnregisterFetch(async () =>
+      Response.json({ message: "등록 해제에 실패했어요." }, { status: 500 }),
+    );
+    try {
+      const dialog = await openUnregisterDialog(canvasElement);
+      await userEvent.click(dialog.getByRole("button", { name: "등록 해제" }));
+      await expect(await dialog.findByRole("alert")).toHaveTextContent("등록 해제에 실패했어요.");
+      await expect(dialog.getByRole("button", { name: "등록 해제" })).toBeEnabled();
+    } finally {
+      restore();
+    }
+  },
+};
+
 export const ResearcherStatusMock: Story = {
   render: function Render(args) {
     const [researcher, setResearcher] = useState(false);

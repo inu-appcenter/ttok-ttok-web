@@ -87,11 +87,47 @@ export function MyPage({
         </div>
       </main>
       {isResearcher ? (
-        <Dialog isOpen={statusDialogOpen} onClose={closeStatusDialog} title="연구생 등록을 해제하시겠어요?">
-          <div className="mt-4 flex flex-col gap-4">
-            <p className="text-sm text-text-subtle">등록을 해제하면 커피챗 정보가 삭제되고, 작성한 연구실 리뷰는 익명으로 남아요.</p>
-            {statusError ? <p role="alert" className="text-sm text-text-error">{statusError}</p> : null}
-            <div className="flex gap-3"><Button className="flex-1" variant="tertiary" disabled={pending} onClick={() => setStatusDialogOpen(false)}>취소</Button><Button className="flex-1" disabled={pending} isLoading={pending} onClick={() => void handleUnregister()}>등록 해제</Button></div>
+        <Dialog
+          className="!max-w-[340px]"
+          isOpen={statusDialogOpen}
+          onClose={closeStatusDialog}
+          title="학부연구생 등록을 해제하시겠어요?"
+          variant="confirmation"
+        >
+          <div className="mt-3 flex flex-col gap-3">
+            <p className="text-center text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle">
+              커피챗 정보가 삭제됩니다.
+              <br />
+              작성한 연구실 리뷰는 계정 연결이 해제되어
+              <br />
+              익명으로 남습니다.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                autoFocus
+                className="!h-8 flex-1 !rounded-[var(--radius-md)] !px-4 !text-[length:var(--font-size-body3)]"
+                disabled={pending}
+                onClick={closeStatusDialog}
+                size="sm"
+                variant="tertiary"
+              >
+                취소
+              </Button>
+              <Button
+                className="!h-8 flex-1 !rounded-[var(--radius-md)] !bg-bg-error !px-4 !text-[length:var(--font-size-body3)] !text-text-inverse hover:!bg-[var(--color-red-red-400)]"
+                disabled={pending}
+                isLoading={pending}
+                onClick={() => void handleUnregister()}
+                size="sm"
+              >
+                등록 해제
+              </Button>
+            </div>
+            {statusError ? (
+              <p className="text-center text-xs text-text-error" role="alert">
+                {statusError}
+              </p>
+            ) : null}
           </div>
         </Dialog>
       ) : (
