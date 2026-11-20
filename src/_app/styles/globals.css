@@ -45,3 +45,10 @@ body {
   color: var(--foreground);
   font-family: "Wanted Sans", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
 }
+
+/* 내부 페이지 이동 진행 바(nextjs-toploader)는 인라인 transition을 쓰므로 모션 감소 설정에서 덮어쓴다. */
+@media (prefers-reduced-motion: reduce) {
+  #nprogress .bar {
+    transition: none !important;
+  }
+}

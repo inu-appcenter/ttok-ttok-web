@@ -19,9 +19,20 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const card = within(canvasElement).getByRole("link");
+    // 홈·탐색 목록의 카드는 같은 탭에서 상세로 이동한다.
+    await expect(card).not.toHaveAttribute("target");
     const tag = within(card).getByText(MOCK_LABS[0].tags[0]);
     const container = tag.parentElement?.parentElement;
     await waitFor(() => expect(getComputedStyle(container!).maskImage).toBe("none"));
+  },
+};
+
+export const OpensInNewTab: Story = {
+  args: { opensInNewTab: true },
+  play: async ({ canvasElement }) => {
+    const card = within(canvasElement).getByRole("link");
+    await expect(card).toHaveAttribute("target", "_blank");
+    await expect(card).toHaveAttribute("rel", "noopener noreferrer");
   },
 };
 

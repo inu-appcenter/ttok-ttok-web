@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition, type FormEvent } from "react";
 
-import { Button, useToast } from "@/shared/ui";
+import { Button, useStartNavigationProgress, useToast } from "@/shared/ui";
 
 import type { CollegeOption } from "@/entities/lab";
 import { SearchConditionDropdown } from "./search-condition-dropdown";
@@ -47,6 +47,7 @@ export function HomeSearchField({
   const [college, setCollege] = useState(initialCollege);
   const [department, setDepartment] = useState(initialDepartment);
   const showToast = useToast();
+  const startNavigationProgress = useStartNavigationProgress();
   const [isPending, startTransition] = useTransition();
   // 검색 조건 오류도 공통 토스트로 띄워 다른 안내와 겹치지 않게 한다.
   const setMessage = (message: string) => {
@@ -82,7 +83,9 @@ export function HomeSearchField({
       return;
     }
     setMessage("");
-    startTransition(() => router.push(createSearchHref(conditions)));
+    const href = createSearchHref(conditions);
+    startNavigationProgress(href);
+    startTransition(() => router.push(href));
   }
 
   return (
