@@ -128,7 +128,7 @@ export function HomeSearchField({
         <div className="col-span-3 flex min-w-0 items-center gap-2 border-t border-border-subtlest pt-2 md:gap-3 xl:flex-1 xl:border-t-0 xl:pt-0">
           <input
             aria-label="연구실 검색"
-            className="h-[37px] min-w-0 flex-1 md:h-[54px] rounded-sm bg-bg-default px-2 text-[length:var(--font-size-label2)] md:text-[length:var(--font-size-body2)] leading-[1.5] text-text-default outline-none placeholder:text-text-subtle focus-visible:ring-2 focus-visible:ring-border-primary"
+            className="h-[37px] min-w-0 flex-1 md:h-[54px] rounded-sm bg-bg-default px-2 text-[length:var(--font-size-label2)] md:text-[length:var(--font-size-body2)] leading-[1.5] text-text-default outline-none placeholder:text-text-subtle focus-visible:ring-2 focus-visible:ring-border-primary [&::-webkit-search-cancel-button]:appearance-none"
             disabled={isPending || isDisabled}
             maxLength={MAX_SEARCH_QUERY_LENGTH}
             onChange={(event) => {
@@ -140,6 +140,21 @@ export function HomeSearchField({
             type="search"
             value={query}
           />
+          {query ? (
+            <button
+              aria-label="검색어 지우기"
+              className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-border-primary disabled:cursor-not-allowed"
+              disabled={isPending || isDisabled}
+              onClick={() => {
+                setQuery("");
+                setMessage("");
+                inputRef.current?.focus();
+              }}
+              type="button"
+            >
+              <Image alt="" height={18} src="/icons/home/mobile/close.svg" width={18} />
+            </button>
+          ) : null}
           <Button
             disabled={isPending || isDisabled}
             leadingIcon={

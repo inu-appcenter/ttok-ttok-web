@@ -94,7 +94,7 @@ export const CollegeAllSelection: Story = {
       await userEvent.keyboard("{Escape}");
     } else {
       await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
-      await expect(canvas.getByRole("button", { name: "학과 초기화" })).toBeVisible();
+      await expect(canvas.queryByRole("button", { name: "학과 초기화" })).not.toBeInTheDocument();
     }
     await userEvent.click(canvas.getByRole("button", { name: "검색" }));
     await expect(getRouter().push).toHaveBeenLastCalledWith(`/search?college=${encodeURIComponent("정보기술대학")}`);
@@ -105,6 +105,20 @@ export const CollegeAllSelection: Story = {
     await expect(canvas.getByRole("button", { name: "학과: 전체" })).toBeVisible();
     await userEvent.click(canvas.getByRole("button", { name: "검색" }));
     await expect(getRouter().push).toHaveBeenLastCalledWith("/search");
+  },
+};
+
+export const ClearSearchQuery: Story = {
+  args: { initialQuery: "연구실", initialCategory: "AI" },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole("searchbox", { name: "연구실 검색" });
+    await expect(canvas.queryByRole("button", { name: "분야 초기화" })).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "검색어 지우기" }));
+    await expect(input).toHaveValue("");
+    await expect(input).toHaveFocus();
+    await expect(canvas.getByRole("button", { name: "분야: AI" })).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: "검색어 지우기" })).not.toBeInTheDocument();
   },
 };
 

@@ -97,13 +97,6 @@ export function ResearchMetrics({ metrics }: { metrics?: LabResearchMetrics }) {
           }}
           role="tooltip"
         >
-          <Image
-            alt=""
-            className="absolute -top-[10px] right-10"
-            src="/icons/lab-detail/tooltip-tail.svg"
-            width={25.0526}
-            height={14.25}
-          />
           <h3 className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5]">
             {activeMetric === "citations" ? "피인용지수" : "h-index"}
           </h3>
