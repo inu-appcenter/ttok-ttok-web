@@ -72,7 +72,7 @@ export function SiteHeader({
               return (
                 <LoginRequiredLink
                   aria-current={isActive ? "page" : undefined}
-                  className="flex cursor-pointer items-center gap-[var(--spacing-spacing-2)] rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
+                  className="group flex cursor-pointer items-center gap-[var(--spacing-spacing-2)] rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
                   href={item.href}
                   isAuthenticated={isAi ? isAuthenticated : true}
                   key={item.id}
@@ -85,7 +85,15 @@ export function SiteHeader({
                       alt=""
                       fill
                       sizes={`${item.iconSize}px`}
-                      src={isActive ? item.activeIcon : item.icon}
+                      className={isActive ? "opacity-0" : "opacity-100 group-hover:opacity-0"}
+                      src={item.icon}
+                    />
+                    <Image
+                      alt=""
+                      fill
+                      sizes={`${item.iconSize}px`}
+                      className={isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}
+                      src={item.activeIcon}
                     />
                   </span>
                   <span
@@ -94,7 +102,9 @@ export function SiteHeader({
                         ? isAi
                           ? "bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] bg-clip-text text-transparent"
                           : "text-text-primary"
-                        : "text-text-subtlest"
+                        : isAi
+                          ? "text-text-subtlest group-hover:bg-[linear-gradient(90deg,#a7c0db_0%,#b4bade_33%,#c2aed6_66%,#d699c5_100%)] group-hover:bg-clip-text group-hover:text-transparent"
+                          : "text-text-subtlest group-hover:text-text-primary"
                     }`}
                   >
                     {item.label}
