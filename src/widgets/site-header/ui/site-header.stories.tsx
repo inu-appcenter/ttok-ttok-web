@@ -21,6 +21,33 @@ export const Search: Story = { args: { activeItem: "search" } };
 export const AiRecommendation: Story = { args: { activeItem: "ai" } };
 export const Authenticated: Story = { args: { isAuthenticated: true } };
 
+export const NavigationHover: Story = {
+  args: { activeItem: "home", isAuthenticated: true },
+  play: async ({ canvasElement }) => {
+    if (window.matchMedia("(max-width: 767px)").matches) return;
+    const canvas = within(canvasElement);
+    const home = canvas.getByRole("link", { name: /^홈$/ });
+    await expect(home).toHaveAttribute("aria-current", "page");
+    for (const name of ["연구실 탐색", "AI 연구실 추천"]) {
+      const link = canvas.getByRole("link", { name });
+      const [defaultIcon, activeIcon] = link.querySelectorAll("img");
+      const label = link.lastElementChild!;
+      await expect(getComputedStyle(defaultIcon).opacity).toBe("1");
+      await expect(getComputedStyle(activeIcon).opacity).toBe("0");
+      await expect(link).toHaveClass("group");
+      await expect(defaultIcon).toHaveClass("group-hover:opacity-0");
+      await expect(activeIcon).toHaveClass("group-hover:opacity-100");
+      if (name === "AI 연구실 추천") {
+        await expect(label).toHaveClass("group-hover:bg-clip-text", "group-hover:text-transparent");
+      } else {
+        await expect(label).toHaveClass("group-hover:text-text-primary");
+      }
+    }
+    home.focus();
+    await expect(home).toHaveFocus();
+  },
+};
+
 export const LoggedOutAiEntry: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
