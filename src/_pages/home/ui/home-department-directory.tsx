@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useId, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import type { CollegeLabCount } from "@/entities/lab";
@@ -14,12 +14,44 @@ export type HomeDepartmentDirectoryProps = {
   status?: "ready" | "loading" | "error";
 };
 
-function CollegeCard({ college }: { college: CollegeLabCount }) {
-  const [expanded, setExpanded] = useState(false);
+const VISIBLE_DEPARTMENT_COUNT = 3;
+
+type ExpandedRows = { columnCount: number; rows: number[] };
+
+function DepartmentLink({ department }: { department: CollegeLabCount["departments"][number] }) {
+  return (
+    <Link
+      className="group/department flex min-w-0 items-center justify-between gap-2 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
+      href={createSearchHref({ department: department.departmentName })}
+      title={department.departmentName}
+    >
+      <span className="min-w-0 truncate group-hover/department:font-semibold group-hover/department:text-text-default group-focus-visible/department:font-semibold group-focus-visible/department:text-text-default">
+        {department.departmentName}
+      </span>
+      <span className="shrink-0">
+        {department.count.toLocaleString("ko-KR")}개
+      </span>
+    </Link>
+  );
+}
+
+const departmentListClasses =
+  "flex flex-col gap-3 text-[length:var(--font-size-body1)] leading-[1.5] text-text-subtle";
+
+function CollegeCard({
+  college,
+  isExpanded,
+  onToggle,
+}: {
+  college: CollegeLabCount;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
   const id = useId();
-  const visibleDepartments = expanded
-    ? college.departments
-    : college.departments.slice(0, 3);
+  const visibleDepartments = college.departments.slice(0, VISIBLE_DEPARTMENT_COUNT);
+  const extraDepartments = college.departments.slice(VISIBLE_DEPARTMENT_COUNT);
+  const hasExtra = extraDepartments.length > 0;
+
   return (
     <article className="flex min-h-[240px] min-w-0 flex-col gap-3 rounded-[var(--radius-xl)] bg-bg-default p-4 shadow-[0_4px_16px_var(--color-opacity-black-10)]">
       <h3
@@ -33,45 +65,104 @@ function CollegeCard({ college }: { college: CollegeLabCount }) {
           {college.collegeName}
         </Link>
       </h3>
-      <ul
-        className="flex flex-col gap-3 text-[length:var(--font-size-body1)] leading-[1.5] text-text-subtle"
-        id={id}
-      >
-        {visibleDepartments.map((department) => (
-          <li
-            className="min-w-0 border-b border-border-subtle pb-1 last:border-b-0"
-            key={department.department}
-          >
-            <Link
-              className="group/department flex min-w-0 items-center justify-between gap-2 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-              href={createSearchHref({ department: department.departmentName })}
-              title={department.departmentName}
+      <div>
+        <ul className={departmentListClasses}>
+          {visibleDepartments.map((department, index) => (
+            <li
+              className={`min-w-0 pb-1 ${index < visibleDepartments.length - 1 || (hasExtra && isExpanded) ? "border-b border-border-subtle" : ""}`}
+              key={department.department}
             >
-              <span className="min-w-0 truncate group-hover/department:font-semibold group-hover/department:text-text-default group-focus-visible/department:font-semibold group-focus-visible/department:text-text-default">
-                {department.departmentName}
-              </span>
-              <span className="shrink-0">
-                {department.count.toLocaleString("ko-KR")}개
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-      {college.departments.length > 3 ? (
+              <DepartmentLink department={department} />
+            </li>
+          ))}
+        </ul>
+        {hasExtra ? (
+          // 높이를 재지 않고 grid 행을 0fr↔1fr로 바꿔 숨긴 학과 수만큼 펼친다.
+          <div
+            className={`grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none ${isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+            id={id}
+            inert={!isExpanded}
+          >
+            <div className="min-h-0 overflow-hidden">
+              <ul className={`${departmentListClasses} pt-3`}>
+                {extraDepartments.map((department) => (
+                  <li
+                    className="min-w-0 border-b border-border-subtle pb-1 last:border-b-0"
+                    key={department.department}
+                  >
+                    <DepartmentLink department={department} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ) : null}
+      </div>
+      {hasExtra ? (
         <button
           aria-controls={id}
-          aria-expanded={expanded}
-          aria-label={`${college.collegeName} ${expanded ? "학과 접기" : "학과 더보기"}`}
+          aria-expanded={isExpanded}
+          aria-label={`${college.collegeName} ${isExpanded ? "학과 접기" : "학과 더보기"}`}
           className="mt-auto self-center rounded-sm pt-1 text-[length:var(--font-size-body2)] leading-[1.5] text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-          onClick={() => setExpanded(!expanded)}
+          onClick={onToggle}
           type="button"
         >
-          {expanded
-            ? "접기"
-            : `+${college.departments.length - 3}개 학과 더보기`}
+          {isExpanded ? "접기" : `+${extraDepartments.length}개 학과 더보기`}
         </button>
       ) : null}
     </article>
+  );
+}
+
+function getColumnCount(grid: HTMLElement | null) {
+  if (!grid) return 0;
+  const columns = getComputedStyle(grid).gridTemplateColumns;
+  return columns === "none" ? 0 : columns.split(" ").filter(Boolean).length;
+}
+
+// 한 줄의 카드는 가장 긴 카드 높이로 늘어나므로 같은 줄을 함께 펼쳐 숨긴 학과 옆에 빈 공간이 생기지 않게 한다.
+// 열 수가 바뀌면 줄 구성이 달라지므로 펼친 상태를 적용하지 않는다(모두 접힘).
+function DesktopCollegeGrid({ colleges }: { colleges: CollegeLabCount[] }) {
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [columnCount, setColumnCount] = useState(0);
+  const [expandedRows, setExpandedRows] = useState<ExpandedRows>({ columnCount: 0, rows: [] });
+
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    const observer = new ResizeObserver(() => setColumnCount(getColumnCount(grid)));
+    observer.observe(grid);
+    return () => observer.disconnect();
+  }, []);
+
+  function handleToggle(index: number) {
+    const currentColumnCount = getColumnCount(gridRef.current) || 1;
+    const row = Math.floor(index / currentColumnCount);
+    setExpandedRows((previous) => {
+      const rows = previous.columnCount === currentColumnCount ? previous.rows : [];
+      return {
+        columnCount: currentColumnCount,
+        rows: rows.includes(row) ? rows.filter((value) => value !== row) : [...rows, row],
+      };
+    });
+  }
+
+  function isRowExpanded(index: number) {
+    if (!columnCount || expandedRows.columnCount !== columnCount) return false;
+    return expandedRows.rows.includes(Math.floor(index / columnCount));
+  }
+
+  return (
+    <div className="hidden grid-cols-2 gap-6 md:grid xl:grid-cols-4" ref={gridRef}>
+      {colleges.map((college, index) => (
+        <CollegeCard
+          college={college}
+          isExpanded={isRowExpanded(index)}
+          key={college.college}
+          onToggle={() => handleToggle(index)}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -165,11 +256,7 @@ export function HomeDepartmentDirectory({
       ) : colleges.length ? (
         <>
         <MobileCollegeAccordion colleges={colleges} />
-        <div className="hidden grid-cols-2 gap-6 md:grid xl:grid-cols-4">
-          {colleges.map((college) => (
-            <CollegeCard college={college} key={college.college} />
-          ))}
-        </div>
+        <DesktopCollegeGrid colleges={colleges} />
         </>
       ) : (
         <p className="py-10 text-center text-[length:var(--font-size-body2)] text-text-subtle">

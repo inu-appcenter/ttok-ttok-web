@@ -40,6 +40,10 @@ export const OneDepartment: Story = {
     ],
   },
 };
+function isHiddenDepartment(link: HTMLElement | null) {
+  return Boolean(link?.closest("[inert]"));
+}
+
 export const ExpandAndCollapse: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -49,21 +53,33 @@ export const ExpandAndCollapse: Story = {
     const trigger = canvas.getByRole("button", {
       name: "공과대학 학과 더보기",
     });
-    await expect(
-      canvas.queryByRole("link", { name: "기계공학과 5개" }),
-    ).not.toBeInTheDocument();
+    const hiddenLink = canvas.getByRole("link", { name: "기계공학과 5개" });
+    await expect(isHiddenDepartment(hiddenLink)).toBe(true);
     await userEvent.click(trigger);
     await expect(trigger).toHaveAttribute("aria-expanded", "true");
-    await expect(
-      canvas.getByRole("link", { name: "기계공학과 5개" }),
-    ).toHaveAttribute(
+    await expect(isHiddenDepartment(hiddenLink)).toBe(false);
+    await expect(hiddenLink).toHaveAttribute(
       "href",
       "/search?department=%EA%B8%B0%EA%B3%84%EA%B3%B5%ED%95%99%EA%B3%BC",
     );
-    await userEvent.click(trigger);
+    await userEvent.click(canvas.getByRole("button", { name: "공과대학 학과 접기" }));
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
-    await expect(
-      canvas.queryByRole("link", { name: "기계공학과 5개" }),
-    ).not.toBeInTheDocument();
+    await expect(isHiddenDepartment(hiddenLink)).toBe(true);
+  },
+};
+
+// 같은 줄의 카드는 함께 펼치고 접는다. 2열이면 [공과·도시], 4열이면 네 카드가 한 줄이다.
+export const ExpandSameRow: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const grid = canvas.getByRole("button", { name: "공과대학 학과 더보기" }).closest("article")?.parentElement;
+    const columnCount = getComputedStyle(grid!).gridTemplateColumns.split(" ").length;
+    await userEvent.click(canvas.getByRole("button", { name: "도시과학대학 학과 더보기" }));
+    await expect(canvas.getByRole("button", { name: "공과대학 학과 접기" })).toHaveAttribute("aria-expanded", "true");
+    await expect(canvas.getByRole("button", { name: "도시과학대학 학과 접기" })).toHaveAttribute("aria-expanded", "true");
+    const nextRowName = columnCount >= 4 ? "자연과학대학 학과 접기" : "자연과학대학 학과 더보기";
+    await expect(canvas.getByRole("button", { name: nextRowName })).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "공과대학 학과 접기" }));
+    await expect(canvas.getByRole("button", { name: "도시과학대학 학과 더보기" })).toHaveAttribute("aria-expanded", "false");
   },
 };
