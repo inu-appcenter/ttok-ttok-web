@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ComponentProps, MouseEvent, ReactNode } from "react";
 import { createContext, useCallback, useContext, useEffect } from "react";
 
-import { useToast } from "@/shared/ui";
+import { SKIP_NAVIGATION_PROGRESS_ATTRIBUTE, useToast } from "@/shared/ui";
 
 import {
   getLoginNotice,
@@ -118,8 +118,19 @@ export function LoginRequiredLink({
     showLoginRequired();
   }
 
+  // 로그인 화면에서는 이동하지 않고 안내만 띄우므로 이동 진행 표시를 남기지 않는다.
+  const progressProps = isLoginPage
+    ? { [SKIP_NAVIGATION_PROGRESS_ATTRIBUTE]: "" }
+    : undefined;
+
   return (
-    <Link {...props} href={loginPath} onClick={handleClick} prefetch={false} />
+    <Link
+      {...props}
+      {...progressProps}
+      href={loginPath}
+      onClick={handleClick}
+      prefetch={false}
+    />
   );
 }
 

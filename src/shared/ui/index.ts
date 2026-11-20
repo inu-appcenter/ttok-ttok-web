@@ -7,6 +7,11 @@ export type { DialogProps } from "./dialog";
 export { Field, Textarea } from "./field";
 export type { FieldProps, TextareaProps } from "./field";
 export { Logo } from "./logo";
+export {
+  NavigationProgress,
+  SKIP_NAVIGATION_PROGRESS_ATTRIBUTE,
+  useStartNavigationProgress,
+} from "./navigation-progress";
 export type { LogoProps, LogoVariant } from "./logo";
 export { Checkbox, Radio, Toggle } from "./selection";
 export type { CheckboxProps, RadioProps } from "./selection";
