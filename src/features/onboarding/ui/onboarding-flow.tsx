@@ -15,6 +15,8 @@ import {
 } from "../model/onboarding-steps";
 import type { OnboardingAnswers } from "../model/onboarding-steps";
 import type { OnboardingReviewOptions } from "../model/review-options";
+import { captureAnalytics } from "@/shared/lib/analytics";
+import { AnalyticsView } from "@/shared/lib/analytics/view";
 import { parseCoffeeChatContact } from "../api/complete-onboarding";
 import { ChatMessage } from "./chat-message";
 import { DepartmentCombobox } from "./department-combobox";
@@ -197,6 +199,49 @@ export function OnboardingFlow({
         return next;
       });
     }
+    const eventPurpose = nextAnswers.purpose === ONBOARDING_PURPOSE.explore ? "FINDER" : "RESEARCHER";
+    switch (currentQuestion.id) {
+      case "purpose":
+        captureAnalytics("click_onboarding_role", { purpose: eventPurpose });
+        break;
+      case "lab":
+        captureAnalytics("click_onboarding_labname", { purpose: eventPurpose, lab_id: selectedLaboratory?.laboratoryId ?? null });
+        break;
+      case "departmentConfirmation":
+        captureAnalytics("click_onboarding_dept_confirm", { purpose: eventPurpose, confirmed: nextAnswer === "네, 맞아요" });
+        break;
+      case "department":
+        captureAnalytics("click_onboarding_dept", { purpose: eventPurpose, department: departmentCode ?? null });
+        break;
+      case "coreTime":
+        captureAnalytics("click_onboarding_coretime", { purpose: eventPurpose, core_time: typeof nextAnswer === "string" ? nextAnswer : null });
+        break;
+      case "meetingFrequency":
+        captureAnalytics("click_onboarding_meeting", { purpose: eventPurpose, meeting: typeof nextAnswer === "string" ? nextAnswer : null });
+        break;
+      case "activities": {
+        const activities = Array.isArray(nextAnswer)
+          ? nextAnswer.filter((activity) => reviewOptions?.works.includes(activity))
+          : [];
+        captureAnalytics("click_onboarding_activity", {
+          purpose: eventPurpose,
+          activities,
+          activity_count: activities.length,
+        });
+        break;
+      }
+      case "coffeeChat":
+        captureAnalytics("click_onboarding_coffeechat", { purpose: eventPurpose, allowed: nextAnswer === "네, 좋아요" });
+        break;
+      case "contact": {
+        const contact = typeof nextAnswer === "string" ? parseCoffeeChatContact(nextAnswer) : null;
+        if (contact) captureAnalytics("click_onboarding_coffeechat_link", { purpose: eventPurpose, contact_type: contact.contactType });
+        break;
+      }
+      case "interest":
+        captureAnalytics("click_onboarding_interest", { purpose: eventPurpose, interest_length: nextAnswer.length });
+        break;
+    }
     setAnswers(nextAnswers);
     const nextQuestions = getOnboardingQuestions(
       typeof nextAnswers.purpose === "string" ? nextAnswers.purpose : undefined,
@@ -314,6 +359,7 @@ export function OnboardingFlow({
             {renderFinderResults?.({
               interest: typeof answers.interest === "string" ? answers.interest : "",
               onHome: () => {
+                captureAnalytics("click_onboarding_home", { purpose: "FINDER" });
                 void handleCompletion("/");
               },
               onOpen: (href) => {
@@ -331,6 +377,7 @@ export function OnboardingFlow({
             }}
             tabIndex={-1}
           >
+            <AnalyticsView event="click_onboarding_complete_researcher" properties={{ purpose: "RESEARCHER" }} />
             <ChatMessage sender="bot">회원가입 축하드려요! 🥳</ChatMessage>
             <div className="w-fit max-w-full rounded-[var(--radius-xl)] bg-bg-neutral px-[var(--spacing-spacing-6)] py-[var(--spacing-spacing-4)]">
               <p className="text-[length:var(--font-size-body3)] font-normal leading-[1.5] text-text-subtle">
@@ -342,7 +389,10 @@ export function OnboardingFlow({
                     className="mt-[var(--spacing-spacing-3)]"
                     disabled={isSubmitting}
                     isLoading={isSubmitting}
-                    onClick={() => handleCompletion()}
+                    onClick={() => {
+                      captureAnalytics("click_onboarding_done_researcher", { purpose: "RESEARCHER" });
+                      void handleCompletion();
+                    }}
                     type="button"
                   >
                     시작하기

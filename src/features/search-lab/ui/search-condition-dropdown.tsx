@@ -1,5 +1,8 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+import { captureAnalytics } from "@/shared/lib/analytics";
+import { AnalyticsView } from "@/shared/lib/analytics/view";
 import Image from "next/image";
 import type { CollegeOption } from "@/entities/lab";
 import { useEffect, useId, useRef, useState } from "react";
@@ -55,6 +58,7 @@ export function SearchConditionDropdown({
   onChange,
 }: SearchConditionDropdownProps) {
   const id = useId();
+  const isSearch = usePathname() === "/search";
   const rootRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -136,6 +140,20 @@ export function SearchConditionDropdown({
   }
 
   function handleSelect(nextValue: string) {
+    if (kind === "category") {
+      captureAnalytics(isSearch ? "click_search_field" : "click_home_search_field", {
+        category: nextValue || null,
+        field_query_length: query.trim().length,
+      });
+    } else {
+      const selectedGroup = activeCollege === "전체"
+        ? colleges.find((group) => group.departments.some((department) => department.departmentName === nextValue))?.collegeName
+        : activeCollege;
+      captureAnalytics(isSearch ? "click_search_dept" : "click_home_search_dept", {
+        college: selectedGroup ?? null,
+        department: nextValue || null,
+      });
+    }
     onChange(nextValue, kind === "department" && !nextValue && activeCollege !== "전체" ? activeCollege : "");
     if (kind === "department" && isMobileSheet) return;
     setIsOpen(false);
@@ -310,6 +328,7 @@ export function SearchConditionDropdown({
                       disabled={!group.fields.length}
                       key={group.index}
                       onClick={() => {
+                        captureAnalytics(isSearch ? "click_search_field_index" : "click_home_search_field_index", { index: group.index });
                         const section = sectionRefs.current[group.index];
                         if (section && listRef.current)
                           listRef.current.scrollTo({
@@ -388,6 +407,12 @@ export function SearchConditionDropdown({
                       </div>
                     </section>
                   ))}
+                {!visibleFields.length && query.trim() && (
+                  <AnalyticsView
+                    event={isSearch ? "view_search_field_no_result" : "click_home_search_field_no_result"}
+                    properties={{ field_query_length: query.trim().length }}
+                  />
+                )}
                 {!visibleFields.length ? (
                   <p className="px-2 py-3 text-[12px] text-text-subtlest">
                     {error || (options.length ? `‘${query}’에 맞는 분야가 없어요` : "등록된 분야가 없어요")}

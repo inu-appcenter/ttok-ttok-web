@@ -9,6 +9,8 @@ import {
   loadEmailDepartments,
   EmailApiError,
 } from "../model/request-email";
+import { captureAnalytics } from "@/shared/lib/analytics";
+import { AnalyticsView } from "@/shared/lib/analytics/view";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { useLoginRequiredRedirect } from "@/shared/lib/auth/login-required";
@@ -158,6 +160,15 @@ export function ContactEmailComposer({
     const nextErrors = validateEmailInput(input);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
+    const isRetouch = Boolean(draft);
+    const startedAt = performance.now();
+    captureAnalytics(isRetouch ? "click_mail_edit_retouch" : "click_mail_edit_create", {
+      lab_id: recipient.laboratoryId,
+      mail_purpose: input.purpose,
+      grade: input.year,
+      interest_length: input.interest.trim().length,
+      content_length: input.experience.trim().length,
+    });
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
@@ -170,10 +181,21 @@ export function ContactEmailComposer({
         controller.signal,
       );
       if (controller.signal.aborted || request.current !== controller) return;
+      captureAnalytics("submit_mail_edit", {
+        success: true,
+        latency_ms: Math.round(performance.now() - startedAt),
+        is_retouch: isRetouch,
+      });
       setDraft({ ...content, recipient: recipient.email ?? "" });
       setMobileView("draft");
     } catch (error) {
       if (controller.signal.aborted || request.current !== controller) return;
+      captureAnalytics("submit_mail_edit", {
+        success: false,
+        error_code: error instanceof EmailApiError ? String(error.status) : "request_failed",
+        latency_ms: Math.round(performance.now() - startedAt),
+        is_retouch: isRetouch,
+      });
       if (error instanceof EmailApiError && error.status === 401)
         redirectToLogin({ replace: true });
       setMobileView("input");
@@ -193,6 +215,8 @@ export function ContactEmailComposer({
     setMobileView(draft ? "draft" : "input");
   }
   async function copy(label: string, value: string) {
+    const target = label === "받는 사람" ? "recipient" : label === "제목" ? "subject" : "body";
+    captureAnalytics("click_mail_edit_copy", { target, mail_purpose: input.purpose });
     const version = ++copyVersion.current;
     try {
       await navigator.clipboard.writeText(value);
@@ -297,7 +321,10 @@ export function ContactEmailComposer({
                     name={purposeName}
                     value={purpose}
                     checked={input.purpose === purpose}
-                    onChange={() => update("purpose", purpose)}
+                    onChange={() => {
+                      captureAnalytics("click_mail_edit_purpose", { mail_purpose: purpose });
+                      update("purpose", purpose);
+                    }}
                   >
                     {purpose}
                   </Radio>
@@ -342,6 +369,7 @@ export function ContactEmailComposer({
                   </button>
                 </div>
               )}
+              {isOpen && <AnalyticsView event="view_mail_edit" properties={{ lab_id: recipient.laboratoryId }} />}
               <fieldset>
                 <legend className="mb-1 text-[14px] font-semibold">학년</legend>
                 <div className="flex flex-wrap gap-1">
@@ -550,6 +578,7 @@ export function ContactEmailButton({
             : "mt-3 w-full"
         }
         onClick={() => {
+          captureAnalytics("click_lab_page_mail_edit", { lab_id: recipient.laboratoryId, has_professor_email: Boolean(recipient.email) });
           if (!isAuthenticated) {
             redirectToLogin();
             return;

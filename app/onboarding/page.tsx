@@ -1,3 +1,4 @@
+import { AnalyticsView } from "@/shared/lib/analytics/view";
 import { cookies } from "next/headers";
 import { getLoginReturnPath } from "@/shared/lib/auth/return-path";
 import { redirect } from "next/navigation";
@@ -40,16 +41,19 @@ export default async function OnboardingRoute({
       : undefined;
 
   return (
-    <OnboardingPage
-      completionHref={returnTo}
-      colleges={collegeResult.status === "fulfilled" ? collegeResult.value : []}
-      collegesError={
-        collegeResult.status === "rejected"
-          ? "학과 목록을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요."
-          : undefined
-      }
-      reviewOptions={reviewOptions}
-      reviewOptionsError={reviewOptionsError}
-    />
+    <>
+      <AnalyticsView event="view_onloading" />
+      <OnboardingPage
+        completionHref={returnTo}
+        colleges={collegeResult.status === "fulfilled" ? collegeResult.value : []}
+        collegesError={
+          collegeResult.status === "rejected"
+            ? "학과 목록을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요."
+            : undefined
+        }
+        reviewOptions={reviewOptions}
+        reviewOptionsError={reviewOptionsError}
+      />
+    </>
   );
 }

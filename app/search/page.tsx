@@ -1,8 +1,10 @@
+import { AnalyticsView } from "@/shared/lib/analytics/view";
 import type { Metadata } from "next";
 import { SearchPage } from "@/_pages/search";
 import { DEFAULT_OPEN_GRAPH } from "@/shared/config";
 import { getResearchCategories, getCollegeOptions } from "@/entities/lab/api";
 import {
+  getSearchAnalyticsProperties,
   parseSearchConditions,
   type SearchRouteParams,
 } from "@/features/search-lab";
@@ -43,19 +45,31 @@ export default async function Page({
         ).result?.content.slice(0, 3) ?? [])
       : [];
 
+  const searchProperties = getSearchAnalyticsProperties(conditions, categories.categories, collegesResult.colleges);
+
   return (
-    <SearchPage
-      alternativeLabs={alternativeLabs}
-      {...search}
-      {...categories}
-      {...collegesResult}
-      category={conditions.category}
-      college={conditions.college}
-      department={conditions.department}
-      initialQuery={conditions.query}
-      invalidConditions={search.invalidConditions}
-      page={conditions.page}
-      status={search.result ? "ready" : "error"}
-    />
+    <>
+      <AnalyticsView event="view_search" properties={{ ...searchProperties, result_count: search.result?.totalElements ?? null }} />
+      {search.result?.totalElements === 0 && (
+        <AnalyticsView
+          key={JSON.stringify(conditions)}
+          event="view_search_no_result"
+          properties={searchProperties}
+        />
+      )}
+      <SearchPage
+        alternativeLabs={alternativeLabs}
+        {...search}
+        {...categories}
+        {...collegesResult}
+        category={conditions.category}
+        college={conditions.college}
+        department={conditions.department}
+        initialQuery={conditions.query}
+        invalidConditions={search.invalidConditions}
+        page={conditions.page}
+        status={search.result ? "ready" : "error"}
+      />
+    </>
   );
 }

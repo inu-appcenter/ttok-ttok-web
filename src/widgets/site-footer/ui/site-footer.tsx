@@ -1,3 +1,4 @@
+import { AnalyticsAnchor } from "@/shared/lib/analytics/link";
 import Image from "next/image";
 
 import { EXTERNAL_LINKS } from "@/shared/config";
@@ -21,9 +22,9 @@ export function SiteFooter({ showOnMobile = false }: { showOnMobile?: boolean })
               <strong className="text-[14px] font-semibold text-text-default md:font-medium">
                 고객지원
               </strong>
-              <a className="text-text-subtle hover:text-text-primary" href={EXTERNAL_LINKS.report} target="_blank" rel="noopener noreferrer">
+              <AnalyticsAnchor event="click_report" properties={{ location: "footer" }} className="text-text-subtle hover:text-text-primary" href={EXTERNAL_LINKS.report} target="_blank" rel="noopener noreferrer">
                 제보하기
-              </a>
+              </AnalyticsAnchor>
             </div>
             <div className="flex flex-col gap-2.5 md:gap-3">
               <strong className="text-[14px] font-semibold text-text-default md:font-medium">

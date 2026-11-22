@@ -1,5 +1,6 @@
 "use client";
 
+import { captureAnalytics } from "@/shared/lib/analytics";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
@@ -10,6 +11,7 @@ import {
 
 type MobileBottomNavItem = {
   href: string;
+  analyticsEvent: string;
   icon: string;
   activeIcon: string;
   iconSize: number;
@@ -23,6 +25,7 @@ export type MobileBottomNavProps = {
 
 const items: MobileBottomNavItem[] = [
   {
+    analyticsEvent: "click_bottom_nav_home",
     href: "/",
     icon: "/icons/mobile-bottom-nav/home.svg",
     activeIcon: "/icons/mobile-bottom-nav/home-active.svg",
@@ -30,6 +33,7 @@ const items: MobileBottomNavItem[] = [
     label: "홈",
   },
   {
+    analyticsEvent: "click_bottom_nav_search",
     href: "/search",
     icon: "/icons/mobile-bottom-nav/explore.svg",
     activeIcon: "/icons/mobile-bottom-nav/explore-active.svg",
@@ -37,6 +41,7 @@ const items: MobileBottomNavItem[] = [
     label: "탐색",
   },
   {
+    analyticsEvent: "click_bottom_nav_recommend",
     href: "/recommendations",
     icon: "/icons/mobile-bottom-nav/ai.svg",
     activeIcon: "/icons/mobile-bottom-nav/ai-active.svg",
@@ -45,6 +50,7 @@ const items: MobileBottomNavItem[] = [
     requiresLogin: true,
   },
   {
+    analyticsEvent: "click_bottom_nav_mypage",
     href: "/mypage",
     icon: "/icons/mobile-bottom-nav/my.svg",
     activeIcon: "/icons/mobile-bottom-nav/my-active.svg",
@@ -86,6 +92,7 @@ export function MobileBottomNav({ activeHref }: MobileBottomNavProps) {
             className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-[var(--radius-full)] py-2 font-semibold leading-[1.5] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary ${isActive ? "bg-bg-default shadow-[0_4px_16px_var(--color-opacity-black-10)]" : ""}`}
             href={item.href}
             key={item.href}
+            onClickCapture={() => captureAnalytics(item.analyticsEvent)}
           >
             <Image
               alt=""

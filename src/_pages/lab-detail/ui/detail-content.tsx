@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { AnalyticsAnchor, AnalyticsLink } from "@/shared/lib/analytics/link";
 
 import type { LabDetail, LabPaper } from "@/entities/lab";
 import { Tag } from "@/shared/ui";
@@ -9,18 +9,18 @@ import { DetailRetryButton } from "./detail-retry-button";
 
 const DETAIL_PREVIEW_LIMIT = 3;
 
-function ProjectList({ projects, isMobile }: { projects: NonNullable<LabDetail["projects"]>; isMobile: boolean }) {
+function ProjectList({ projects, isMobile, laboratoryId }: { projects: NonNullable<LabDetail["projects"]>; isMobile: boolean; laboratoryId: number }) {
   if (isMobile) {
     return (
       <ul className="mt-[14px] flex flex-col gap-[14px]">
-        {projects.map((project) => (
+        {projects.map((project, index) => (
           <li className="flex min-w-0 items-center gap-[10px]" key={project.id}>
             <Tag className="h-[21px] w-[50px] shrink-0 justify-center whitespace-nowrap !text-[length:var(--font-size-caption2)]" tone={project.isOngoing ? "primary" : "default"}>
               {project.isOngoing ? "진행중" : "종료"}
             </Tag>
             <div className="min-w-0 flex-1">
               <h3 className="truncate text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-primary" title={project.title}>
-                {project.url ? <a className="hover:underline focus-visible:outline-2 focus-visible:outline-border-primary" href={project.url} target="_blank" rel="noopener noreferrer">{project.title}</a> : project.title}
+                {project.url ? <AnalyticsAnchor event="click_lab_page_research_recent" properties={{ lab_id: laboratoryId, position: index + 1 }} className="hover:underline focus-visible:outline-2 focus-visible:outline-border-primary" href={project.url} target="_blank" rel="noopener noreferrer">{project.title}</AnalyticsAnchor> : project.title}
               </h3>
               <p className="truncate text-[length:var(--font-size-caption2)] leading-[1.5] text-text-subtlest">{[project.period, project.agency].filter(Boolean).join(" · ")}</p>
             </div>
@@ -31,7 +31,7 @@ function ProjectList({ projects, isMobile }: { projects: NonNullable<LabDetail["
   }
   return (
     <ul className="mt-5 flex flex-col gap-5">
-      {projects.map((project) => (
+      {projects.map((project, index) => (
         <li className="flex min-w-0 flex-col gap-1" key={project.id}>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Tag
@@ -53,14 +53,16 @@ function ProjectList({ projects, isMobile }: { projects: NonNullable<LabDetail["
               className={`truncate text-[length:var(--font-size-label1)] font-semibold leading-[1.5] md:text-[length:var(--font-size-heading2)] ${project.isOngoing ? "text-text-primary" : "text-text-default"}`}
             >
               {project.url ? (
-                <a
+                <AnalyticsAnchor
+                  event="click_lab_page_research_recent"
+                  properties={{ lab_id: laboratoryId, position: index + 1 }}
                   className="block truncate hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
                   href={project.url}
                   target="_blank"
                   rel="noreferrer"
                 >
                   {project.title}
-                </a>
+                </AnalyticsAnchor>
               ) : (
                 project.title
               )}
@@ -100,7 +102,7 @@ export function ResearchProjects({
       id={isMobile ? "mobile-projects" : "projects"}
     >
       <section className="min-w-0 rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)] md:px-6 md:py-5">
-        <h2><Link href={`/labs/${lab.laboratoryId}/projects`} className="inline-flex items-center text-[length:var(--font-size-label1)] font-semibold leading-[1.5] hover:underline focus-visible:outline-2 focus-visible:outline-border-primary md:gap-1 md:text-[length:var(--font-size-heading1)]">연구과제{isMobile ? <Image alt="" src="/icons/lab-detail/project-chevron.svg" width={18} height={18} /> : <Image alt="" src="/icons/lab-detail/papers-chevron.svg" width={22} height={21} />}</Link></h2>
+        <h2><AnalyticsLink event="click_lab_page_research_all" properties={{ lab_id: lab.laboratoryId }} href={`/labs/${lab.laboratoryId}/projects`} className="inline-flex items-center text-[length:var(--font-size-label1)] font-semibold leading-[1.5] hover:underline focus-visible:outline-2 focus-visible:outline-border-primary md:gap-1 md:text-[length:var(--font-size-heading1)]">연구과제{isMobile ? <Image alt="" src="/icons/lab-detail/project-chevron.svg" width={18} height={18} /> : <Image alt="" src="/icons/lab-detail/papers-chevron.svg" width={22} height={21} />}</AnalyticsLink></h2>
         {lab.projectState?.status === "error" ? (
           <p
             role="status"
@@ -111,7 +113,7 @@ export function ResearchProjects({
             <DetailRetryButton />
           </p>
         ) : lab.projects?.length ? (
-          <ProjectList isMobile={isMobile} projects={lab.projects.slice(0, DETAIL_PREVIEW_LIMIT)} />
+          <ProjectList laboratoryId={lab.laboratoryId} isMobile={isMobile} projects={lab.projects.slice(0, DETAIL_PREVIEW_LIMIT)} />
         ) : (
           <p className="mt-5 text-[length:var(--font-size-body3)] text-text-subtle">
             등록된 연구과제가 없어요.
@@ -122,9 +124,11 @@ export function ResearchProjects({
   );
 }
 
-export function PaperTitle({ paper }: { paper: LabPaper }) {
+export function PaperTitle({ paper, laboratoryId, position }: { paper: LabPaper; laboratoryId?: number; position?: number }) {
   return paper.url ? (
-    <a
+    <AnalyticsAnchor
+      event={laboratoryId === undefined ? undefined : "click_lab_page_paper_recent"}
+      properties={{ lab_id: laboratoryId ?? null, position: position ?? null }}
       className="flex min-w-0 items-center gap-1 hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
       title={paper.title}
       href={paper.url}
@@ -135,7 +139,7 @@ export function PaperTitle({ paper }: { paper: LabPaper }) {
       <span aria-hidden="true" className="shrink-0">
         ↗
       </span>
-    </a>
+    </AnalyticsAnchor>
   ) : (
     <span className="block truncate" title={paper.title}>
       {paper.title}
@@ -182,20 +186,24 @@ export function ProfessorCard({
       </div>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[length:var(--font-size-caption1)] font-semibold text-text-primary">
         {professor?.email ? (
-          <a
+          <AnalyticsAnchor
+            event="click_lab_page_email"
+            properties={{ lab_id: lab.laboratoryId }}
             className="break-all underline focus-visible:outline-2 focus-visible:outline-border-primary"
             href={`mailto:${professor.email}`}
           >
             {professor.email}
-          </a>
+          </AnalyticsAnchor>
         ) : null}
         {professor?.phone ? (
-          <a
+          <AnalyticsAnchor
+            event="click_lab_page_telephone"
+            properties={{ lab_id: lab.laboratoryId }}
             className="underline focus-visible:outline-2 focus-visible:outline-border-primary"
             href={`tel:${professor.phone}`}
           >
             {professor.phone}
-          </a>
+          </AnalyticsAnchor>
         ) : null}
       </div>
     </section>
@@ -215,7 +223,9 @@ export function RecentPapers({
       className="min-w-0 scroll-mt-24 rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)] md:px-6 md:py-5"
     >
       <h2>
-        <Link
+        <AnalyticsLink
+          event="click_lab_page_paper_all"
+          properties={{ lab_id: lab.laboratoryId }}
           href={`/labs/${lab.laboratoryId}/papers`}
           className="inline-flex items-center gap-1 text-[length:var(--font-size-label1)] font-semibold leading-[1.5] hover:underline focus-visible:outline-2 focus-visible:outline-border-primary md:text-[length:var(--font-size-heading1)]"
         >
@@ -226,7 +236,7 @@ export function RecentPapers({
             width={22}
             height={21}
           />
-        </Link>
+        </AnalyticsLink>
       </h2>
       {lab.publicationState?.status === "error" ? (
         <p role="status" className="mt-5 text-sm text-text-subtle">
@@ -236,10 +246,10 @@ export function RecentPapers({
         </p>
       ) : lab.papers.length ? (
         <ul className="mt-5 flex min-w-0 flex-col gap-3">
-          {lab.papers.slice(0, DETAIL_PREVIEW_LIMIT).map((paper) => (
+          {lab.papers.slice(0, DETAIL_PREVIEW_LIMIT).map((paper, index) => (
             <li className="min-w-0" key={`${paper.year}-${paper.title}`}>
               <h3 className="min-w-0 text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-primary md:text-[length:var(--font-size-heading2)]">
-                <PaperTitle paper={paper} />
+                <PaperTitle paper={paper} laboratoryId={lab.laboratoryId} position={index + 1} />
               </h3>
               <p className="truncate text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle md:text-[14px]">
                 {[paper.year, paper.venue]

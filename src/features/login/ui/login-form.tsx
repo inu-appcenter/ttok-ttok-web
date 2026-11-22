@@ -4,6 +4,7 @@ import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { captureAnalytics, identifyAnalytics } from "@/shared/lib/analytics";
 import { Button, Field, Logo, useToast } from "@/shared/ui";
 import { getLoginReturnPath } from "@/shared/lib/auth/return-path";
 import { notifyAuthChange } from "@/shared/lib/session-store";
@@ -50,6 +51,7 @@ export function LoginForm({
     const password = formData.get("password");
 
     if (typeof studentNumber !== "string" || typeof password !== "string") {
+      captureAnalytics("submit_login", { success: false, error_type: "missing_input" });
       setErrorMessage("학번과 비밀번호를 모두 입력해주세요.");
       showToast({ state: "error", title: "학번과 비밀번호를 모두 입력해주세요." });
       return;
@@ -67,6 +69,8 @@ export function LoginForm({
       return;
     }
 
+    await identifyAnalytics(result.memberId);
+    captureAnalytics("submit_login", { success: true });
     notifyAuthChange();
     const destination = getLoginReturnPath(returnTo);
     router.replace(

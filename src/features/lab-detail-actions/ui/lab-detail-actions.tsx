@@ -1,5 +1,7 @@
 "use client";
 
+import { captureAnalytics } from "@/shared/lib/analytics";
+
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import { useState } from "react";
@@ -17,9 +19,11 @@ import {
 
 export function LabContactCard({
   contact,
+  laboratoryId,
   isAuthenticated = false,
 }: {
   contact: LabDetail["contact"];
+  laboratoryId?: number;
   isAuthenticated?: boolean;
 }) {
   const redirectToLogin = useLoginRequiredRedirect();
@@ -48,6 +52,10 @@ export function LabContactCard({
                 <a
                   className="min-w-0 break-all text-right text-text-primary hover:underline"
                   href={member.url}
+                  onClick={() => captureAnalytics("click_lab_page_coffeechat", {
+                    lab_id: laboratoryId ?? null,
+                    contact_type: "KAKAO_TALK",
+                  })}
                   rel="noreferrer"
                   target="_blank"
                 >
@@ -72,7 +80,10 @@ export function LabContactCard({
           </div>
           <Button
             className="absolute !h-8 !rounded-[var(--radius-md)] !px-4 !text-[length:var(--font-size-body3)]"
-            onClick={() => redirectToLogin()}
+            onClick={() => {
+              captureAnalytics("click_lab_page_coffeechat_login", { lab_id: laboratoryId ?? null });
+              redirectToLogin();
+            }}
             size="sm"
           >
             로그인하고 커피챗 확인하기
@@ -184,6 +195,7 @@ export function ProvideLabInfoCard({
       <button
         className="flex w-full cursor-pointer flex-col items-center justify-center rounded-[var(--radius-2xl)] border border-border-primary bg-bg-default px-3 py-2 text-center transition-colors hover:bg-bg-primary-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
         onClick={() => {
+          captureAnalytics("click_lab_page_provide_info", { lab_id: laboratoryId ?? null });
           if (!isAuthenticated) {
             redirectToLogin();
             return;
@@ -335,11 +347,12 @@ export function ProvideLabInfoCard({
   );
 }
 
-export function ReportLabButton() {
+export function ReportLabButton({ laboratoryId }: { laboratoryId?: number }) {
   return (
     <a
       className="cursor-pointer text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtlest underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
       href={EXTERNAL_LINKS.report}
+      onClick={() => captureAnalytics("click_report", { location: "lab_page", lab_id: laboratoryId ?? null })}
       target="_blank"
       rel="noopener noreferrer"
     >

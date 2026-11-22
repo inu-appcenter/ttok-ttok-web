@@ -1,11 +1,12 @@
 "use client";
 
+import { captureAnalytics } from "@/shared/lib/analytics";
 import Image from "next/image";
 import { useEffect, useId, useRef, useState } from "react";
 
 import type { LabResearchMetrics } from "@/entities/lab";
 
-export function ResearchMetrics({ metrics }: { metrics?: LabResearchMetrics }) {
+export function ResearchMetrics({ laboratoryId, metrics }: { laboratoryId?: number; metrics?: LabResearchMetrics }) {
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
   const tooltipId = useId();
   const container = useRef<HTMLElement>(null);
@@ -80,7 +81,15 @@ export function ResearchMetrics({ metrics }: { metrics?: LabResearchMetrics }) {
               onMouseEnter={() => setActiveMetric(item.key)}
               onFocus={() => setActiveMetric(item.key)}
               onBlur={() => setActiveMetric(null)}
-              onClick={() => setActiveMetric(item.key)}
+              onClick={() => {
+                if (activeMetric !== item.key) {
+                  captureAnalytics("click_lab_page_metric_tooltip", {
+                    lab_id: laboratoryId ?? null,
+                    metric: item.key === "h-index" ? "h_index" : "citation",
+                  });
+                }
+                setActiveMetric(item.key);
+              }}
             >
               {content}
             </button>

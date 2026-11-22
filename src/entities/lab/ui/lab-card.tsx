@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { AnalyticsLink } from "@/shared/lib/analytics/link";
+import type { MouseEventHandler } from "react";
 
 import type { LabSummary } from "../model/lab";
 import { LabCardTags } from "./lab-card-tags";
@@ -7,6 +8,8 @@ export type LabCardProps = {
   lab: LabSummary;
   /** 홈·탐색 목록은 같은 탭에서 이동하고, 다른 흐름을 유지해야 하는 화면만 새 탭으로 연다. */
   opensInNewTab?: boolean;
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
+  analytics?: { event: "click_home_lab_list" | "click_search_no_result_suggest"; position: number };
 };
 
 const cardClasses = "flex h-full min-h-[131px] min-w-0 flex-col justify-between rounded-[var(--radius-xl)] border border-bg-default bg-bg-default p-3 shadow-[0_2px_4px_var(--color-opacity-black-10)] md:min-h-[140px] md:shadow-[0_4px_8px_var(--color-opacity-black-10)]";
@@ -28,11 +31,14 @@ export function LabCardSkeleton() {
   );
 }
 
-export function LabCard({ lab, opensInNewTab = false }: LabCardProps) {
+export function LabCard({ lab, opensInNewTab = false, onClick, analytics }: LabCardProps) {
   return (
-    <Link
+    <AnalyticsLink
+      event={analytics?.event}
+      properties={analytics ? { lab_id: lab.laboratoryId, position: analytics.position } : undefined}
       aria-label={`${lab.name} 상세 보기`}
       className="group block min-w-0 rounded-[var(--radius-xl)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
+      onClick={onClick}
       href={`/labs/${encodeURIComponent(lab.labId)}`}
       {...(opensInNewTab ? { rel: "noopener noreferrer", target: "_blank" } : {})}
     >
@@ -50,6 +56,6 @@ export function LabCard({ lab, opensInNewTab = false }: LabCardProps) {
         </div>
         <LabCardTags tags={lab.tags} />
       </article>
-    </Link>
+    </AnalyticsLink>
   );
 }

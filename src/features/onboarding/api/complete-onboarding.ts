@@ -120,6 +120,7 @@ function getErrorMessage(response: OnboardingResponse) {
 
 export async function completeOnboarding(
   answers: OnboardingAnswers,
+  onResponse?: (response: { purpose: OnboardingRequest["purpose"]; success: boolean; error_code?: string }) => void,
 ): Promise<CompleteOnboardingResult> {
   const request = toOnboardingRequest(answers);
   const validationError = getRequestValidationError(request);
@@ -136,12 +137,18 @@ export async function completeOnboarding(
     });
 
     if (response.ok) {
+      onResponse?.({ purpose: request.purpose, success: true });
       return { ok: true };
     }
 
     const result: OnboardingResponse = await response.json().catch(() => ({}));
+    const errorCode = typeof result.code === "string" && Object.hasOwn(ERROR_MESSAGES, result.code)
+      ? result.code
+      : "server";
+    onResponse?.({ purpose: request.purpose, success: false, error_code: errorCode });
     return { message: getErrorMessage(result), ok: false };
   } catch {
+    onResponse?.({ purpose: request.purpose, success: false, error_code: "server" });
     return { message: ERROR_MESSAGE, ok: false };
   }
 }
