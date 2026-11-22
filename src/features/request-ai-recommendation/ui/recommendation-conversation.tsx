@@ -66,7 +66,7 @@ export function RecommendationConversation({
   }, [step]);
   return (
     <div
-      className="relative mt-6 flex flex-col gap-3 lg:mt-7 lg:max-h-[calc(100dvh-264px)] lg:gap-4 lg:overflow-y-auto lg:pb-4"
+      className="relative mt-6 flex flex-col gap-3 lg:mt-7 lg:max-h-[calc(100dvh-264px)] lg:gap-4 lg:overflow-x-hidden lg:overflow-y-auto lg:pb-4"
       aria-live="polite"
       aria-busy={isPending}
     >
@@ -167,7 +167,8 @@ export function RecommendationConversation({
                 disabled={isPending}
                 className="flex flex-wrap justify-end gap-2"
               >
-                <legend className="sr-only">관심 키워드</legend>
+                {/* 오른쪽 정렬된 칩 끝에 놓이면 대화 영역보다 넘쳐 가로 스크롤이 생기므로 왼쪽에 고정한다. */}
+                <legend className="sr-only left-0">관심 키워드</legend>
                 {[...new Set(options)].map((option) => (
                   <Checkbox
                     appearance="chip"
