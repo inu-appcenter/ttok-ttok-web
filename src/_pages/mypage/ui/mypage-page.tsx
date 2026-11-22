@@ -19,7 +19,10 @@ import {
   type ResearcherRegistrationDialogProps,
 } from "./researcher-registration-dialog";
 
-export type MyPageProps = Omit<MemberProfilePanelProps, "bookmarks"> &
+export type MyPageProps = Omit<
+  MemberProfilePanelProps,
+  "bookmarks" | "reviewOptions" | "reviewOptionsError"
+> &
   BookmarkActions &
   Pick<ResearcherRegistrationDialogProps, "reviewOptions" | "reviewOptionsError"> & {
     profile: MemberProfile;
@@ -82,6 +85,8 @@ export function MyPage({
               />
             }
             {...actions}
+            reviewOptions={reviewOptions}
+            reviewOptionsError={reviewOptionsError}
             onChangeResearcherStatus={actions.onChangeResearcherStatus ?? (() => { setStatusError(""); setStatusDialogOpen(true); })}
           />
         </div>

@@ -53,10 +53,14 @@ export default async function MyPageRoute() {
         department: lab.departmentName,
       };
   }
-  // 탐색자만 학부연구생 등록 모달에서 코어타임·미팅 빈도·하는 일 선택지를 사용한다.
+  // 탐색자는 학부연구생 등록, 연구생은 연구실 정보 수정에서 코어타임·미팅 빈도·하는 일 선택지를 사용한다.
   const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
+  const usesReviewOptions =
+    profile.userType === "FINDER" ||
+    profile.userType === "RESEARCHER" ||
+    profile.isUndergraduateResearcher === true;
   const reviewOptionsResult =
-    profile.userType === "FINDER" && accessToken
+    usesReviewOptions && accessToken
       ? await getOnboardingReviewOptions(accessToken).then(
           (value) => ({ value }),
           () => ({ value: undefined }),

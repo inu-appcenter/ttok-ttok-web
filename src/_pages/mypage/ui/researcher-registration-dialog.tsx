@@ -8,6 +8,7 @@ import {
   searchOnboardingLaboratories,
   type OnboardingReviewOptions,
 } from "@/features/onboarding";
+import { MAX_REVIEW_DOINGS } from "@/features/manage-member-profile";
 import { LabSearchCombobox } from "@/features/search-lab";
 import { EXTERNAL_LINKS } from "@/shared/config";
 import { Button, ChoiceChipGroup, Dialog, useToast } from "@/shared/ui";
@@ -36,9 +37,6 @@ function toRegistrationResponse(value: unknown): RegistrationResponse {
 
 const LABEL_CLASSES =
   "text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-default";
-
-/** 온보딩과 같은 기준으로 하는 일은 최대 3개까지 고른다. */
-const MAX_DOINGS = 3;
 
 export function ResearcherRegistrationDialog({
   isOpen,
@@ -178,9 +176,9 @@ export function ResearcherRegistrationDialog({
             />
             <ChoiceChipGroup
               disabled={isPending}
-              hint={`최대 ${MAX_DOINGS}개까지 선택할 수 있어요`}
+              hint={`최대 ${MAX_REVIEW_DOINGS}개까지 선택할 수 있어요`}
               label="주로 하는 일"
-              maxSelected={MAX_DOINGS}
+              maxSelected={MAX_REVIEW_DOINGS}
               multiple
               name="researcher-doings"
               onChange={setDoings}

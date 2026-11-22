@@ -547,12 +547,14 @@ test("연구실 정보 수정은 하는 일이 비어 있거나 서버 제한을
   }
   assert.deepEqual(calls, []);
 });
-test("마이페이지는 탐색자에게만 학부연구생 등록 선택지를 전달한다", async () => {
+test("마이페이지는 탐색자의 등록과 연구생의 정보 수정에 리뷰 선택지를 전달한다", async () => {
   // 선택지 조회는 Next 데이터 캐시를 쓰므로 호출 횟수 대신 렌더 결과로 확인한다.
   const finder = await (await request("/mypage", { token: "fake-finder" })).text();
   assert.match(finder, /격주/);
+  assert.match(finder, /데이터 라벨링/);
   const researcher = await (await request("/mypage")).text();
-  assert.doesNotMatch(researcher, /격주/);
+  assert.match(researcher, /격주/);
+  assert.match(researcher, /데이터 라벨링/);
 });
 test("상세의 정보 제공은 현재 상세와 본인 소속 연구실이 일치해야 저장한다", async () => {
   const body = {

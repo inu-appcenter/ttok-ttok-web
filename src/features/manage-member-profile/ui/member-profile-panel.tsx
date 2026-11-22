@@ -13,6 +13,7 @@ import {
   CoffeeChatSettings,
   type CoffeeChatSettingsProps,
 } from "./coffee-chat-settings";
+import type { ResearchReviewOptions } from "../model/review-options";
 import { ResearchReviewEditor } from "./research-review-editor";
 
 export type MemberProfilePanelProps = {
@@ -25,6 +26,9 @@ export type MemberProfilePanelProps = {
   mockContacts?: CoffeeChatSettingsProps["mockContacts"];
   bookmarks?: ReactNode;
   profile: MemberProfile;
+  /** 연구실 정보 수정의 코어타임·미팅 빈도·하는 일 선택지 */
+  reviewOptions?: ResearchReviewOptions;
+  reviewOptionsError?: string;
 };
 
 export function MemberProfilePanel({
@@ -37,6 +41,8 @@ export function MemberProfilePanel({
   mockContacts,
   bookmarks,
   profile,
+  reviewOptions,
+  reviewOptionsError,
 }: MemberProfilePanelProps) {
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(initialWithdrawalDialogOpen);
@@ -240,6 +246,8 @@ export function MemberProfilePanel({
         <ResearchReviewEditor
           research={research}
           onClose={() => setEditingReview(false)}
+          reviewOptions={reviewOptions}
+          reviewOptionsError={reviewOptionsError}
         />
       ) : null}
       <Dialog
