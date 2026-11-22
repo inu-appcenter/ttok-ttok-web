@@ -109,11 +109,6 @@ export function ResearchMetrics({ laboratoryId, metrics }: { laboratoryId?: numb
           <h3 className="text-[length:var(--font-size-heading2)] font-semibold leading-[1.5]">
             {activeMetric === "citations" ? "피인용지수" : "h-index"}
           </h3>
-          {metrics?.syncedAt ? (
-            <p className="mt-1 text-[length:var(--font-size-caption1)] text-text-subtle">
-              기준일 {metrics?.syncedAt.slice(0, 10)}
-            </p>
-          ) : null}
           {activeMetric === "citations" ? (
             <>
               <div
