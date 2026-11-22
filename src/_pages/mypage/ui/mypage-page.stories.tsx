@@ -84,6 +84,7 @@ const FINDER_PROFILE = {
 const REVIEW_OPTIONS = {
   coreTime: ["있어요", "없어요"],
   weeklyMeeting: ["매일", "주 2~3회", "주 1회", "격주", "월 1회"],
+  works: ["논문 리딩", "실험/코딩", "데이터 라벨링", "세미나 발표", "과제 참여"],
 };
 
 // 연구실 검색(GET)과 등록(POST)만 대체해 실제 요청 경로와 본문을 검증한다.
@@ -120,7 +121,9 @@ export const FinderStatusDialog: Story = {
     await expect(dialog.getByRole("combobox")).toHaveAttribute("placeholder", "연구실 이름을 입력해주세요.");
     await expect(dialog.getByRole("group", { name: "코어타임" })).toBeVisible();
     await expect(dialog.getByRole("group", { name: "미팅 빈도" })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: "정보 제공하기" })).toBeDisabled();
+    await expect(dialog.getByRole("group", { name: /주로 하는 일/ })).toBeVisible();
+    await expect(dialog.getByText("최대 3개까지 선택할 수 있어요")).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "학부연구생으로 저장" })).toBeDisabled();
     await userEvent.click(dialog.getByRole("button", { name: "취소" }));
     await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
   },
@@ -139,7 +142,7 @@ export const FinderRegistrationFlow: Story = {
       // 선택 후 입력은 비우고 선택한 연구실을 카드로 보여준다.
       await expect(input).toHaveValue("");
       await expect(dialog.getByRole("heading", { name: MOCK_LABS[0].name })).toBeVisible();
-      const submit = dialog.getByRole("button", { name: "정보 제공하기" });
+      const submit = dialog.getByRole("button", { name: "학부연구생으로 저장" });
       await expect(submit).toBeDisabled();
 
       // 다시 검색하면 기존 선택 연구실이 선택 상태로 보인다.
@@ -154,11 +157,22 @@ export const FinderRegistrationFlow: Story = {
       await userEvent.click(dialog.getByRole("radio", { name: "있어요" }));
       await expect(submit).toBeDisabled();
       await userEvent.click(dialog.getByRole("radio", { name: "주 2~3회" }));
+      // 하는 일을 하나 이상 골라야 저장할 수 있다.
+      await expect(submit).toBeDisabled();
+      await userEvent.click(dialog.getByRole("checkbox", { name: "논문 리딩" }));
       await expect(submit).toBeEnabled();
+      // 최대 3개를 고르면 나머지 선택지는 비활성화되고, 해제하면 다시 고를 수 있다.
+      await userEvent.click(dialog.getByRole("checkbox", { name: "실험/코딩" }));
+      await userEvent.click(dialog.getByRole("checkbox", { name: "데이터 라벨링" }));
+      await expect(dialog.getByRole("checkbox", { name: "세미나 발표" })).toBeDisabled();
+      await expect(dialog.getByRole("checkbox", { name: "데이터 라벨링" })).toBeEnabled();
+      await userEvent.click(dialog.getByRole("checkbox", { name: "실험/코딩" }));
+      await expect(dialog.getByRole("checkbox", { name: "세미나 발표" })).toBeEnabled();
       await userEvent.click(submit);
       await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
       await expect(post).toHaveBeenCalledWith({
         coreTime: "있어요",
+        doings: ["논문 리딩", "데이터 라벨링"],
         laboratoryId: MOCK_LABS[0].laboratoryId,
         weeklyMeeting: "주 2~3회",
       });
@@ -193,7 +207,11 @@ export const FinderRegistrationReviewFailure: Story = {
     const { restore } = stubRegistrationFetch({
       register: async () =>
         Response.json(
-          { message: "코어타임·미팅 빈도를 저장하지 못했어요. 정보 수정하기에서 다시 입력해주세요.", registered: true },
+          {
+            code: "INVALID_INPUT",
+            message: "코어타임·미팅 빈도·하는 일을 저장하지 못했어요. 정보 수정하기에서 다시 입력해주세요.",
+            registered: true,
+          },
           { status: 502 },
         ),
     });
@@ -203,7 +221,8 @@ export const FinderRegistrationReviewFailure: Story = {
       await userEvent.click(await dialog.findByRole("button", { name: new RegExp(MOCK_LABS[0].name) }));
       await userEvent.click(dialog.getByRole("radio", { name: "없어요" }));
       await userEvent.click(dialog.getByRole("radio", { name: "주 1회" }));
-      await userEvent.click(dialog.getByRole("button", { name: "정보 제공하기" }));
+      await userEvent.click(dialog.getByRole("checkbox", { name: "실험/코딩" }));
+      await userEvent.click(dialog.getByRole("button", { name: "학부연구생으로 저장" }));
       // 등록은 반영됐으므로 모달을 닫고 다시 입력할 곳을 안내한다.
       await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
       await expect(await canvas.findByText(/정보 수정하기에서 다시 입력해주세요/)).toBeVisible();
@@ -218,7 +237,7 @@ export const FinderRegistrationOptionsUnavailable: Story = {
   play: async ({ canvasElement }) => {
     const dialog = await openRegistrationDialog(canvasElement);
     await expect(dialog.getByRole("alert")).toHaveTextContent("선택지를 불러오지 못했어요");
-    await expect(dialog.getByRole("button", { name: "정보 제공하기" })).toBeDisabled();
+    await expect(dialog.getByRole("button", { name: "학부연구생으로 저장" })).toBeDisabled();
   },
 };
 

@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { useState } from "react";
+import { expect, userEvent, within } from "storybook/test";
 
+import { ChoiceChipGroup } from "./choice-chip-group";
 import { Checkbox, Radio, Toggle } from "./selection";
 
 const meta = {
@@ -52,4 +55,45 @@ export const ToggleStates: Story = {
       <Toggle disabled>비활성화</Toggle>
     </div>
   ),
+};
+
+function ChoiceChipGroupDemo() {
+  const [coreTime, setCoreTime] = useState("있어요");
+  // "기타 업무"는 선택지에 없는 저장값으로, 칩으로 덧붙여 보여준다.
+  const [doings, setDoings] = useState(["논문 리딩", "기타 업무"]);
+  return (
+    <div className="flex w-[340px] flex-col gap-4">
+      <ChoiceChipGroup
+        label="코어타임"
+        name="story-core-time"
+        onChange={setCoreTime}
+        options={["있어요", "없어요"]}
+        value={coreTime}
+      />
+      <ChoiceChipGroup
+        hint="최대 3개까지 선택할 수 있어요"
+        label="주로 하는 일"
+        maxSelected={3}
+        multiple
+        name="story-doings"
+        onChange={setDoings}
+        options={["논문 리딩", "실험/코딩", "데이터 라벨링", "세미나 발표"]}
+        value={doings}
+      />
+    </div>
+  );
+}
+
+export const ChoiceChipGroupStates: Story = {
+  render: () => <ChoiceChipGroupDemo />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("checkbox", { name: "기타 업무" })).toBeChecked();
+    await userEvent.click(canvas.getByRole("checkbox", { name: "실험/코딩" }));
+    await expect(canvas.getByRole("checkbox", { name: "세미나 발표" })).toBeDisabled();
+    await userEvent.click(canvas.getByRole("checkbox", { name: "기타 업무" }));
+    await expect(canvas.getByRole("checkbox", { name: "세미나 발표" })).toBeEnabled();
+    await userEvent.click(canvas.getByRole("radio", { name: "없어요" }));
+    await expect(canvas.getByRole("radio", { name: "없어요" })).toBeChecked();
+  },
 };
