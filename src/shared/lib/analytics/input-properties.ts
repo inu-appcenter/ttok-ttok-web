@@ -1,4 +1,5 @@
-const INPUT_PROPERTY_KEYS = ["query", "field_query", "keywords"] as const;
+const INPUT_PROPERTY_KEYS = ["query", "field_query", "keywords", "interest"] as const;
+const TEXT_INPUT_MAX_LENGTH = { query: 30, field_query: 100, interest: 300 } as const;
 const CONTACT_OR_IDENTIFIER = /[@＠]|(?:https?:\/\/|www\.|open\.kakao\.com|kakao\.com\/|mailto:|tel:)|(?:\d[\s.()-]*){7}|(?:password|passwd|비밀번호|학번|연락처|전화번호)\s*[:=]/iu;
 
 function isShareableInput(value: unknown, maxLength: number): value is string {
@@ -22,8 +23,7 @@ export function filterAnalyticsInputProperties(
         delete properties[key];
       }
     } else {
-      const maxLength = key === "query" ? 30 : 100;
-      properties[key] = isShareableInput(value, maxLength) ? value : null;
+      properties[key] = isShareableInput(value, TEXT_INPUT_MAX_LENGTH[key]) ? value : null;
     }
   }
 }
