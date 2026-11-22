@@ -566,3 +566,68 @@ async function expectInitialProgressSidebar(canvasElement: HTMLElement) {
     sidebar.queryAllByRole("link", { name: /연구실 보기/ }),
   ).toHaveLength(0);
 }
+
+// 결과 없음 상태에서 다시 받기를 눌러도 데스크톱 결과 영역은 초기 진행 단계로 돌아간다.
+export const NoMatchRestartReturnsToProgress: Story = {
+  args: { ...NoMatch.args },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+    if (isMobile) {
+      await userEvent.click(canvas.getByRole("button", { name: /결과 보기/ }));
+    }
+    await userEvent.click(
+      await canvas.findByRole("button", { name: "연구실 추천 다시 받기" }),
+    );
+    await expect(
+      canvas.getByRole("group", { name: "이전 추천 대화" }),
+    ).toHaveTextContent("조건에 맞는 연구실을 찾지 못했어요");
+    if (isMobile) {
+      await expect(
+        canvas.getByRole("button", { name: /이전 추천 0곳/ }),
+      ).toBeVisible();
+    } else {
+      await expectInitialProgressSidebar(canvasElement);
+    }
+  },
+};
+
+// 모바일 이전 추천 시트의 다시 받기를 재질문 요청 중에 눌러도, 결과를 받지 않은 새 입력은 이전 대화로 남지 않는다.
+export const PreviousResultsRestartDuringRetry: Story = {
+  args: {
+    ...Result.args,
+    onSuggest: fn(() => new Promise<string[]>(() => {})),
+  },
+  play: async ({ canvasElement, args }) => {
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
+    const canvas = within(canvasElement);
+    const retryPrompt = "그래프 신경망도 궁금해요";
+    await userEvent.click(canvas.getByRole("button", { name: /결과 보기/ }));
+    await userEvent.click(
+      within(await canvas.findByRole("dialog")).getByRole("button", {
+        name: "연구실 추천 다시 받기",
+      }),
+    );
+    await userEvent.type(
+      canvas.getByRole("textbox", { name: "관심 연구 주제" }),
+      retryPrompt,
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    await expect(args.onSuggest).toHaveBeenCalledTimes(1);
+    await userEvent.click(canvas.getByRole("button", { name: /이전 추천 3곳/ }));
+    await userEvent.click(
+      within(await canvas.findByRole("dialog")).getByRole("button", {
+        name: "연구실 추천 다시 받기",
+      }),
+    );
+    const pastTurns = canvas.getByRole("group", { name: "이전 추천 대화" });
+    await expect(pastTurns).toHaveTextContent(initialPrompt);
+    await expect(pastTurns).not.toHaveTextContent(retryPrompt);
+    await expect(
+      within(pastTurns).getAllByText("딱 맞는 연구실 3곳을 찾았어요"),
+    ).toHaveLength(1);
+    await expect(
+      canvas.getByRole("textbox", { name: "관심 연구 주제" }),
+    ).toHaveValue("");
+  },
+};
