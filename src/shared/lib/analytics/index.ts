@@ -1,5 +1,8 @@
+import { filterAnalyticsInputProperties } from "./input-properties";
+
 const projectToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
 const apiHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
+const includeInputValues = process.env.NEXT_PUBLIC_POSTHOG_CAPTURE_INPUT_VALUES === "true";
 
 type AnalyticsProperties = Record<string, boolean | number | string | string[] | null>;
 type AnalyticsClient = typeof import("posthog-js").default;
@@ -70,6 +73,8 @@ export function initializeAnalytics() {
                 key !== "$initial_current_url",
             ),
           );
+
+          filterAnalyticsInputProperties(properties, includeInputValues);
 
           if (typeof properties.$current_url === "string") {
             properties.$current_url = properties.$current_url.split(/[?#]/, 1)[0];

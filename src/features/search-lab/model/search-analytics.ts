@@ -20,6 +20,7 @@ export function getSearchAnalyticsProperties(
     category: categories.includes(conditions.category) ? conditions.category : null,
     college: college?.college ?? null,
     department: department?.department ?? null,
+    query: conditions.query || null,
     has_query: conditions.query.length > 0,
     query_length: conditions.query.length,
   };

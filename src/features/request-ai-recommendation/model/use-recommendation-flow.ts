@@ -220,6 +220,7 @@ export function useRecommendationFlow({
       setIsAdding(false);
       setCustom("");
       captureAnalytics("click_recommend_keyword", {
+        keywords,
         keyword_count: keywords.length,
         custom_keyword_count: keywords.filter((keyword) => customKeywords.includes(keyword)).length,
         suggestion_count: suggestions.length,
