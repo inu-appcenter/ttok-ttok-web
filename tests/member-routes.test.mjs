@@ -24,7 +24,7 @@ let aiFailure, aiMalformed;
 let memberStatus, memberIsNew, memberMalformed;
 let emailStatus, emailMalformed;
 let memberDepartment;
-let finderRegistered, reviewFailure;
+let finderRegistered, reviewFailure, reviewUnauthorized;
 
 beforeEach(() => {
   publicationCount = 7;
@@ -32,6 +32,7 @@ beforeEach(() => {
   memberDepartment = "COMPUTER_ENGINEERING";
   finderRegistered = false;
   reviewFailure = false;
+  reviewUnauthorized = false;
   aiFailure = false;
   emailStatus = 200;
   emailMalformed = false;
@@ -167,16 +168,30 @@ before(async () => {
         data = coffee;
       }
     } else if (url.pathname === "/api/lab-review/options") {
-      data = { coreTime: ["있음", "없음"], weeklyMeeting: ["주 1회", "격주"], works: ["논문 리딩"] };
+      data = {
+        coreTime: ["있음", "없음"],
+        weeklyMeeting: ["주 1회", "격주"],
+        works: ["논문 리딩", "실험/코딩", "데이터 라벨링", "세미나 발표"],
+      };
     } else if (url.pathname === "/api/researcher" && request.method === "POST") {
       finderRegistered = true;
       data = { id: 3, laboratoryId: body.laboratoryId };
     } else if (url.pathname === "/api/lab-review") {
-      if (reviewFailure) {
-        response.writeHead(500, { "Content-Type": "application/json" });
-        response.end(JSON.stringify({ code: "INTERNAL_ERROR", data: null }));
-        return;
-      }
+      const fail = (status, payload) => {
+        response.writeHead(status, { "Content-Type": "application/json" });
+        response.end(JSON.stringify(payload));
+      };
+      if (reviewUnauthorized)
+        return fail(401, { data: null, code: "TOKEN_EXPIRED", message: "만료된 토큰입니다." });
+      if (reviewFailure)
+        return fail(500, { code: "INTERNAL_ERROR", data: null });
+      // 실제 서버의 @Valid 실패는 공통 envelope가 아닌 Spring 기본 오류 본문을 돌려준다.
+      if (!Array.isArray(body?.doings) || body.doings.length === 0)
+        return fail(400, { status: 400, error: "Bad Request", path: url.pathname });
+      if (request.method === "POST" && review)
+        return fail(400, { data: null, code: "LAB_REVIEW_ALREADY_EXIST", message: "해당 연구자의 랩리뷰가 이미 존재합니다." });
+      if (request.method === "PATCH" && !review)
+        return fail(404, { data: null, code: "LAB_REVIEW_NOT_FOUND", message: "존재하지 않는 연구실 리뷰입니다." });
       review = { id: 12, laboratoryId: 157, ...body };
       data = review;
     } else if (url.pathname === "/api/laboratory/157") data = laboratory;
@@ -456,19 +471,33 @@ test("연구실 리뷰는 제공 이력에 따라 생성과 수정을 구분한�
     ["POST", "PATCH"],
   );
 });
-const researcherBody = { laboratoryId: 157, coreTime: "있음", weeklyMeeting: "격주" };
+const researcherBody = { laboratoryId: 157, coreTime: "있음", weeklyMeeting: "격주", doings: ["논문 리딩", "실험/코딩"] };
 const writeCalls = () =>
   calls
     .filter((call) => call.method !== "GET")
     .map(({ path, method, body }) => [path, method, body]);
-test("학부연구생 등록은 연구생 등록 후 코어타임·미팅을 리뷰로 저장한다", async () => {
+test("학부연구생 등록은 연구생 등록 후 코어타임·미팅·하는 일을 리뷰로 저장한다", async () => {
   const response = await request("/api/member/researcher", { token: "fake-finder", method: "POST", body: researcherBody });
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("cache-control"), "private, no-store");
   assert.deepEqual(writeCalls(), [
     ["/api/researcher", "POST", { laboratoryId: 157 }],
-    ["/api/lab-review", "POST", { coreTime: "있음", weeklyMeeting: "격주", doings: [] }],
+    ["/api/lab-review", "POST", { coreTime: "있음", weeklyMeeting: "격주", doings: ["논문 리딩", "실험/코딩"] }],
   ]);
+  // 등록 직후 회원 정보를 다시 조회하지 않고 바로 리뷰를 생성한다.
+  const registerIndex = calls.findIndex((call) => call.path === "/api/researcher");
+  assert.equal(calls.slice(registerIndex).some((call) => call.path === "/api/member/me"), false);
+});
+test("학부연구생 등록 시 리뷰가 이미 있으면 수정으로 저장한다", async () => {
+  review = { id: 12, laboratoryId: 157, coreTime: "없음", weeklyMeeting: "주 1회", doings: ["세미나 발표"] };
+  const response = await request("/api/member/researcher", { token: "fake-finder", method: "POST", body: researcherBody });
+  assert.equal(response.status, 200);
+  assert.deepEqual(writeCalls().map(([path, method]) => [path, method]), [
+    ["/api/researcher", "POST"],
+    ["/api/lab-review", "POST"],
+    ["/api/lab-review", "PATCH"],
+  ]);
+  assert.deepEqual(review.doings, ["논문 리딩", "실험/코딩"]);
 });
 test("학부연구생 등록은 누락·서버 선택지 밖 값과 탐색자가 아닌 회원을 등록 전에 거부한다", async () => {
   for (const body of [
@@ -476,6 +505,13 @@ test("학부연구생 등록은 누락·서버 선택지 밖 값과 탐색자가
     { ...researcherBody, laboratoryId: "157" },
     { ...researcherBody, coreTime: "자율" },
     { ...researcherBody, weeklyMeeting: "매일" },
+    { ...researcherBody, doings: undefined },
+    { ...researcherBody, doings: [] },
+    { ...researcherBody, doings: ["논문 리딩", "실험/코딩", "데이터 라벨링", "세미나 발표"] },
+    { ...researcherBody, doings: ["논문 리딩", " 논문 리딩 "] },
+    { ...researcherBody, doings: ["논문 리딩", " "] },
+    { ...researcherBody, doings: ["논문 리딩", 3] },
+    { ...researcherBody, doings: ["자유 입력"] },
   ]) {
     const response = await request("/api/member/researcher", { token: "fake-finder", method: "POST", body });
     assert.equal(response.status, 400, JSON.stringify(body));
@@ -484,14 +520,32 @@ test("학부연구생 등록은 누락·서버 선택지 밖 값과 탐색자가
   assert.equal(researcher.status, 403);
   assert.deepEqual(writeCalls(), []);
 });
-test("학부연구생 등록 후 리뷰 저장 실패는 등록 상태와 재입력 안내를 함께 반환한다", async () => {
+test("학부연구생 등록 후 리뷰 저장 실패는 등록 상태·재입력 안내·업스트림 코드를 함께 반환한다", async () => {
   reviewFailure = true;
   const response = await request("/api/member/researcher", { token: "fake-finder", method: "POST", body: researcherBody });
   assert.equal(response.status, 502);
   const body = await response.json();
   assert.equal(body.registered, true);
+  assert.equal(body.code, "INTERNAL_ERROR");
   assert.match(body.message, /정보 수정하기/);
   assert.deepEqual(writeCalls().map(([path]) => path), ["/api/researcher", "/api/lab-review"]);
+});
+test("학부연구생 등록 후 리뷰 저장 중 인증 만료는 401로 로그인 처리한다", async () => {
+  reviewUnauthorized = true;
+  const response = await request("/api/member/researcher", { token: "fake-finder", method: "POST", body: researcherBody });
+  assert.equal(response.status, 401);
+  assert.equal((await response.json()).requiresLogin, true);
+  assert.match(response.headers.get("set-cookie") ?? "", /Max-Age=0/i);
+});
+test("연구실 정보 수정은 하는 일이 비어 있거나 서버 제한을 넘으면 서버 요청 전에 거부한다", async () => {
+  for (const doings of [[], undefined, Array.from({ length: 21 }, (_, index) => `업무 ${index}`)]) {
+    const response = await request("/api/member/review", {
+      method: "POST",
+      body: { coreTime: "있음", weeklyMeeting: "주 1회", doings },
+    });
+    assert.equal(response.status, 400, JSON.stringify(doings));
+  }
+  assert.deepEqual(calls, []);
 });
 test("마이페이지는 탐색자에게만 학부연구생 등록 선택지를 전달한다", async () => {
   // 선택지 조회는 Next 데이터 캐시를 쓰므로 호출 횟수 대신 렌더 결과로 확인한다.
