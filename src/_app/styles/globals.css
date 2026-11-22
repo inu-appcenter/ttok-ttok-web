@@ -52,3 +52,29 @@ body {
     transition: none !important;
   }
 }
+
+/* AI 그라데이션 글자 위로 색이 한 방향으로 계속 흐른다.
+   양 끝 색이 같은 대칭 그라데이션을 두 배 폭으로 반복 배치하고 한 주기(200%)만큼 이동시켜 이음새가 보이지 않는다.
+   시작 위치(0%)에서는 기존 정지 그라데이션(#a7c0db → #d699c5)과 같은 모습이다. */
+.ai-gradient-text-flow {
+  animation: ai-gradient-flow 4s linear infinite;
+  background-clip: text;
+  background-image: linear-gradient(90deg, #a7c0db 0%, #b4bade 16.5%, #c2aed6 33%, #d699c5 50%, #c2aed6 67%, #b4bade 83.5%, #a7c0db 100%);
+  background-position: 0% 50%;
+  background-size: 200% 100%;
+  color: transparent;
+  -webkit-background-clip: text;
+}
+
+@keyframes ai-gradient-flow {
+  to {
+    background-position: 200% 50%;
+  }
+}
+
+/* 모션 줄이기 설정에서는 흐르지 않는 기존 그라데이션으로 보여준다. */
+@media (prefers-reduced-motion: reduce) {
+  .ai-gradient-text-flow {
+    animation: none;
+  }
+}
