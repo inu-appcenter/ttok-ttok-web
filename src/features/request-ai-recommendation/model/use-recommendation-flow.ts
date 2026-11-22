@@ -208,8 +208,12 @@ export function useRecommendationFlow({
     handleAddKeyword,
     handleCancelRequest,
     handleSuggestKeywords() {
-      if (interest.trim() && !isPending) {
-        captureAnalytics("click_recommend_interest", { interest_length: interest.trim().length });
+      const submittedInterest = interest.trim();
+      if (submittedInterest && !isPending) {
+        captureAnalytics("click_recommend_interest", {
+          interest: submittedInterest,
+          interest_length: submittedInterest.length,
+        });
         void handleRequest("keywords");
       }
     },
