@@ -3,48 +3,54 @@
 import { useInView, useReducedMotion, type Transition } from "motion/react";
 import * as m from "motion/react-m";
 import Image from "next/image";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 
 type PreviewState = { isPlaying: boolean; isReduced: boolean };
+type LoopState = { cycle: number; isInView: boolean; isReduced: boolean };
 
+const LOOP_WAIT = 2;
 const LOOP_FADE_OUT = 0.4;
 
-// 미리보기는 화면에 보이는 동안 반복 재생하고, 화면 밖에서는 멈춘다.
-// 한 바퀴가 끝나면 서서히 사라진 뒤 처음부터 다시 그린다(key로 다시 마운트).
-// 모든 요소의 자리를 처음부터 차지하고 opacity·transform만 바꿔 카드 높이가 변하지 않게 한다.
+const PreviewLoopContext = createContext<LoopState>({ cycle: 0, isInView: false, isReduced: false });
+
+// 세 미리보기는 같은 주기로 재생한다. 가장 늦게 끝나는 모션까지 마치면 2초 기다린 뒤
+// 함께 서서히 사라지고 처음부터 다시 재생한다. 화면 밖에서는 멈추고, 다시 들어오면 처음부터 재생한다.
 // 모션 줄이기 설정에서는 반복하지 않고 완성 상태만 보여준다.
-function PreviewLoop({
-  children,
-  className,
-  loopDuration,
-}: {
-  children: (state: PreviewState) => ReactNode;
-  className: string;
-  loopDuration: number;
-}) {
+export function ServicePreviewLoop({ children, className }: { children: ReactNode; className: string }) {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { amount: 0.3 });
+  const isInView = useInView(ref, { amount: 0.2 });
   const isReduced = useReducedMotion() ?? false;
   const [cycle, setCycle] = useState(0);
   const isLooping = isInView && !isReduced;
 
   useEffect(() => {
     if (!isLooping) return;
-    const intervalId = window.setInterval(() => setCycle((current) => current + 1), loopDuration * 1000);
+    const intervalId = window.setInterval(() => setCycle((current) => current + 1), previewLoopDuration() * 1000);
     return () => window.clearInterval(intervalId);
-  }, [isLooping, loopDuration]);
+  }, [isLooping]);
 
   return (
-    <div className="w-full" ref={ref}>
-      <m.div
-        animate={isLooping ? { opacity: [1, 1, 0] } : undefined}
-        className={className}
-        key={isReduced ? "static" : isInView ? `cycle-${cycle}` : "idle"}
-        transition={{ duration: loopDuration, ease: "linear", times: [0, 1 - LOOP_FADE_OUT / loopDuration, 1] }}
-      >
-        {children({ isPlaying: isInView || isReduced, isReduced })}
-      </m.div>
+    <div className={className} ref={ref}>
+      <PreviewLoopContext.Provider value={{ cycle, isInView, isReduced }}>{children}</PreviewLoopContext.Provider>
     </div>
+  );
+}
+
+// 미리보기 한 장. 주기가 바뀌면 key로 다시 마운트해 처음부터 그린다.
+// 모든 요소의 자리를 처음부터 차지하고 opacity·transform만 바꿔 카드 높이가 변하지 않게 한다.
+function PreviewLoop({ children, className }: { children: (state: PreviewState) => ReactNode; className: string }) {
+  const { cycle, isInView, isReduced } = useContext(PreviewLoopContext);
+  const isLooping = isInView && !isReduced;
+  const loopDuration = previewLoopDuration();
+  return (
+    <m.div
+      animate={isLooping ? { opacity: [1, 1, 0] } : undefined}
+      className={className}
+      key={isReduced ? "static" : isInView ? `cycle-${cycle}` : "idle"}
+      transition={{ duration: loopDuration, ease: "linear", times: [0, 1 - LOOP_FADE_OUT / loopDuration, 1] }}
+    >
+      {children({ isPlaying: isInView || isReduced, isReduced })}
+    </m.div>
   );
 }
 
@@ -97,11 +103,12 @@ const ANSWER_AT = 0.85;
 const TYPING_AT = 1.45;
 const RESULT_AT = 2.35;
 
-const RECOMMENDATION_LOOP = RESULT_AT + 3.2;
+// 추천 결과의 두 번째 연구실이 나타나기까지
+const RECOMMENDATION_END = RESULT_AT + 0.25 + 0.15 + 0.3;
 
 export function RecommendationPreview() {
   return (
-    <PreviewLoop className="flex w-full flex-col gap-2 text-[length:var(--font-size-body3)] leading-[1.5]" loopDuration={RECOMMENDATION_LOOP}>
+    <PreviewLoop className="flex w-full flex-col gap-2 text-[length:var(--font-size-body3)] leading-[1.5]">
       {({ isPlaying, isReduced }) => (
         <>
           <Bubble className="self-start rounded-xl rounded-tl-sm bg-bg-default px-3 py-1.5" delay={QUESTION_AT} isPlaying={isPlaying} isReduced={isReduced} side="left">
@@ -213,11 +220,12 @@ function TypingLine({ index, isPlaying, isReduced }: { index: number; isPlaying:
   );
 }
 
-const MAIL_LOOP = TYPING_END + 2.8;
+// 마지막 커서 깜빡임까지
+const MAIL_END = TYPING_END + 1.6;
 
 export function MailPreview() {
   return (
-    <PreviewLoop className="relative w-full" loopDuration={MAIL_LOOP}>
+    <PreviewLoop className="relative w-full">
       {({ isPlaying, isReduced }) => (
         <>
           {isReduced ? null : (
@@ -268,11 +276,12 @@ const CONTACTS = [
 ];
 
 // 연락처가 차례로 나타난 뒤 포인터가 오픈채팅 링크로 이동해 누르는 흐름을 보여준다.
-const COFFEE_CHAT_LOOP = PRESS_AT + 3;
+// 포인터가 누른 뒤 사라지기까지
+const COFFEE_CHAT_END = CURSOR_AT + CURSOR_TRAVEL + 1.1;
 
 export function CoffeeChatPreview() {
   return (
-    <PreviewLoop className="w-full rounded-[var(--radius-2xl)] bg-bg-default px-4 pb-2 pt-3.5" loopDuration={COFFEE_CHAT_LOOP}>
+    <PreviewLoop className="w-full rounded-[var(--radius-2xl)] bg-bg-default px-4 pb-2 pt-3.5">
       {({ isPlaying, isReduced }) => (
         <>
           <p className="mb-2.5 text-[length:var(--font-size-label1)] font-semibold">커피챗</p>
@@ -336,4 +345,8 @@ export function CoffeeChatPreview() {
       )}
     </PreviewLoop>
   );
+}
+
+function previewLoopDuration() {
+  return Math.max(RECOMMENDATION_END, MAIL_END, COFFEE_CHAT_END) + LOOP_WAIT + LOOP_FADE_OUT;
 }

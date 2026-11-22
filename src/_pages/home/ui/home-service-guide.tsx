@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 
 import { LoginRequiredLink } from "@/shared/lib/auth/login-required";
 
-import { CoffeeChatPreview, MailPreview, RecommendationPreview } from "./home-service-previews";
+import { CoffeeChatPreview, MailPreview, RecommendationPreview, ServicePreviewLoop } from "./home-service-previews";
 
 function ServiceCard({ card, title, description, children, href, linkLabel, requiresLogin = false }: {
   card: "recommend" | "mail" | "coffeechat";
@@ -34,11 +34,11 @@ export function HomeServiceGuide({ headingId = "home-services-heading" }: { head
     <section aria-labelledby={headingId} className="flex flex-col gap-3 py-8 md:gap-5 md:py-12">
       <h2 className="text-[20px] font-semibold leading-[1.5] tracking-[-0.01em] md:text-[length:var(--font-size-heading2)]" id={headingId}>처음이라면 이렇게 시작해 보세요</h2>
       <LazyMotion features={domAnimation} strict>
-        <div className="grid grid-cols-1 gap-2 md:gap-5 lg:grid-cols-3">
+        <ServicePreviewLoop className="grid grid-cols-1 gap-2 md:gap-5 lg:grid-cols-3">
           <ServiceCard card="recommend" href="/recommendations" requiresLogin linkLabel="추천 받으러 가기" title="AI 추천 받기" description="대화하듯 관심사를 말하면 연구실을 추천해드려요"><RecommendationPreview /></ServiceCard>
           <ServiceCard card="mail" title="교수님께 메일 쓰기" description={<>원하는 연구실을 고르고,<br />교수님께 보낼 메일을 첨삭받아 보세요</>}><MailPreview /></ServiceCard>
           <ServiceCard card="coffeechat" title="커피챗 신청하기" description={<>궁금한 연구실 선배에게<br />커피챗으로 연구실 생활을 물어보세요</>}><CoffeeChatPreview /></ServiceCard>
-        </div>
+        </ServicePreviewLoop>
       </LazyMotion>
     </section>
   );
