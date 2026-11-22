@@ -106,6 +106,8 @@ function stubRegistrationFetch({
   return { post, restore: () => (window.fetch = originalFetch) };
 }
 
+const isMobileWidth = () => window.matchMedia("(max-width: 767px)").matches;
+
 async function openRegistrationDialog(canvasElement: HTMLElement) {
   const canvas = within(canvasElement);
   await userEvent.click(canvas.getByRole("button", { name: "변경" }));
@@ -117,7 +119,10 @@ export const FinderStatusDialog: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const dialog = await openRegistrationDialog(canvasElement);
-    await expect(dialog.getByText("연구실을 고르면 학부연구생으로 저장돼요.")).toBeVisible();
+    // 설명 문구는 PC 모달에만 있고 모바일 바텀시트에서는 숨긴다.
+    const description = dialog.getByText("연구실을 고르면 학부연구생으로 저장돼요.");
+    if (isMobileWidth()) await expect(description).not.toBeVisible();
+    else await expect(description).toBeVisible();
     await expect(dialog.getByRole("combobox")).toHaveAttribute("placeholder", "연구실 이름을 입력해주세요.");
     await expect(dialog.getByRole("group", { name: "코어타임" })).toBeVisible();
     await expect(dialog.getByRole("group", { name: "미팅 빈도" })).toBeVisible();
@@ -389,22 +394,170 @@ export const BookmarkRemoval: Story = {
   },
 };
 
-export const Mobile: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: "mobile375",
-      options: {
-        mobile375: {
-          name: "Mobile 375",
-          styles: {
-            height: "812px",
-            width: "375px",
-          },
-          type: "mobile",
+const MOBILE_VIEWPORT = {
+  viewport: {
+    defaultViewport: "mobile375",
+    options: {
+      mobile375: {
+        name: "Mobile 375",
+        styles: {
+          height: "812px",
+          width: "375px",
         },
+        type: "mobile",
       },
     },
   },
+};
+
+export const Mobile: Story = {
+  parameters: MOBILE_VIEWPORT,
+};
+
+export const MobileResearcher: Story = {
+  args: ResearcherDesignMock.args,
+  parameters: MOBILE_VIEWPORT,
+};
+
+export const MobileFinder: Story = {
+  args: { profile: FINDER_PROFILE, reviewOptions: REVIEW_OPTIONS },
+  parameters: MOBILE_VIEWPORT,
+};
+
+export const MobileRegistrationSheet: Story = {
+  args: { profile: FINDER_PROFILE, reviewOptions: REVIEW_OPTIONS },
+  parameters: MOBILE_VIEWPORT,
+  play: async ({ canvasElement }) => {
+    const dialog = await openRegistrationDialog(canvasElement);
+    // 모바일 바텀시트는 설명 문구 없이 제목과 닫기만 보여주고, PC 모달은 설명을 유지한다.
+    const description = dialog.getByText("연구실을 고르면 학부연구생으로 저장돼요.");
+    if (isMobileWidth()) await expect(description).not.toBeVisible();
+    else await expect(description).toBeVisible();
+    await userEvent.click(dialog.getByRole("radio", { name: "없어요" }));
+    await userEvent.click(dialog.getByRole("radio", { name: "격주" }));
+    await userEvent.click(dialog.getByRole("checkbox", { name: "논문 리딩" }));
+    await expect(dialog.getByRole("checkbox", { name: "논문 리딩" })).toBeChecked();
+  },
+};
+
+const REVIEW_PROFILE = {
+  ...MOCK_MEMBER_PROFILE,
+  researchProfile: {
+    ...MOCK_MEMBER_PROFILE.researchProfile!,
+    // "랩 미팅 정리"는 현재 선택지에 없는 저장값이다.
+    review: { coreTime: "있어요", weeklyMeeting: "주 1회", doings: ["논문 리딩", "랩 미팅 정리"] },
+  },
+};
+
+// 연구실 정보 저장(POST /api/member/review)만 대체한다.
+function stubReviewFetch(respond: () => Promise<Response>) {
+  const originalFetch = window.fetch;
+  const save = fn<(body: unknown) => Promise<Response>>(respond);
+  window.fetch = ((input: RequestInfo | URL, init?: RequestInit) =>
+    String(input) === "/api/member/review" && init?.method === "POST"
+      ? save(JSON.parse(String(init.body)))
+      : originalFetch(input, init)) as typeof fetch;
+  return { save, restore: () => (window.fetch = originalFetch) };
+}
+
+async function openReviewEditor(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement);
+  await userEvent.click(canvas.getByRole("button", { name: "정보 수정하기" }));
+  return within(canvas.getByRole("dialog", { name: "연구실 정보 수정" }));
+}
+
+export const ReviewEditorPreselected: Story = {
+  args: { onEdit: undefined, profile: REVIEW_PROFILE, reviewOptions: REVIEW_OPTIONS },
+  parameters: MOBILE_VIEWPORT,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const dialog = await openReviewEditor(canvasElement);
+    // 학부연구생 등록과 같은 형태: PC는 설명이 있는 모달, 모바일은 설명 없는 바텀시트
+    const description = dialog.getByText("학부연구생으로 제공한 연구실 정보를 수정할 수 있어요.");
+    if (isMobileWidth()) await expect(description).not.toBeVisible();
+    else await expect(description).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "닫기" })).toBeVisible();
+    await expect(dialog.getByRole("radio", { name: "있어요" })).toBeChecked();
+    await expect(dialog.getByRole("radio", { name: "주 1회" })).toBeChecked();
+    await expect(dialog.getByRole("checkbox", { name: "논문 리딩" })).toBeChecked();
+    // 선택지에 없는 저장값도 버리지 않고 선택된 칩으로 보여준다.
+    await expect(dialog.getByRole("checkbox", { name: "랩 미팅 정리" })).toBeChecked();
+    await expect(dialog.getByText("최대 3개까지 선택할 수 있어요")).toBeVisible();
+    await userEvent.click(dialog.getByRole("checkbox", { name: "실험/코딩" }));
+    await expect(dialog.getByRole("checkbox", { name: "세미나 발표" })).toBeDisabled();
+    await userEvent.click(dialog.getByRole("button", { name: "취소" }));
+    await expect(canvas.queryByRole("dialog")).not.toBeInTheDocument();
+  },
+};
+
+export const ReviewEditorSave: Story = {
+  args: { onEdit: undefined, profile: REVIEW_PROFILE, reviewOptions: REVIEW_OPTIONS },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { save, restore } = stubReviewFetch(async () => Response.json({ ok: true }));
+    try {
+      const dialog = await openReviewEditor(canvasElement);
+      const submit = dialog.getByRole("button", { name: "저장" });
+      await userEvent.click(dialog.getByRole("checkbox", { name: "논문 리딩" }));
+      await userEvent.click(dialog.getByRole("checkbox", { name: "랩 미팅 정리" }));
+      // 하는 일을 모두 해제하면 저장할 수 없다.
+      await expect(submit).toBeDisabled();
+      await userEvent.click(dialog.getByRole("radio", { name: "없어요" }));
+      await userEvent.click(dialog.getByRole("radio", { name: "격주" }));
+      await userEvent.click(dialog.getByRole("checkbox", { name: "데이터 라벨링" }));
+      await expect(submit).toBeEnabled();
+      await userEvent.click(submit);
+      await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+      await expect(save).toHaveBeenCalledWith({
+        coreTime: "없어요",
+        doings: ["데이터 라벨링"],
+        weeklyMeeting: "격주",
+      });
+      await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
+      await expect(await canvas.findByText("연구실 정보를 저장했어요.")).toBeVisible();
+    } finally {
+      restore();
+    }
+  },
+};
+
+export const ReviewEditorSaveFailure: Story = {
+  args: { onEdit: undefined, profile: REVIEW_PROFILE, reviewOptions: REVIEW_OPTIONS },
+  play: async ({ canvasElement }) => {
+    const { restore } = stubReviewFetch(async () =>
+      Response.json({ message: "코어타임·미팅·하는 일을 확인해주세요." }, { status: 400 }),
+    );
+    try {
+      const dialog = await openReviewEditor(canvasElement);
+      await userEvent.click(dialog.getByRole("button", { name: "저장" }));
+      await expect(await dialog.findByRole("alert")).toHaveTextContent("코어타임·미팅·하는 일을 확인해주세요.");
+      await expect(dialog.getByRole("button", { name: "저장" })).toBeEnabled();
+    } finally {
+      restore();
+    }
+  },
+};
+
+export const ReviewEditorOptionsUnavailable: Story = {
+  args: { onEdit: undefined, profile: REVIEW_PROFILE, reviewOptions: undefined },
+  play: async ({ canvasElement }) => {
+    const dialog = await openReviewEditor(canvasElement);
+    await expect(dialog.getByRole("alert")).toHaveTextContent("선택지를 불러오지 못했어요");
+    await expect(dialog.getByRole("button", { name: "저장" })).toBeDisabled();
+  },
+};
+
+export const MobileUnregisterDialog: Story = {
+  parameters: MOBILE_VIEWPORT,
+  play: async ({ canvasElement }) => {
+    const dialog = await openUnregisterDialog(canvasElement);
+    await expect(dialog.getByRole("button", { name: "등록 해제" })).toBeVisible();
+  },
+};
+
+export const MobileWithdrawalDialog: Story = {
+  args: { initialWithdrawalDialogOpen: true },
+  parameters: MOBILE_VIEWPORT,
 };
 
 export const WithdrawalDialogOpen: Story = {
