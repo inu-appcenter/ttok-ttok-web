@@ -162,14 +162,17 @@ export function useRecommendationFlow({
     setError("");
     setPastTurns([]);
   }
-  // 이전 대화를 흐리게 남기고 입력만 비운다. 결과 카드는 새 결과가 오기 전까지 유지한다.
+  // 이전 대화를 흐리게 남기고 입력만 비운다. 결과는 모바일 이전 추천 시트에서 새 결과가 오기 전까지 볼 수 있다.
+  // 결과를 받은 대화만 이전 대화로 남긴다. 재질문 중(요청 대기 포함) 다시 시작하면 이전 결과 제목이 새 입력에 붙지 않도록 기록하지 않는다.
   function handleStartNew() {
     captureAnalytics("click_recommend_reset");
     handleCancelRequest();
-    setPastTurns((turns) => [
-      ...turns,
-      { interest: interest.trim(), keywords, title: resultTitle },
-    ]);
+    if (step === "results") {
+      setPastTurns((turns) => [
+        ...turns,
+        { interest: interest.trim(), keywords, title: resultTitle },
+      ]);
+    }
     setStep("interest");
     setInterest("");
     setKeywords([]);
