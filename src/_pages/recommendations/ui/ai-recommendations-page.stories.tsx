@@ -126,7 +126,7 @@ export const CompleteFlow: Story = {
       );
     }
     const detailLink = (
-      await canvas.findAllByRole("link", { name: "연구실 보기" })
+      await canvas.findAllByRole("link", { name: /연구실 보기$/ })
     )[0];
     await expect(detailLink).toHaveAttribute("href", "/labs/124");
     await expect(detailLink).toHaveAttribute("target", "_blank");
@@ -181,7 +181,7 @@ export const NewSearchKeepsResults: Story = {
       ).toBeInTheDocument();
     } else {
       await expect(
-        (await canvas.findAllByRole("link", { name: "연구실 보기" }))[0],
+        (await canvas.findAllByRole("link", { name: /연구실 보기$/ }))[0],
       ).toBeInTheDocument();
     }
     const toggle = canvas.getByRole("button", { name: "상세 이동 토글" });
@@ -227,7 +227,7 @@ export const RestoredAfterDetail: Story = {
         await canvas.findByRole("button", { name: /결과 보기/ }),
       );
     }
-    await canvas.findAllByRole("link", { name: "연구실 보기" });
+    await canvas.findAllByRole("link", { name: /연구실 보기$/ });
     const toggle = canvas.getByRole("button", { name: "상세 이동 토글" });
     await userEvent.click(toggle);
     await userEvent.click(toggle);
@@ -238,7 +238,7 @@ export const RestoredAfterDetail: Story = {
       );
     }
     await expect(
-      (await canvas.findAllByRole("link", { name: "연구실 보기" }))[0],
+      (await canvas.findAllByRole("link", { name: /연구실 보기$/ }))[0],
     ).toHaveAttribute("href", "/labs/124");
     await expect(args.onSuggest).toHaveBeenCalledTimes(1);
     await expect(args.onRecommend).toHaveBeenCalledTimes(1);
