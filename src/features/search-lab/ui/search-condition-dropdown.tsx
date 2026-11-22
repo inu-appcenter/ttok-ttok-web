@@ -143,6 +143,7 @@ export function SearchConditionDropdown({
     if (kind === "category") {
       captureAnalytics(isSearch ? "click_search_field" : "click_home_search_field", {
         category: nextValue || null,
+        field_query: query.trim(),
         field_query_length: query.trim().length,
       });
     } else {
@@ -410,7 +411,7 @@ export function SearchConditionDropdown({
                 {!visibleFields.length && query.trim() && (
                   <AnalyticsView
                     event={isSearch ? "view_search_field_no_result" : "click_home_search_field_no_result"}
-                    properties={{ field_query_length: query.trim().length }}
+                    properties={{ field_query: query.trim(), field_query_length: query.trim().length }}
                   />
                 )}
                 {!visibleFields.length ? (
