@@ -110,6 +110,7 @@ export const DeclinedCoffeeChat: Story = {
         coffeeChat: "아니요, 괜찮아요",
       }),
       "/",
+      false,
     );
   },
 };
@@ -150,6 +151,7 @@ export const ChangeCoffeeChat: Story = {
     await expect(args.onComplete).toHaveBeenCalledWith(
       expect.not.objectContaining({ contact: expect.any(String) }),
       "/",
+      false,
     );
   },
 };
@@ -182,6 +184,7 @@ export const SaveFailure: Story = {
         departmentCode: "INFORMATION_COMMUNICATION_ENGINEERING",
       }),
       "/",
+      false,
     );
     await expect(
       canvas.getByRole("button", { name: "시작하기" }),
@@ -210,6 +213,7 @@ export const EmailContact: Story = {
     await expect(args.onComplete).toHaveBeenCalledWith(
       expect.objectContaining({ contact: "member@example.test", coffeeChat: "네, 좋아요" }),
       "/",
+      false,
     );
   },
 };
