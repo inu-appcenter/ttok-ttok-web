@@ -548,3 +548,39 @@ export const MobileResultKeyboard: Story = {
     await expect(trigger).toHaveFocus();
   },
 };
+
+// 결과 카드의 제목 영역을 눌러도 해당 연구실 상세 링크가 눌린다(모바일은 결과 시트에서 확인).
+export const ResultCardAreaOpensDetail: Story = {
+  args: { ...Result.args },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    let scope = canvas;
+    if (window.matchMedia("(max-width: 1023px)").matches) {
+      await userEvent.click(canvas.getByRole("button", { name: /결과 보기/ }));
+      scope = within(await canvas.findByRole("dialog"));
+    }
+    const [lab] = result.recommendations;
+    const link = scope.getByRole("link", { name: `${lab.name} 연구실 보기` });
+    await expect(link).toHaveAttribute("href", `/labs/${lab.id}`);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    const heading = scope.getByRole("heading", { name: lab.name });
+    const box = heading.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      box.left + box.width / 2,
+      box.top + box.height / 2,
+    );
+    if (!hit) throw new Error("카드 제목 위치에 눌릴 요소가 필요합니다.");
+    await expect(hit).toBe(link);
+    let clickCount = 0;
+    // 새 탭이 열리지 않도록 기본 동작만 막고 링크 클릭 여부를 센다.
+    const handleClick = (event: MouseEvent) => {
+      event.preventDefault();
+      clickCount += 1;
+    };
+    link.addEventListener("click", handleClick);
+    await userEvent.click(hit);
+    link.removeEventListener("click", handleClick);
+    await expect(clickCount).toBe(1);
+  },
+};
