@@ -203,3 +203,88 @@ export function MailPreview() {
     </div>
   );
 }
+
+const CONTACT_AT = 0.3;
+const CURSOR_AT = 1.1;
+const CURSOR_TRAVEL = 0.8;
+const PRESS_AT = CURSOR_AT + CURSOR_TRAVEL;
+
+// 장식용 마우스 포인터. 미리보기 전체가 aria-hidden이다.
+function PointerIcon() {
+  return (
+    <svg fill="none" height="18" viewBox="0 0 18 18" width="18">
+      <path d="M3 2.5 14.5 9l-5.2 1.2L6.6 15 3 2.5Z" fill="var(--color-text-default)" stroke="white" strokeLinejoin="round" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
+const CONTACTS = [
+  { action: "오픈채팅 열기 ↗", name: "학부연구생 A" },
+  { action: "ttokttok@inu.ac.kr", name: "학부연구생 B" },
+];
+
+// 연락처가 차례로 나타난 뒤 포인터가 오픈채팅 링크로 이동해 누르는 흐름을 보여준다.
+export function CoffeeChatPreview() {
+  const { isPlaying, isReduced, ref } = usePreviewPlayback();
+  return (
+    <div className="w-full rounded-[var(--radius-2xl)] bg-bg-default px-4 pb-2 pt-3.5" ref={ref}>
+      <p className="mb-2.5 text-[length:var(--font-size-label1)] font-semibold">커피챗</p>
+      <div className="py-1 text-[length:var(--font-size-caption1)] text-text-subtle">
+        {CONTACTS.map((contact, index) => {
+          const isOpenChat = index === 0;
+          return (
+            <m.p
+              animate={isPlaying ? { opacity: 1, x: 0 } : undefined}
+              className={`flex justify-between gap-2 py-1 ${isOpenChat ? "border-b border-border-subtle" : ""}`}
+              initial={{ opacity: 0, x: -8 }}
+              key={contact.name}
+              transition={timing(isReduced, { delay: CONTACT_AT + index * 0.2, duration: 0.3, ease: "easeOut" })}
+            >
+              <span>{contact.name}</span>
+              {isOpenChat ? (
+                <span className="relative text-text-primary">
+                  {isReduced ? null : (
+                    <m.span
+                      animate={isPlaying ? { opacity: [0, 1, 0] } : undefined}
+                      className="absolute -inset-x-1.5 -inset-y-0.5 rounded-md bg-bg-primary-subtle"
+                      initial={{ opacity: 0 }}
+                      transition={{ delay: PRESS_AT, duration: 0.7, times: [0, 0.2, 1] }}
+                    />
+                  )}
+                  <m.span
+                    animate={isPlaying && !isReduced ? { scale: [1, 0.94, 1] } : undefined}
+                    className="relative inline-block"
+                    transition={{ delay: PRESS_AT, duration: 0.3 }}
+                  >
+                    {contact.action}
+                  </m.span>
+                  {isReduced ? null : (
+                    <m.span
+                      animate={
+                        isPlaying
+                          ? { opacity: [0, 1, 1, 1, 0], scale: [1, 1, 1, 0.85, 1], x: [56, 56, 0, 0, 0], y: [44, 44, 0, 0, 0] }
+                          : undefined
+                      }
+                      className="absolute left-1/2 top-1/2"
+                      initial={{ opacity: 0 }}
+                      transition={{
+                        delay: CURSOR_AT,
+                        duration: CURSOR_TRAVEL + 1.1,
+                        ease: "easeInOut",
+                        times: [0, 0.08, CURSOR_TRAVEL / (CURSOR_TRAVEL + 1.1), (CURSOR_TRAVEL + 0.15) / (CURSOR_TRAVEL + 1.1), 1],
+                      }}
+                    >
+                      <PointerIcon />
+                    </m.span>
+                  )}
+                </span>
+              ) : (
+                <span className="text-text-primary">{contact.action}</span>
+              )}
+            </m.p>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

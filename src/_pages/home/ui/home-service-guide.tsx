@@ -6,19 +6,7 @@ import type { ReactNode } from "react";
 
 import { LoginRequiredLink } from "@/shared/lib/auth/login-required";
 
-import { MailPreview, RecommendationPreview } from "./home-service-previews";
-
-function CoffeeChatPreview() {
-  return (
-    <div className="w-full rounded-[var(--radius-2xl)] bg-bg-default px-4 pb-2 pt-3.5">
-      <p className="mb-2.5 text-[length:var(--font-size-label1)] font-semibold">커피챗</p>
-      <div className="py-1 text-[length:var(--font-size-caption1)] text-text-subtle">
-        <p className="flex justify-between gap-2 border-b border-border-subtle py-1"><span>학부연구생 A</span><span className="text-text-primary">오픈채팅 열기 ↗</span></p>
-        <p className="flex justify-between gap-2 py-1"><span>학부연구생 B</span><span className="text-text-primary">ttokttok@inu.ac.kr</span></p>
-      </div>
-    </div>
-  );
-}
+import { CoffeeChatPreview, MailPreview, RecommendationPreview } from "./home-service-previews";
 
 function ServiceCard({ card, title, description, children, href, linkLabel, requiresLogin = false }: {
   card: "recommend" | "mail" | "coffeechat";
