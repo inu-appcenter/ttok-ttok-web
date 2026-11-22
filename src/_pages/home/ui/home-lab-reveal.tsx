@@ -26,28 +26,42 @@ function scheduleReveal(entry: PendingReveal) {
   });
 }
 
-// 스크롤로 연구실 카드가 화면에 들어오면 아래에서 떠오르며 나타난다.
+// 스크롤로 연구실 카드가 화면에 들어올 때마다 아래에서 떠오르며 나타난다.
+// 카드가 화면 아래쪽으로 빠지면 다시 숨겨 두고, 위쪽으로 지나간 카드는 그대로 둔다.
+// 그래서 내려갈 때마다 재생되고, 위로 되돌아갈 때 이미 본 카드가 다시 떠오르지 않는다.
 // 모션 줄이기 설정에서는 이동 없이 투명도만 바뀐다.
 export function HomeLabReveal({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { amount: 0.3, once: true });
+  const isInView = useInView(ref, { amount: 0.3 });
   const [delay, setDelay] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!isInView || !ref.current) return;
-    scheduleReveal({ element: ref.current, reveal: setDelay });
+    const element = ref.current;
+    if (!element) return;
+    if (isInView) {
+      scheduleReveal({ element, reveal: setDelay });
+      return;
+    }
+    // 화면 아래로 빠진 카드만 다음 등장을 위해 숨김 상태로 되돌린다.
+    if (element.getBoundingClientRect().top <= 0) return;
+    const frameId = requestAnimationFrame(() => setDelay(null));
+    return () => cancelAnimationFrame(frameId);
   }, [isInView]);
 
   return (
     <LazyMotion features={domAnimation} strict>
       <MotionConfig reducedMotion="user">
         <m.div
-          animate={delay === null ? undefined : { opacity: 1, y: 0 }}
+          animate={delay === null ? "hidden" : "visible"}
           // 그리드 셀 높이를 카드 링크가 그대로 채우도록 grid로 감싼다.
           className="grid min-w-0"
-          initial={{ opacity: 0, y: 24 }}
+          initial="hidden"
           ref={ref}
-          transition={{ delay: delay ?? 0, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          variants={{
+            // 숨길 때는 화면 밖이므로 즉시 되돌린다.
+            hidden: { opacity: 0, transition: { duration: 0 }, y: 24 },
+            visible: { opacity: 1, transition: { delay: delay ?? 0, duration: 0.5, ease: [0.22, 1, 0.36, 1] }, y: 0 },
+          }}
         >
           {children}
         </m.div>
