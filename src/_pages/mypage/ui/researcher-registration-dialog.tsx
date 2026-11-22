@@ -8,10 +8,14 @@ import {
   searchOnboardingLaboratories,
   type OnboardingReviewOptions,
 } from "@/features/onboarding";
-import { MAX_REVIEW_DOINGS } from "@/features/manage-member-profile";
+import {
+  isResearchReviewComplete,
+  ResearchReviewFormDialog,
+  type ResearchReviewValue,
+} from "@/features/manage-member-profile";
 import { LabSearchCombobox } from "@/features/search-lab";
 import { EXTERNAL_LINKS } from "@/shared/config";
-import { Button, ChoiceChipGroup, Dialog, useToast } from "@/shared/ui";
+import { useToast } from "@/shared/ui";
 
 export type ResearcherRegistrationDialogProps = {
   isOpen: boolean;
@@ -38,6 +42,8 @@ function toRegistrationResponse(value: unknown): RegistrationResponse {
 const LABEL_CLASSES =
   "text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-default";
 
+const EMPTY_REVIEW: ResearchReviewValue = { coreTime: "", doings: [], weeklyMeeting: "" };
+
 export function ResearcherRegistrationDialog({
   isOpen,
   onClose,
@@ -47,19 +53,15 @@ export function ResearcherRegistrationDialog({
   const router = useRouter();
   const showToast = useToast();
   const [selectedLab, setSelectedLab] = useState<LabSummary | null>(null);
-  const [coreTime, setCoreTime] = useState("");
-  const [weeklyMeeting, setWeeklyMeeting] = useState("");
-  const [doings, setDoings] = useState<string[]>([]);
+  const [review, setReview] = useState<ResearchReviewValue>(EMPTY_REVIEW);
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const busy = useRef(false);
-  const canSubmit = Boolean(selectedLab && coreTime && weeklyMeeting && doings.length > 0) && !isPending;
+  const canSubmit = Boolean(selectedLab && reviewOptions) && isResearchReviewComplete(review);
 
   function reset() {
     setSelectedLab(null);
-    setCoreTime("");
-    setWeeklyMeeting("");
-    setDoings([]);
+    setReview(EMPTY_REVIEW);
     setErrorMessage("");
   }
 
@@ -70,17 +72,15 @@ export function ResearcherRegistrationDialog({
   }
 
   async function handleSubmit() {
-    if (busy.current || !selectedLab || !coreTime || !weeklyMeeting || doings.length === 0) return;
+    if (busy.current || !selectedLab || !isResearchReviewComplete(review)) return;
     busy.current = true;
     setIsPending(true);
     setErrorMessage("");
     try {
       const response = await fetch("/api/member/researcher", {
         body: JSON.stringify({
-          coreTime,
-          doings,
+          ...review,
           laboratoryId: selectedLab.laboratoryId,
-          weeklyMeeting,
         }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
@@ -120,96 +120,48 @@ export function ResearcherRegistrationDialog({
   }
 
   return (
-    <Dialog
-      className="md:max-w-[520px] md:rounded-[var(--radius-3xl)] md:border-0"
+    <ResearchReviewFormDialog
+      canSubmit={canSubmit}
       description="연구실을 고르면 학부연구생으로 저장돼요."
-      headerLayout="form"
+      errorMessage={errorMessage}
       isOpen={isOpen}
-      mobileBottomSheet
+      isPending={isPending}
+      name="researcher"
+      onChange={setReview}
       onClose={handleClose}
+      onSubmit={() => void handleSubmit()}
+      reviewOptions={reviewOptions}
+      reviewOptionsError={reviewOptionsError}
+      submitLabel="학부연구생으로 저장"
       title="소속 연구실을 알려주세요"
+      value={review}
     >
-      <div className="flex flex-col gap-[var(--spacing-spacing-4)] px-[var(--spacing-spacing-5)] pt-[var(--spacing-spacing-4)] md:px-9 md:pb-9">
-        <div className="flex flex-col gap-[var(--spacing-spacing-2)]">
-          <p className={LABEL_CLASSES}>연구실 정보</p>
-          <LabSearchCombobox
-            className="!max-w-none"
-            clearQueryOnSelect
-            emptyContent={
-              <p className="flex flex-wrap items-center gap-1 px-[var(--spacing-spacing-5)] py-[14px] text-[length:var(--font-size-body3)] leading-[1.5]">
-                <span className="text-text-subtlest">찾는 연구실이 없나요?</span>
-                <a
-                  className="rounded-sm text-text-subtle underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
-                  href={EXTERNAL_LINKS.report}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  제보하기
-                </a>
-              </p>
-            }
-            onSearch={searchOnboardingLaboratories}
-            onSelect={setSelectedLab}
-            overlayResults
-            placeholder="연구실 이름을 입력해주세요."
-            selectedLabId={selectedLab?.labId}
-          />
-          {selectedLab ? <SelectedLabCard className="" lab={selectedLab} /> : null}
-        </div>
-        {reviewOptions ? (
-          <>
-            <ChoiceChipGroup
-              disabled={isPending}
-              label="코어타임"
-              name="researcher-core-time"
-              onChange={setCoreTime}
-              options={reviewOptions.coreTime}
-              value={coreTime}
-            />
-            <ChoiceChipGroup
-              disabled={isPending}
-              label="미팅 빈도"
-              name="researcher-weekly-meeting"
-              onChange={setWeeklyMeeting}
-              options={reviewOptions.weeklyMeeting}
-              value={weeklyMeeting}
-            />
-            <ChoiceChipGroup
-              disabled={isPending}
-              hint={`최대 ${MAX_REVIEW_DOINGS}개까지 선택할 수 있어요`}
-              label="주로 하는 일"
-              maxSelected={MAX_REVIEW_DOINGS}
-              multiple
-              name="researcher-doings"
-              onChange={setDoings}
-              options={reviewOptions.works}
-              value={doings}
-            />
-          </>
-        ) : (
-          <p className="text-[length:var(--font-size-body3)] text-text-error" role="alert">
-            {reviewOptionsError ?? "선택지를 불러오지 못했어요. 새로고침 후 다시 시도해주세요."}
-          </p>
-        )}
-        {errorMessage ? (
-          <p className="text-[length:var(--font-size-body3)] text-text-error" role="alert">
-            {errorMessage}
-          </p>
-        ) : null}
-        <div className="flex gap-[var(--spacing-spacing-3)]">
-          <Button className="flex-1" disabled={isPending} onClick={handleClose} variant="tertiary">
-            취소
-          </Button>
-          <Button
-            className="flex-1"
-            disabled={!canSubmit}
-            isLoading={isPending}
-            onClick={() => void handleSubmit()}
-          >
-            학부연구생으로 저장
-          </Button>
-        </div>
+      <div className="flex flex-col gap-[var(--spacing-spacing-2)]">
+        <p className={LABEL_CLASSES}>연구실 정보</p>
+        <LabSearchCombobox
+          className="!max-w-none"
+          clearQueryOnSelect
+          emptyContent={
+            <p className="flex flex-wrap items-center gap-1 px-[var(--spacing-spacing-5)] py-[14px] text-[length:var(--font-size-body3)] leading-[1.5]">
+              <span className="text-text-subtlest">찾는 연구실이 없나요?</span>
+              <a
+                className="rounded-sm text-text-subtle underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
+                href={EXTERNAL_LINKS.report}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                제보하기
+              </a>
+            </p>
+          }
+          onSearch={searchOnboardingLaboratories}
+          onSelect={setSelectedLab}
+          overlayResults
+          placeholder="연구실 이름을 입력해주세요."
+          selectedLabId={selectedLab?.labId}
+        />
+        {selectedLab ? <SelectedLabCard className="" lab={selectedLab} /> : null}
       </div>
-    </Dialog>
+    </ResearchReviewFormDialog>
   );
 }
