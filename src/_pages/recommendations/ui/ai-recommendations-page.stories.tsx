@@ -548,3 +548,58 @@ export const MobileResultKeyboard: Story = {
     await expect(trigger).toHaveFocus();
   },
 };
+
+// smooth 스크롤이 끝날 때까지 같은 값이 연속으로 읽히길 기다린다.
+async function waitForScrollEnd(read: () => number) {
+  let last = Number.NaN;
+  await waitFor(
+    () => {
+      const current = read();
+      const isSettled = current === last;
+      last = current;
+      expect(isSettled).toBe(true);
+    },
+    { interval: 150, timeout: 3000 },
+  );
+}
+// 다시 받기 후 키워드 칩을 눌러도 데스크톱 창 스크롤이 움직이지 않고, 모바일은 보내기가 하단 결과 버튼에 가리지 않는다.
+export const RestartKeywordChipKeepsScroll: Story = {
+  args: { ...Result.args },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+    if (!isDesktop) {
+      await userEvent.click(canvas.getByRole("button", { name: /결과 보기/ }));
+    }
+    await userEvent.click(
+      await canvas.findByRole("button", { name: "연구실 추천 다시 받기" }),
+    );
+    await userEvent.type(
+      canvas.getByRole("textbox", { name: "관심 연구 주제" }),
+      initialPrompt,
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    const chip = await canvas.findByRole("checkbox", { name: "추천시스템" });
+    if (isDesktop) {
+      const conversation = chip.closest<HTMLElement>("[aria-live]");
+      const label = chip.closest("label");
+      if (!conversation || !label) throw new Error("대화 영역과 칩이 필요합니다.");
+      await waitForScrollEnd(() => conversation.scrollTop);
+      await expect(conversation.scrollTop).toBeGreaterThan(0);
+      await userEvent.click(label);
+      await expect(chip).toBeChecked();
+      await waitForScrollEnd(() => window.scrollY);
+      await expect(window.scrollY).toBe(0);
+      await expect(document.documentElement.scrollHeight).toBeLessThanOrEqual(
+        window.innerHeight + 16,
+      );
+    } else {
+      await waitForScrollEnd(() => window.scrollY);
+      const submit = canvas.getByRole("button", { name: "보내기" });
+      const trigger = canvas.getByRole("button", { name: /이전 추천/ });
+      await expect(submit.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        trigger.getBoundingClientRect().top,
+      );
+    }
+  },
+};
