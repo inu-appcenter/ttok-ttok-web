@@ -133,8 +133,9 @@ export const CompleteFlow: Story = {
     await expect(detailLink).toHaveAttribute("rel", "noopener noreferrer");
   },
 };
-// 새로 찾기: 이전 대화는 흐리게 남고 결과 카드는 유지되며, 상세 이동 후 복귀해도 현재 탭에서 복원된다.
-export const NewSearchKeepsResults: Story = {
+// 새로 찾기: 이전 대화는 흐리게 남고, 데스크톱 결과 영역은 초기 진행 단계로 돌아가며
+// 모바일은 이전 추천 결과를 계속 볼 수 있다. 상세 이동 후 복귀해도 현재 탭에서 복원된다.
+export const NewSearchResetsResultPanel: Story = {
   args: { memberId: 7001, sessionKey: "session-a" },
   render: function Render(args) {
     const [visible, setVisible] = useState(true);
@@ -180,9 +181,7 @@ export const NewSearchKeepsResults: Story = {
         canvas.getByRole("button", { name: /이전 추천/ }),
       ).toBeInTheDocument();
     } else {
-      await expect(
-        (await canvas.findAllByRole("link", { name: /연구실 보기$/ }))[0],
-      ).toBeInTheDocument();
+      await expectInitialProgressSidebar(canvasElement);
     }
     const toggle = canvas.getByRole("button", { name: "상세 이동 토글" });
     await userEvent.click(toggle);
@@ -546,6 +545,90 @@ export const MobileResultKeyboard: Story = {
       expect(canvas.queryByRole("dialog")).not.toBeInTheDocument(),
     );
     await expect(trigger).toHaveFocus();
+  },
+};
+
+// 데스크톱 결과 영역이 결과 없이 첫 단계가 진행 중인 초기 상태인지 확인한다.
+async function expectInitialProgressSidebar(canvasElement: HTMLElement) {
+  const aside = canvasElement.querySelector("aside");
+  if (!aside) throw new Error("데스크톱 결과 영역이 필요합니다.");
+  const sidebar = within(aside);
+  await expect(
+    sidebar.getByRole("heading", { name: "어떤 연구실이 잘 맞을까요?" }),
+  ).toBeVisible();
+  const steps = within(
+    sidebar.getByRole("list", { name: "추천 준비 단계" }),
+  ).getAllByRole("listitem");
+  await expect(steps[0]).toHaveAttribute("aria-current", "step");
+  await expect(steps[0]).toHaveTextContent("관심 주제 파악하는 중…");
+  await expect(steps[1]).not.toHaveAttribute("aria-current");
+  await expect(
+    sidebar.queryAllByRole("link", { name: /연구실 보기/ }),
+  ).toHaveLength(0);
+}
+
+// 결과 없음 상태에서 다시 받기를 눌러도 데스크톱 결과 영역은 초기 진행 단계로 돌아간다.
+export const NoMatchRestartReturnsToProgress: Story = {
+  args: { ...NoMatch.args },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+    if (isMobile) {
+      await userEvent.click(canvas.getByRole("button", { name: /결과 보기/ }));
+    }
+    await userEvent.click(
+      await canvas.findByRole("button", { name: "연구실 추천 다시 받기" }),
+    );
+    await expect(
+      canvas.getByRole("group", { name: "이전 추천 대화" }),
+    ).toHaveTextContent("조건에 맞는 연구실을 찾지 못했어요");
+    if (isMobile) {
+      await expect(
+        canvas.getByRole("button", { name: /이전 추천 0곳/ }),
+      ).toBeVisible();
+    } else {
+      await expectInitialProgressSidebar(canvasElement);
+    }
+  },
+};
+
+// 모바일 이전 추천 시트의 다시 받기를 재질문 요청 중에 눌러도, 결과를 받지 않은 새 입력은 이전 대화로 남지 않는다.
+export const PreviousResultsRestartDuringRetry: Story = {
+  args: {
+    ...Result.args,
+    onSuggest: fn(() => new Promise<string[]>(() => {})),
+  },
+  play: async ({ canvasElement, args }) => {
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
+    const canvas = within(canvasElement);
+    const retryPrompt = "그래프 신경망도 궁금해요";
+    await userEvent.click(canvas.getByRole("button", { name: /결과 보기/ }));
+    await userEvent.click(
+      within(await canvas.findByRole("dialog")).getByRole("button", {
+        name: "연구실 추천 다시 받기",
+      }),
+    );
+    await userEvent.type(
+      canvas.getByRole("textbox", { name: "관심 연구 주제" }),
+      retryPrompt,
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "보내기" }));
+    await expect(args.onSuggest).toHaveBeenCalledTimes(1);
+    await userEvent.click(canvas.getByRole("button", { name: /이전 추천 3곳/ }));
+    await userEvent.click(
+      within(await canvas.findByRole("dialog")).getByRole("button", {
+        name: "연구실 추천 다시 받기",
+      }),
+    );
+    const pastTurns = canvas.getByRole("group", { name: "이전 추천 대화" });
+    await expect(pastTurns).toHaveTextContent(initialPrompt);
+    await expect(pastTurns).not.toHaveTextContent(retryPrompt);
+    await expect(
+      within(pastTurns).getAllByText("딱 맞는 연구실 3곳을 찾았어요"),
+    ).toHaveLength(1);
+    await expect(
+      canvas.getByRole("textbox", { name: "관심 연구 주제" }),
+    ).toHaveValue("");
   },
 };
 
