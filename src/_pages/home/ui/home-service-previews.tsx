@@ -3,15 +3,49 @@
 import { useInView, useReducedMotion, type Transition } from "motion/react";
 import * as m from "motion/react-m";
 import Image from "next/image";
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
-// 미리보기는 장식 요소(aria-hidden)이므로 화면에 들어왔을 때 한 번만 재생한다.
+type PreviewState = { isPlaying: boolean; isReduced: boolean };
+
+const LOOP_FADE_OUT = 0.4;
+
+// 미리보기는 화면에 보이는 동안 반복 재생하고, 화면 밖에서는 멈춘다.
+// 한 바퀴가 끝나면 서서히 사라진 뒤 처음부터 다시 그린다(key로 다시 마운트).
 // 모든 요소의 자리를 처음부터 차지하고 opacity·transform만 바꿔 카드 높이가 변하지 않게 한다.
-function usePreviewPlayback() {
+// 모션 줄이기 설정에서는 반복하지 않고 완성 상태만 보여준다.
+function PreviewLoop({
+  children,
+  className,
+  loopDuration,
+}: {
+  children: (state: PreviewState) => ReactNode;
+  className: string;
+  loopDuration: number;
+}) {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { amount: 0.5, once: true });
+  const isInView = useInView(ref, { amount: 0.3 });
   const isReduced = useReducedMotion() ?? false;
-  return { isPlaying: isInView || isReduced, isReduced, ref };
+  const [cycle, setCycle] = useState(0);
+  const isLooping = isInView && !isReduced;
+
+  useEffect(() => {
+    if (!isLooping) return;
+    const intervalId = window.setInterval(() => setCycle((current) => current + 1), loopDuration * 1000);
+    return () => window.clearInterval(intervalId);
+  }, [isLooping, loopDuration]);
+
+  return (
+    <div className="w-full" ref={ref}>
+      <m.div
+        animate={isLooping ? { opacity: [1, 1, 0] } : undefined}
+        className={className}
+        key={isReduced ? "static" : isInView ? `cycle-${cycle}` : "idle"}
+        transition={{ duration: loopDuration, ease: "linear", times: [0, 1 - LOOP_FADE_OUT / loopDuration, 1] }}
+      >
+        {children({ isPlaying: isInView || isReduced, isReduced })}
+      </m.div>
+    </div>
+  );
 }
 
 /** 모션 줄이기 설정에서는 지연 없이 완성 상태로 바로 둔다. */
@@ -63,54 +97,59 @@ const ANSWER_AT = 0.85;
 const TYPING_AT = 1.45;
 const RESULT_AT = 2.35;
 
+const RECOMMENDATION_LOOP = RESULT_AT + 3.2;
+
 export function RecommendationPreview() {
-  const { isPlaying, isReduced, ref } = usePreviewPlayback();
   return (
-    <div className="flex w-full flex-col gap-2 text-[length:var(--font-size-body3)] leading-[1.5]" ref={ref}>
-      <Bubble className="self-start rounded-xl rounded-tl-sm bg-bg-default px-3 py-1.5" delay={QUESTION_AT} isPlaying={isPlaying} isReduced={isReduced} side="left">
-        어떤 분야에 관심이 있어요?
-      </Bubble>
-      <Bubble className="self-end rounded-xl rounded-tr-sm bg-text-primary px-3 py-1.5 text-text-inverse" delay={ANSWER_AT} isPlaying={isPlaying} isReduced={isReduced} side="right">
-        딥러닝이랑 자연어처리요!
-      </Bubble>
-      <div className="relative self-start">
-        {isReduced ? null : (
-          <m.div
-            animate={isPlaying ? { opacity: [0, 1, 1, 0], scale: [0.85, 1, 1, 0.9] } : undefined}
-            className="absolute left-0 top-0 flex items-center gap-1 rounded-xl rounded-tl-sm bg-bg-default px-3 py-2.5"
-            initial={{ opacity: 0 }}
-            style={{ transformOrigin: "bottom left" }}
-            transition={{ delay: TYPING_AT, duration: RESULT_AT - TYPING_AT, times: [0, 0.15, 0.85, 1] }}
-          >
-            {[0, 1, 2].map((dot) => (
-              <m.span
-                animate={isPlaying ? { opacity: [0.35, 1, 0.35], y: [0, -3, 0] } : undefined}
-                className="size-1.5 rounded-full bg-text-subtlest"
-                initial={{ opacity: 0.35 }}
-                key={dot}
-                transition={{ delay: TYPING_AT + dot * 0.12, duration: 0.5, repeat: 1 }}
-              />
-            ))}
-          </m.div>
-        )}
-        <Bubble className="flex w-[270px] max-w-full flex-col gap-1.5 rounded-xl rounded-tl-sm bg-bg-default p-2" delay={RESULT_AT} isPlaying={isPlaying} isReduced={isReduced} side="left">
-          <p className="text-text-subtle">이런 연구실을 추천해요</p>
-          {PREVIEW_LABS.map((lab, index) => (
-            <m.div
-              animate={isPlaying ? { opacity: 1, x: 0 } : undefined}
-              className="flex items-center gap-1.5 rounded-lg border border-[var(--color-primary-primary-200)] bg-bg-primary-subtle py-[5px] pl-2.5 pr-1.5"
-              initial={{ opacity: 0, x: -8 }}
-              key={lab.name}
-              transition={timing(isReduced, { delay: RESULT_AT + 0.25 + index * 0.15, duration: 0.3, ease: "easeOut" })}
-            >
-              <span className="min-w-0 flex-1 truncate font-semibold">{lab.name}</span>
-              <span className="shrink-0 rounded-full bg-[var(--color-primary-primary-200)] px-2 py-px text-[11px] text-[var(--color-primary-primary-700)]">{lab.tags}</span>
-              <Image alt="" height={16} src="/icons/home/services/chevron.svg" width={16} />
-            </m.div>
-          ))}
-        </Bubble>
-      </div>
-    </div>
+    <PreviewLoop className="flex w-full flex-col gap-2 text-[length:var(--font-size-body3)] leading-[1.5]" loopDuration={RECOMMENDATION_LOOP}>
+      {({ isPlaying, isReduced }) => (
+        <>
+          <Bubble className="self-start rounded-xl rounded-tl-sm bg-bg-default px-3 py-1.5" delay={QUESTION_AT} isPlaying={isPlaying} isReduced={isReduced} side="left">
+            어떤 분야에 관심이 있어요?
+          </Bubble>
+          <Bubble className="self-end rounded-xl rounded-tr-sm bg-text-primary px-3 py-1.5 text-text-inverse" delay={ANSWER_AT} isPlaying={isPlaying} isReduced={isReduced} side="right">
+            딥러닝이랑 자연어처리요!
+          </Bubble>
+          <div className="relative self-start">
+            {isReduced ? null : (
+              <m.div
+                animate={isPlaying ? { opacity: [0, 1, 1, 0], scale: [0.85, 1, 1, 0.9] } : undefined}
+                className="absolute left-0 top-0 flex items-center gap-1 rounded-xl rounded-tl-sm bg-bg-default px-3 py-2.5"
+                initial={{ opacity: 0 }}
+                style={{ transformOrigin: "bottom left" }}
+                transition={{ delay: TYPING_AT, duration: RESULT_AT - TYPING_AT, times: [0, 0.15, 0.85, 1] }}
+              >
+                {[0, 1, 2].map((dot) => (
+                  <m.span
+                    animate={isPlaying ? { opacity: [0.35, 1, 0.35], y: [0, -3, 0] } : undefined}
+                    className="size-1.5 rounded-full bg-text-subtlest"
+                    initial={{ opacity: 0.35 }}
+                    key={dot}
+                    transition={{ delay: TYPING_AT + dot * 0.12, duration: 0.5, repeat: 1 }}
+                  />
+                ))}
+              </m.div>
+            )}
+            <Bubble className="flex w-[270px] max-w-full flex-col gap-1.5 rounded-xl rounded-tl-sm bg-bg-default p-2" delay={RESULT_AT} isPlaying={isPlaying} isReduced={isReduced} side="left">
+              <p className="text-text-subtle">이런 연구실을 추천해요</p>
+              {PREVIEW_LABS.map((lab, index) => (
+                <m.div
+                  animate={isPlaying ? { opacity: 1, x: 0 } : undefined}
+                  className="flex items-center gap-1.5 rounded-lg border border-[var(--color-primary-primary-200)] bg-bg-primary-subtle py-[5px] pl-2.5 pr-1.5"
+                  initial={{ opacity: 0, x: -8 }}
+                  key={lab.name}
+                  transition={timing(isReduced, { delay: RESULT_AT + 0.25 + index * 0.15, duration: 0.3, ease: "easeOut" })}
+                >
+                  <span className="min-w-0 flex-1 truncate font-semibold">{lab.name}</span>
+                  <span className="shrink-0 rounded-full bg-[var(--color-primary-primary-200)] px-2 py-px text-[11px] text-[var(--color-primary-primary-700)]">{lab.tags}</span>
+                  <Image alt="" height={16} src="/icons/home/services/chevron.svg" width={16} />
+                </m.div>
+              ))}
+            </Bubble>
+          </div>
+        </>
+      )}
+    </PreviewLoop>
   );
 }
 
@@ -174,33 +213,38 @@ function TypingLine({ index, isPlaying, isReduced }: { index: number; isPlaying:
   );
 }
 
+const MAIL_LOOP = TYPING_END + 2.8;
+
 export function MailPreview() {
-  const { isPlaying, isReduced, ref } = usePreviewPlayback();
   return (
-    <div className="relative w-full" ref={ref}>
-      {isReduced ? null : (
-        // 작성하는 동안 AI 그라데이션 라인이 메일 카드를 감싸고, 다 쓰면 사라진다.
-        <m.div
-          animate={isPlaying ? { backgroundPosition: ["0% 50%", "100% 50%"], opacity: [0, 1, 1, 0] } : undefined}
-          aria-hidden="true"
-          className="pointer-events-none absolute -inset-[1.5px] rounded-[calc(var(--radius-lg)+1.5px)]"
-          initial={{ opacity: 0 }}
-          style={{ backgroundImage: AI_GRADIENT, backgroundSize: "200% 100%" }}
-          transition={{
-            backgroundPosition: { duration: 1.2, ease: "linear", repeat: Math.ceil((TYPING_END + 0.6) / 1.2), repeatType: "mirror" },
-            opacity: { duration: TYPING_END + 0.6, times: [0, 0.1, 0.85, 1] },
-          }}
-        />
+    <PreviewLoop className="relative w-full" loopDuration={MAIL_LOOP}>
+      {({ isPlaying, isReduced }) => (
+        <>
+          {isReduced ? null : (
+            // 작성하는 동안 AI 그라데이션 라인이 메일 카드를 감싸고, 다 쓰면 사라진다.
+            <m.div
+              animate={isPlaying ? { backgroundPosition: ["0% 50%", "100% 50%"], opacity: [0, 1, 1, 0] } : undefined}
+              aria-hidden="true"
+              className="pointer-events-none absolute -inset-[1.5px] rounded-[calc(var(--radius-lg)+1.5px)]"
+              initial={{ opacity: 0 }}
+              style={{ backgroundImage: AI_GRADIENT, backgroundSize: "200% 100%" }}
+              transition={{
+                backgroundPosition: { duration: 1.2, ease: "linear", repeat: Math.ceil((TYPING_END + 0.6) / 1.2), repeatType: "mirror" },
+                opacity: { duration: TYPING_END + 0.6, times: [0, 0.1, 0.85, 1] },
+              }}
+            />
+          )}
+          <div className="relative flex w-full flex-col gap-1 rounded-lg bg-bg-default px-3.5 py-3 text-[length:var(--font-size-label2)] leading-[1.5]">
+            <p><span className="mr-2 text-[length:var(--font-size-caption1)] text-text-subtle">받는 사람</span><strong className="font-semibold">OOO 교수님</strong></p>
+            <p className="truncate"><span className="mr-2 text-[length:var(--font-size-caption1)] text-text-subtle">제목</span><strong className="font-semibold">[학과] [이름] 학부연구생 문의드립니다</strong></p>
+            <div className="mb-1 h-px bg-border-subtle" />
+            {MAIL_LINES.map((line, index) => (
+              <TypingLine index={index} isPlaying={isPlaying} isReduced={isReduced} key={line.text} />
+            ))}
+          </div>
+        </>
       )}
-      <div className="relative flex w-full flex-col gap-1 rounded-lg bg-bg-default px-3.5 py-3 text-[length:var(--font-size-label2)] leading-[1.5]">
-        <p><span className="mr-2 text-[length:var(--font-size-caption1)] text-text-subtle">받는 사람</span><strong className="font-semibold">OOO 교수님</strong></p>
-        <p className="truncate"><span className="mr-2 text-[length:var(--font-size-caption1)] text-text-subtle">제목</span><strong className="font-semibold">[학과] [이름] 학부연구생 문의드립니다</strong></p>
-        <div className="mb-1 h-px bg-border-subtle" />
-        {MAIL_LINES.map((line, index) => (
-          <TypingLine index={index} isPlaying={isPlaying} isReduced={isReduced} key={line.text} />
-        ))}
-      </div>
-    </div>
+    </PreviewLoop>
   );
 }
 
@@ -224,67 +268,72 @@ const CONTACTS = [
 ];
 
 // 연락처가 차례로 나타난 뒤 포인터가 오픈채팅 링크로 이동해 누르는 흐름을 보여준다.
+const COFFEE_CHAT_LOOP = PRESS_AT + 3;
+
 export function CoffeeChatPreview() {
-  const { isPlaying, isReduced, ref } = usePreviewPlayback();
   return (
-    <div className="w-full rounded-[var(--radius-2xl)] bg-bg-default px-4 pb-2 pt-3.5" ref={ref}>
-      <p className="mb-2.5 text-[length:var(--font-size-label1)] font-semibold">커피챗</p>
-      <div className="py-1 text-[length:var(--font-size-caption1)] text-text-subtle">
-        {CONTACTS.map((contact, index) => {
-          const isOpenChat = index === 0;
-          return (
-            <m.p
-              animate={isPlaying ? { opacity: 1, x: 0 } : undefined}
-              className={`flex justify-between gap-2 py-1 ${isOpenChat ? "border-b border-border-subtle" : ""}`}
-              initial={{ opacity: 0, x: -8 }}
-              key={contact.name}
-              transition={timing(isReduced, { delay: CONTACT_AT + index * 0.2, duration: 0.3, ease: "easeOut" })}
-            >
-              <span>{contact.name}</span>
-              {isOpenChat ? (
-                <span className="relative text-text-primary">
-                  {isReduced ? null : (
-                    <m.span
-                      animate={isPlaying ? { opacity: [0, 1, 0] } : undefined}
-                      className="absolute -inset-x-1.5 -inset-y-0.5 rounded-md bg-bg-primary-subtle"
-                      initial={{ opacity: 0 }}
-                      transition={{ delay: PRESS_AT, duration: 0.7, times: [0, 0.2, 1] }}
-                    />
+    <PreviewLoop className="w-full rounded-[var(--radius-2xl)] bg-bg-default px-4 pb-2 pt-3.5" loopDuration={COFFEE_CHAT_LOOP}>
+      {({ isPlaying, isReduced }) => (
+        <>
+          <p className="mb-2.5 text-[length:var(--font-size-label1)] font-semibold">커피챗</p>
+          <div className="py-1 text-[length:var(--font-size-caption1)] text-text-subtle">
+            {CONTACTS.map((contact, index) => {
+              const isOpenChat = index === 0;
+              return (
+                <m.p
+                  animate={isPlaying ? { opacity: 1, x: 0 } : undefined}
+                  className={`flex justify-between gap-2 py-1 ${isOpenChat ? "border-b border-border-subtle" : ""}`}
+                  initial={{ opacity: 0, x: -8 }}
+                  key={contact.name}
+                  transition={timing(isReduced, { delay: CONTACT_AT + index * 0.2, duration: 0.3, ease: "easeOut" })}
+                >
+                  <span>{contact.name}</span>
+                  {isOpenChat ? (
+                    <span className="relative text-text-primary">
+                      {isReduced ? null : (
+                        <m.span
+                          animate={isPlaying ? { opacity: [0, 1, 0] } : undefined}
+                          className="absolute -inset-x-1.5 -inset-y-0.5 rounded-md bg-bg-primary-subtle"
+                          initial={{ opacity: 0 }}
+                          transition={{ delay: PRESS_AT, duration: 0.7, times: [0, 0.2, 1] }}
+                        />
+                      )}
+                      <m.span
+                        animate={isPlaying && !isReduced ? { scale: [1, 0.94, 1] } : undefined}
+                        className="relative inline-block"
+                        transition={{ delay: PRESS_AT, duration: 0.3 }}
+                      >
+                        {contact.action}
+                      </m.span>
+                      {isReduced ? null : (
+                        <m.span
+                          animate={
+                            isPlaying
+                              ? { opacity: [0, 1, 1, 1, 0], scale: [1, 1, 1, 0.85, 1], x: [56, 56, 0, 0, 0], y: [44, 44, 0, 0, 0] }
+                              : undefined
+                          }
+                          className="absolute left-1/2 top-1/2"
+                          initial={{ opacity: 0 }}
+                          transition={{
+                            delay: CURSOR_AT,
+                            duration: CURSOR_TRAVEL + 1.1,
+                            ease: "easeInOut",
+                            times: [0, 0.08, CURSOR_TRAVEL / (CURSOR_TRAVEL + 1.1), (CURSOR_TRAVEL + 0.15) / (CURSOR_TRAVEL + 1.1), 1],
+                          }}
+                        >
+                          <PointerIcon />
+                        </m.span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="text-text-primary">{contact.action}</span>
                   )}
-                  <m.span
-                    animate={isPlaying && !isReduced ? { scale: [1, 0.94, 1] } : undefined}
-                    className="relative inline-block"
-                    transition={{ delay: PRESS_AT, duration: 0.3 }}
-                  >
-                    {contact.action}
-                  </m.span>
-                  {isReduced ? null : (
-                    <m.span
-                      animate={
-                        isPlaying
-                          ? { opacity: [0, 1, 1, 1, 0], scale: [1, 1, 1, 0.85, 1], x: [56, 56, 0, 0, 0], y: [44, 44, 0, 0, 0] }
-                          : undefined
-                      }
-                      className="absolute left-1/2 top-1/2"
-                      initial={{ opacity: 0 }}
-                      transition={{
-                        delay: CURSOR_AT,
-                        duration: CURSOR_TRAVEL + 1.1,
-                        ease: "easeInOut",
-                        times: [0, 0.08, CURSOR_TRAVEL / (CURSOR_TRAVEL + 1.1), (CURSOR_TRAVEL + 0.15) / (CURSOR_TRAVEL + 1.1), 1],
-                      }}
-                    >
-                      <PointerIcon />
-                    </m.span>
-                  )}
-                </span>
-              ) : (
-                <span className="text-text-primary">{contact.action}</span>
-              )}
-            </m.p>
-          );
-        })}
-      </div>
-    </div>
+                </m.p>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </PreviewLoop>
   );
 }
