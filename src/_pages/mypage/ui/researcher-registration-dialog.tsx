@@ -10,12 +10,12 @@ import {
 } from "@/features/onboarding";
 import { LabSearchCombobox } from "@/features/search-lab";
 import { EXTERNAL_LINKS } from "@/shared/config";
-import { Button, Dialog, Radio, useToast } from "@/shared/ui";
+import { Button, ChoiceChipGroup, Dialog, useToast } from "@/shared/ui";
 
 export type ResearcherRegistrationDialogProps = {
   isOpen: boolean;
   onClose: () => void;
-  reviewOptions?: Pick<OnboardingReviewOptions, "coreTime" | "weeklyMeeting">;
+  reviewOptions?: OnboardingReviewOptions;
   reviewOptionsError?: string;
 };
 
@@ -37,42 +37,8 @@ function toRegistrationResponse(value: unknown): RegistrationResponse {
 const LABEL_CLASSES =
   "text-[length:var(--font-size-label1)] font-semibold leading-[1.5] text-text-default";
 
-function ChoiceGroup({
-  disabled,
-  label,
-  name,
-  onChange,
-  options,
-  value,
-}: {
-  disabled: boolean;
-  label: string;
-  name: string;
-  onChange: (value: string) => void;
-  options: string[];
-  value: string;
-}) {
-  return (
-    <fieldset className="flex flex-col gap-[var(--spacing-spacing-2)]">
-      <legend className={`${LABEL_CLASSES} mb-[var(--spacing-spacing-2)]`}>{label}</legend>
-      <div className="flex flex-wrap gap-[var(--spacing-spacing-2)]">
-        {options.map((option) => (
-          <Radio
-            appearance="chip"
-            checked={value === option}
-            disabled={disabled}
-            key={option}
-            name={name}
-            onChange={() => onChange(option)}
-            value={option}
-          >
-            {option}
-          </Radio>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
+/** 온보딩과 같은 기준으로 하는 일은 최대 3개까지 고른다. */
+const MAX_DOINGS = 3;
 
 export function ResearcherRegistrationDialog({
   isOpen,
@@ -85,15 +51,17 @@ export function ResearcherRegistrationDialog({
   const [selectedLab, setSelectedLab] = useState<LabSummary | null>(null);
   const [coreTime, setCoreTime] = useState("");
   const [weeklyMeeting, setWeeklyMeeting] = useState("");
+  const [doings, setDoings] = useState<string[]>([]);
   const [isPending, setIsPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const busy = useRef(false);
-  const canSubmit = Boolean(selectedLab && coreTime && weeklyMeeting) && !isPending;
+  const canSubmit = Boolean(selectedLab && coreTime && weeklyMeeting && doings.length > 0) && !isPending;
 
   function reset() {
     setSelectedLab(null);
     setCoreTime("");
     setWeeklyMeeting("");
+    setDoings([]);
     setErrorMessage("");
   }
 
@@ -104,7 +72,7 @@ export function ResearcherRegistrationDialog({
   }
 
   async function handleSubmit() {
-    if (busy.current || !selectedLab || !coreTime || !weeklyMeeting) return;
+    if (busy.current || !selectedLab || !coreTime || !weeklyMeeting || doings.length === 0) return;
     busy.current = true;
     setIsPending(true);
     setErrorMessage("");
@@ -112,6 +80,7 @@ export function ResearcherRegistrationDialog({
       const response = await fetch("/api/member/researcher", {
         body: JSON.stringify({
           coreTime,
+          doings,
           laboratoryId: selectedLab.laboratoryId,
           weeklyMeeting,
         }),
@@ -132,7 +101,7 @@ export function ResearcherRegistrationDialog({
         return;
       }
       if (result.registered) {
-        // 등록은 됐지만 코어타임·미팅 저장에 실패한 경우: 등록 상태를 반영하고 다시 입력할 곳을 안내한다.
+        // 등록은 됐지만 코어타임·미팅·하는 일 저장에 실패한 경우: 등록 상태를 반영하고 다시 입력할 곳을 안내한다.
         reset();
         onClose();
         showToast({
@@ -190,7 +159,7 @@ export function ResearcherRegistrationDialog({
         </div>
         {reviewOptions ? (
           <>
-            <ChoiceGroup
+            <ChoiceChipGroup
               disabled={isPending}
               label="코어타임"
               name="researcher-core-time"
@@ -198,13 +167,24 @@ export function ResearcherRegistrationDialog({
               options={reviewOptions.coreTime}
               value={coreTime}
             />
-            <ChoiceGroup
+            <ChoiceChipGroup
               disabled={isPending}
               label="미팅 빈도"
               name="researcher-weekly-meeting"
               onChange={setWeeklyMeeting}
               options={reviewOptions.weeklyMeeting}
               value={weeklyMeeting}
+            />
+            <ChoiceChipGroup
+              disabled={isPending}
+              hint={`최대 ${MAX_DOINGS}개까지 선택할 수 있어요`}
+              label="주로 하는 일"
+              maxSelected={MAX_DOINGS}
+              multiple
+              name="researcher-doings"
+              onChange={setDoings}
+              options={reviewOptions.works}
+              value={doings}
             />
           </>
         ) : (
@@ -227,7 +207,7 @@ export function ResearcherRegistrationDialog({
             isLoading={isPending}
             onClick={() => void handleSubmit()}
           >
-            정보 제공하기
+            학부연구생으로 저장
           </Button>
         </div>
       </div>

@@ -1,29 +1,40 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getMyMember } from "@/entities/member/api";
+import {
+  saveLabReview,
+  toLabReviewInput,
+  type LabReviewInput,
+} from "@/features/manage-member-profile/api";
 import { getOnboardingReviewOptions } from "@/features/onboarding/api";
 import { authenticatedRequest, authenticatedErrorResponse, AuthenticatedApiError } from "@/shared/api/authenticated-request";
 import { ACCESS_TOKEN_COOKIE } from "@/shared/lib/auth/cookies";
 
 const NO_STORE = { "Cache-Control": "private, no-store" };
 const REVIEW_SAVE_FAILED_MESSAGE =
-  "코어타임·미팅 빈도를 저장하지 못했어요. 정보 수정하기에서 다시 입력해주세요.";
+  "코어타임·미팅 빈도·하는 일을 저장하지 못했어요. 정보 수정하기에서 다시 입력해주세요.";
+/** 온보딩과 같은 기준으로 하는 일은 최대 3개까지 받는다. */
+const MAX_REGISTER_DOINGS = 3;
 
-type RegisterRequest = { coreTime: string; laboratoryId: number; weeklyMeeting: string };
+type RegisterRequest = LabReviewInput & { laboratoryId: number };
 
 function toRegisterRequest(body: unknown): RegisterRequest | null {
-  if (!body || typeof body !== "object") return null;
-  const { coreTime, laboratoryId, weeklyMeeting } = body as Record<string, unknown>;
+  if (!body || typeof body !== "object" || Array.isArray(body)) return null;
+  const record = body as Record<string, unknown>;
+  const { laboratoryId } = record;
   if (typeof laboratoryId !== "number" || !Number.isSafeInteger(laboratoryId) || laboratoryId < 1) return null;
-  if (typeof coreTime !== "string" || !coreTime.trim() || typeof weeklyMeeting !== "string" || !weeklyMeeting.trim()) return null;
-  return { coreTime: coreTime.trim(), laboratoryId, weeklyMeeting: weeklyMeeting.trim() };
+  const review = toLabReviewInput(record, MAX_REGISTER_DOINGS);
+  return review ? { ...review, laboratoryId } : null;
 }
 
-// 학부연구생 등록 후 같은 요청에서 코어타임·미팅 빈도를 연구실 리뷰로 저장한다.
+// 학부연구생 등록 후 같은 요청에서 코어타임·미팅 빈도·하는 일을 연구실 리뷰로 저장한다.
 export async function POST(request: Request) {
   const input = toRegisterRequest(await request.json().catch(() => null));
   if (!input) {
-    return NextResponse.json({ message: "소속 연구실과 코어타임·미팅 빈도를 선택해주세요." }, { status: 400 });
+    return NextResponse.json(
+      { message: "소속 연구실과 코어타임·미팅 빈도·하는 일을 선택해주세요." },
+      { status: 400 },
+    );
   }
   try {
     const profile = await getMyMember();
@@ -36,27 +47,30 @@ export async function POST(request: Request) {
     if (!options) {
       return NextResponse.json({ message: "선택지를 확인하지 못했어요. 잠시 후 다시 시도해주세요." }, { status: 502 });
     }
-    if (!options.coreTime.includes(input.coreTime) || !options.weeklyMeeting.includes(input.weeklyMeeting)) {
-      return NextResponse.json({ message: "코어타임·미팅 빈도를 다시 선택해주세요." }, { status: 400 });
+    if (
+      !options.coreTime.includes(input.coreTime) ||
+      !options.weeklyMeeting.includes(input.weeklyMeeting) ||
+      !input.doings.every((item) => options.works.includes(item))
+    ) {
+      return NextResponse.json({ message: "코어타임·미팅 빈도·하는 일을 다시 선택해주세요." }, { status: 400 });
     }
 
     await authenticatedRequest("/api/researcher", { method: "POST", body: JSON.stringify({ laboratoryId: input.laboratoryId }) });
 
     try {
-      const registered = await getMyMember();
-      const previousReview = registered.researchProfile?.review;
-      await authenticatedRequest("/api/lab-review", {
-        method: registered.hasContributedReview ? "PATCH" : "POST",
-        body: JSON.stringify({
-          coreTime: input.coreTime,
-          weeklyMeeting: input.weeklyMeeting,
-          // 모달에는 하는 일 입력이 없으므로 기존 값을 유지한다.
-          doings: previousReview?.doings ?? [],
-        }),
-      });
-    } catch {
-      // 등록은 이미 반영됐으므로 실패 원인과 관계없이 등록 상태를 함께 알린다.
-      return NextResponse.json({ message: REVIEW_SAVE_FAILED_MESSAGE, registered: true }, { status: 502, headers: NO_STORE });
+      // 방금 등록한 연구생은 리뷰가 없으므로 생성부터 시도하고, 이미 있으면 수정한다.
+      await saveLabReview({ coreTime: input.coreTime, weeklyMeeting: input.weeklyMeeting, doings: input.doings });
+    } catch (error) {
+      if (error instanceof AuthenticatedApiError && error.status === 401) return authenticatedErrorResponse(error);
+      const status = error instanceof AuthenticatedApiError ? error.status : undefined;
+      const code = error instanceof AuthenticatedApiError ? error.code : undefined;
+      // 토큰·회원 정보 없이 실패 단계와 업스트림 상태만 남긴다.
+      console.error("[member/researcher] lab review save failed", { stage: "lab-review", status, code });
+      // 등록은 이미 반영됐으므로 등록 상태를 함께 알린다.
+      return NextResponse.json(
+        { message: REVIEW_SAVE_FAILED_MESSAGE, registered: true, ...(code ? { code } : {}) },
+        { status: 502, headers: NO_STORE },
+      );
     }
 
     return NextResponse.json({ ok: true }, { headers: NO_STORE });

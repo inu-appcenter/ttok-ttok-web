@@ -13,8 +13,12 @@ export {
   useStartNavigationProgress,
 } from "./navigation-progress";
 export type { LogoProps, LogoVariant } from "./logo";
-export { Checkbox, Radio, Toggle } from "./selection";
-export type { CheckboxProps, RadioProps } from "./selection";
+export { Checkbox, ChoiceChipGroup, Radio, Toggle } from "./selection";
+export type {
+  CheckboxProps,
+  ChoiceChipGroupProps,
+  RadioProps,
+} from "./selection";
 export { RecruitmentStatusTag, Tag } from "./tag";
 export type { RecruitmentStatus, TagProps } from "./tag";
 export { SearchResultItem } from "./search-result-item";

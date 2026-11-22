@@ -11,6 +11,8 @@ export class AuthenticatedApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    /** 업스트림 오류 본문의 code. 문자열일 때만 보존한다. */
+    readonly code?: string,
   ) {
     super(message);
   }
@@ -55,6 +57,7 @@ export async function authenticatedRequest(
       isInvalidSessionResponse(response.status, body?.code)
         ? 401
         : response.status,
+      typeof body?.code === "string" ? body.code : undefined,
     );
   if (!body || typeof body !== "object" || !("data" in body))
     throw new AuthenticatedApiError("서버 응답이 올바르지 않습니다.", 502);
