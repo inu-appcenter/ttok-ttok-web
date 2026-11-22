@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { captureAnalytics } from "@/shared/lib/analytics";
 import { LabCard, type LabSummaryPage } from "@/entities/lab";
 import { createSearchHref, type SearchConditions } from "../model/search-conditions";
 import { appendSearchPage } from "../model/append-search-page";
@@ -88,7 +89,17 @@ export function InfiniteLabResults({ conditions, initialResult, loadPage = fetch
   return (
     <div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" onClickCapture={handleSavePosition}>
-        {result.content.map((lab) => <LabCard key={lab.labId} lab={lab} />)}
+        {result.content.map((lab, index) => (
+          <LabCard
+            key={lab.labId}
+            lab={lab}
+            onClick={() => captureAnalytics("click_search_lab_list", {
+              lab_id: lab.laboratoryId,
+              position: index + 1,
+              result_count: result.totalElements,
+            })}
+          />
+        ))}
       </div>
       <div aria-live="polite" className="mt-6 flex min-h-12 flex-col items-center gap-3 pb-24 md:pb-0" ref={sentinelRef}>
         {status === "error" ? <p role="alert" className="text-sm text-text-subtle">추가 연구실을 불러오지 못했어요.</p> : null}

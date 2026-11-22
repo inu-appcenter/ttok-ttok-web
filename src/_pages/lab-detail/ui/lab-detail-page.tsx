@@ -1,3 +1,4 @@
+import { AnalyticsAnchor } from "@/shared/lib/analytics/link";
 import Image from "next/image";
 import type { ComponentProps } from "react";
 
@@ -102,14 +103,14 @@ export function LabDetailPage({
               <dt className="sr-only">홈페이지</dt>
               <dd>
                 {lab.homepageUrl ? (
-                  <a
+                  <AnalyticsAnchor event="click_lab_page_link" properties={{ lab_id: lab.laboratoryId }}
                     className="text-[#2a78d6] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
                     href={lab.homepageUrl}
                     rel="noreferrer"
                     target="_blank"
                   >
                     홈페이지 · {getHomepageLabel(lab.homepageUrl)} ↗
-                  </a>
+                  </AnalyticsAnchor>
                 ) : (
                   "홈페이지 · 정보 없음"
                 )}
@@ -127,7 +128,7 @@ export function LabDetailPage({
 
         <ResearchProjects isMobile lab={lab} />
         <RecentPapers isMobile lab={lab} />
-        <ResearchMetrics metrics={lab.metrics} />
+        <ResearchMetrics laboratoryId={lab.laboratoryId} metrics={lab.metrics} />
 
         <section className="rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)]">
           <h2 className="text-[length:var(--font-size-label1)] font-semibold leading-[1.5]">
@@ -161,6 +162,7 @@ export function LabDetailPage({
         <ProfessorCard isMobile lab={lab} isAuthenticated={isAuthenticated} memberDepartmentCode={memberDepartmentCode} />
         <LabContactCard
           contact={lab.contact}
+          laboratoryId={lab.laboratoryId}
           isAuthenticated={isAuthenticated}
         />
         {!isAuthenticated && (
@@ -172,7 +174,7 @@ export function LabDetailPage({
           />
         )}
         <div className="text-center">
-          <ReportLabButton />
+          <ReportLabButton laboratoryId={lab.laboratoryId} />
         </div>
       </main>
 
@@ -211,14 +213,14 @@ export function LabDetailPage({
                 </span>
               ) : null}
               {lab.homepageUrl ? (
-                <a
+                <AnalyticsAnchor event="click_lab_page_link" properties={{ lab_id: lab.laboratoryId }}
                   className="break-all text-text-primary hover:underline focus-visible:outline-2 focus-visible:outline-border-primary"
                   href={lab.homepageUrl}
                   rel="noreferrer"
                   target="_blank"
                 >
                   {getHomepageLabel(lab.homepageUrl)} ↗
-                </a>
+                </AnalyticsAnchor>
               ) : null}
             </div>
           </header>
@@ -256,7 +258,7 @@ export function LabDetailPage({
             )}
           </section>
           <div className="self-start">
-            <ReportLabButton />
+            <ReportLabButton laboratoryId={lab.laboratoryId} />
           </div>
         </div>
         <aside className="flex min-w-0 flex-col gap-6 pt-[30px] lg:pt-16">
@@ -285,10 +287,11 @@ export function LabDetailPage({
               </p>
             </section>
           ) : null}
-          <ResearchMetrics metrics={lab.metrics} />
+          <ResearchMetrics laboratoryId={lab.laboratoryId} metrics={lab.metrics} />
           <ProfessorCard lab={lab} isAuthenticated={isAuthenticated} memberDepartmentCode={memberDepartmentCode} />
           <LabContactCard
             contact={lab.contact}
+          laboratoryId={lab.laboratoryId}
             isAuthenticated={isAuthenticated}
           />
           {!isAuthenticated && (

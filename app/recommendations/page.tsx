@@ -1,3 +1,4 @@
+import { AnalyticsView } from "@/shared/lib/analytics/view";
 import { redirect } from "next/navigation";
 
 import { AiRecommendationsPage } from "@/_pages/recommendations";
@@ -15,10 +16,13 @@ export default async function Page() {
 
   // 세션이 바뀌면 다시 마운트해 이전 세션의 화면 상태를 남기지 않는다.
   return (
-    <AiRecommendationsPage
-      key={`${memberId ?? ""}:${sessionKey ?? ""}`}
-      memberId={memberId}
-      sessionKey={sessionKey}
-    />
+    <>
+      <AnalyticsView event="view_recommend" />
+      <AiRecommendationsPage
+        key={`${memberId ?? ""}:${sessionKey ?? ""}`}
+        memberId={memberId}
+        sessionKey={sessionKey}
+      />
+    </>
   );
 }

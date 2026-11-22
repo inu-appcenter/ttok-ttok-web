@@ -1,3 +1,6 @@
+"use client";
+
+import { captureAnalytics } from "@/shared/lib/analytics";
 import Image from "next/image";
 import Link from "next/link";
 import type { Recommendation } from "../model/recommendation-contract";
@@ -49,6 +52,7 @@ export function RecommendationResultCards({
           )}
           <Link
             href={`/labs/${lab.id}`}
+            onClick={() => captureAnalytics("click_recommend_result", { lab_id: lab.id, position: index + 1 })}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2 flex items-center justify-end gap-1 text-[14px] text-text-primary"

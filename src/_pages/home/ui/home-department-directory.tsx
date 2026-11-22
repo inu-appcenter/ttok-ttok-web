@@ -1,5 +1,6 @@
 "use client";
 
+import { captureAnalytics } from "@/shared/lib/analytics";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
@@ -18,12 +19,13 @@ const VISIBLE_DEPARTMENT_COUNT = 3;
 
 type ExpandedRows = { columnCount: number; rows: number[] };
 
-function DepartmentLink({ department }: { department: CollegeLabCount["departments"][number] }) {
+function DepartmentLink({ college, department }: { college: string; department: CollegeLabCount["departments"][number] }) {
   return (
     <Link
       className="group/department flex min-w-0 items-center justify-between gap-2 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
       href={createSearchHref({ department: department.departmentName })}
       title={department.departmentName}
+      onClick={() => captureAnalytics("click_home_lab_list_select", { college, department: department.department })}
     >
       <span className="min-w-0 truncate group-hover/department:font-semibold group-hover/department:text-text-default group-focus-visible/department:font-semibold group-focus-visible/department:text-text-default">
         {department.departmentName}
@@ -61,6 +63,7 @@ function CollegeCard({
         <Link
           className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary"
           href={createSearchHref({ college: college.collegeName })}
+          onClick={() => captureAnalytics("click_home_lab_list_select", { college: college.college, department: null })}
         >
           {college.collegeName}
         </Link>
@@ -72,7 +75,7 @@ function CollegeCard({
               className={`min-w-0 pb-1 ${index < visibleDepartments.length - 1 || (hasExtra && isExpanded) ? "border-b border-border-subtle" : ""}`}
               key={department.department}
             >
-              <DepartmentLink department={department} />
+              <DepartmentLink college={college.college} department={department} />
             </li>
           ))}
         </ul>
@@ -90,7 +93,7 @@ function CollegeCard({
                     className="min-w-0 border-b border-border-subtle pb-1 last:border-b-0"
                     key={department.department}
                   >
-                    <DepartmentLink department={department} />
+                    <DepartmentLink college={college.college} department={department} />
                   </li>
                 ))}
               </ul>
@@ -159,7 +162,10 @@ function DesktopCollegeGrid({ colleges }: { colleges: CollegeLabCount[] }) {
           college={college}
           isExpanded={isRowExpanded(index)}
           key={college.college}
-          onToggle={() => handleToggle(index)}
+          onToggle={() => {
+            captureAnalytics("click_home_dept_lab_list_more", { college: college.college, college_expanded: !isRowExpanded(index) });
+            handleToggle(index);
+          }}
         />
       ))}
     </div>
@@ -179,7 +185,10 @@ function MobileCollegeAccordion({ colleges }: { colleges: CollegeLabCount[] }) {
         return (
           <article className="min-w-0 overflow-hidden rounded-[var(--radius-2xl)] bg-bg-default shadow-[0_2px_8px_var(--color-opacity-black-10)]" key={college.college}>
             <h3>
-              <button aria-controls={panelId} aria-expanded={isExpanded} aria-label={`${college.collegeName} 학과 ${isExpanded ? "접기" : "펼치기"}`} className="flex w-full items-center gap-3 px-4 py-3.5 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-border-primary" onClick={() => setExpandedCollege(isExpanded ? null : college.college)} type="button">
+              <button aria-controls={panelId} aria-expanded={isExpanded} aria-label={`${college.collegeName} 학과 ${isExpanded ? "접기" : "펼치기"}`} className="flex w-full items-center gap-3 px-4 py-3.5 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-border-primary" onClick={() => {
+                captureAnalytics("click_home_dept_lab_list_more", { college: college.college, college_expanded: !isExpanded });
+                setExpandedCollege(isExpanded ? null : college.college);
+              }} type="button">
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="text-[length:var(--font-size-headline2)] font-semibold leading-[1.4] tracking-[-0.01em]">{college.collegeName}</span>
                   <span className="truncate text-[12px] leading-[1.5] text-text-subtle">{college.departments.slice(0, 3).map((department) => department.departmentName).join(" · ")}</span>
@@ -190,7 +199,7 @@ function MobileCollegeAccordion({ colleges }: { colleges: CollegeLabCount[] }) {
             <ul className="grid grid-cols-2 gap-2 px-3 pb-3.5" hidden={!isExpanded} id={panelId}>
               {college.departments.map((department) => (
                 <li className="min-w-0" key={department.department}>
-                  <Link className="flex h-full min-h-16 flex-col justify-between gap-1 rounded-[var(--radius-xl)] bg-bg-primary-subtle px-3 py-2.5 focus-visible:outline-2 focus-visible:outline-border-primary" href={createSearchHref({ department: department.departmentName })}>
+                  <Link className="flex h-full min-h-16 flex-col justify-between gap-1 rounded-[var(--radius-xl)] bg-bg-primary-subtle px-3 py-2.5 focus-visible:outline-2 focus-visible:outline-border-primary" href={createSearchHref({ department: department.departmentName })} onClick={() => captureAnalytics("click_home_lab_list_select", { college: college.college, department: department.department })}>
                     <span className="break-words text-[length:var(--font-size-label1)] font-semibold leading-[1.5]">{department.departmentName}</span>
                     <span className="flex items-center justify-between gap-1 text-[12px] leading-[1.5] text-text-primary">
                       <span>연구실 {department.count.toLocaleString("ko-KR")}개</span>

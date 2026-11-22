@@ -1,3 +1,4 @@
+import { AnalyticsView } from "@/shared/lib/analytics/view";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
@@ -64,15 +65,18 @@ export default async function Page({ params, searchParams }: LabPageProps) {
   if (!lab) notFound();
 
   return (
-    <LabDetailPage
-      isAuthenticated={isAuthenticated}
-      lab={lab}
-      memberDepartmentCode={member?.departmentCode}
-      canContribute={
-        member?.userType === "RESEARCHER" &&
-        member.researchProfile?.laboratoryId === lab.laboratoryId
-      }
-      bookmarkActions={{ initialBookmarks: bookmarks }}
-    />
+    <>
+      <AnalyticsView key={lab.laboratoryId} event="view_lab_page" properties={{ lab_id: lab.laboratoryId, coffeechat_count: isAuthenticated ? lab.contact.members.length : null }} />
+      <LabDetailPage
+        isAuthenticated={isAuthenticated}
+        lab={lab}
+        memberDepartmentCode={member?.departmentCode}
+        canContribute={
+          member?.userType === "RESEARCHER" &&
+          member.researchProfile?.laboratoryId === lab.laboratoryId
+        }
+        bookmarkActions={{ initialBookmarks: bookmarks }}
+      />
+    </>
   );
 }

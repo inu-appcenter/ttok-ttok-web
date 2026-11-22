@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useRef, useState, useTransition, type FormEvent } from "react";
 
+import { captureAnalytics } from "@/shared/lib/analytics";
 import { Button, useStartNavigationProgress, useToast } from "@/shared/ui";
 
 import type { CollegeOption } from "@/entities/lab";
@@ -41,6 +42,7 @@ export function HomeSearchField({
   requireCondition = true,
 }: HomeSearchFieldProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState(initialCategory);
@@ -83,6 +85,13 @@ export function HomeSearchField({
       return;
     }
     setMessage("");
+    captureAnalytics(pathname === "/search" ? "click_search" : "click_home_search", {
+      has_query: Boolean(conditions.query),
+      query_length: conditions.query.length,
+      has_category: Boolean(conditions.category),
+      has_college: Boolean(conditions.college),
+      has_department: Boolean(conditions.department),
+    });
     const href = createSearchHref(conditions);
     startNavigationProgress(href);
     startTransition(() => router.push(href));

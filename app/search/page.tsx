@@ -1,3 +1,4 @@
+import { AnalyticsView } from "@/shared/lib/analytics/view";
 import type { Metadata } from "next";
 import { SearchPage } from "@/_pages/search";
 import { DEFAULT_OPEN_GRAPH } from "@/shared/config";
@@ -44,18 +45,28 @@ export default async function Page({
       : [];
 
   return (
-    <SearchPage
-      alternativeLabs={alternativeLabs}
-      {...search}
-      {...categories}
-      {...collegesResult}
-      category={conditions.category}
-      college={conditions.college}
-      department={conditions.department}
-      initialQuery={conditions.query}
-      invalidConditions={search.invalidConditions}
-      page={conditions.page}
-      status={search.result ? "ready" : "error"}
-    />
+    <>
+      <AnalyticsView event="view_search" properties={{ result_count: search.result?.totalElements ?? null }} />
+      {search.result?.totalElements === 0 && (
+        <AnalyticsView
+          key={JSON.stringify(conditions)}
+          event="view_search_no_result"
+          properties={{ has_query: Boolean(conditions.query), query_length: conditions.query.length }}
+        />
+      )}
+      <SearchPage
+        alternativeLabs={alternativeLabs}
+        {...search}
+        {...categories}
+        {...collegesResult}
+        category={conditions.category}
+        college={conditions.college}
+        department={conditions.department}
+        initialQuery={conditions.query}
+        invalidConditions={search.invalidConditions}
+        page={conditions.page}
+        status={search.result ? "ready" : "error"}
+      />
+    </>
   );
 }

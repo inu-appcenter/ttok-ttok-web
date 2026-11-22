@@ -1,4 +1,5 @@
 "use client";
+import { captureAnalytics } from "@/shared/lib/analytics";
 import { LoginRequiredLink } from "@/shared/lib/auth/login-required";
 import { useBookmarks, type BookmarkActions } from "../model/use-bookmarks";
 
@@ -34,7 +35,10 @@ function AuthenticatedBookmarkToggle({
         type="button"
         aria-pressed={selected}
         disabled={state.pending || !state.loaded || state.needsRefresh}
-        onClick={() => void state.toggle(laboratoryId)}
+        onClick={() => {
+          captureAnalytics("click_lab_page_bookmark", { lab_id: laboratoryId, action: selected ? "remove" : "add" });
+          void state.toggle(laboratoryId);
+        }}
         className={`cursor-pointer whitespace-nowrap rounded-lg border border-border-primary px-3 py-1.5 text-sm text-text-primary disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-border-primary ${selected ? "bg-bg-primary-subtle" : "bg-bg-default"}`}
       >
         {selected ? "관심 연구실 ✓" : "관심 연구실"}

@@ -1,3 +1,4 @@
+import { AnalyticsView } from "@/shared/lib/analytics/view";
 import { Suspense } from "react";
 
 import {
@@ -28,15 +29,18 @@ export default async function Page() {
   ]);
 
   return (
-    <HomePage
-      {...labsResult}
-      {...categoriesResult}
-      {...collegesResult}
-      departmentSection={
-        <Suspense fallback={<HomeDepartmentDirectory status="loading" />}>
-          <HomeDepartmentSection />
-        </Suspense>
-      }
-    />
+    <>
+      <AnalyticsView event="view_home" />
+      <HomePage
+        {...labsResult}
+        {...categoriesResult}
+        {...collegesResult}
+        departmentSection={
+          <Suspense fallback={<HomeDepartmentDirectory status="loading" />}>
+            <HomeDepartmentSection />
+          </Suspense>
+        }
+      />
+    </>
   );
 }

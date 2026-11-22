@@ -1,3 +1,4 @@
+import { captureAnalytics } from "@/shared/lib/analytics";
 import { useEffect, useRef, useState } from "react";
 import {
   suggestKeywords,
@@ -101,6 +102,7 @@ export function useRecommendationFlow({
     request.current = controller;
     setIsPending(true);
     setError("");
+    const startedAt = performance.now();
     try {
       if (kind === "keywords") {
         const items = await onSuggest(interest.trim(), controller.signal);
@@ -115,11 +117,24 @@ export function useRecommendationFlow({
           controller.signal,
         );
         if (controller.signal.aborted || request.current !== controller) return;
+        captureAnalytics("submit_recommend", {
+          success: true,
+          no_match: data.noMatch,
+          result_count: data.recommendations.length,
+          latency_ms: Math.round(performance.now() - startedAt),
+        });
         setResult(data);
         setStep("results");
       }
     } catch (cause) {
       if (!controller.signal.aborted && request.current === controller) {
+        if (kind === "recommendations") {
+          captureAnalytics("submit_recommend", {
+            success: false,
+            error_code: cause instanceof RecommendationApiError ? String(cause.status) : "request_failed",
+            latency_ms: Math.round(performance.now() - startedAt),
+          });
+        }
         if (cause instanceof RecommendationApiError && cause.status === 401) {
           onUnauthorized();
           return;
@@ -149,6 +164,7 @@ export function useRecommendationFlow({
   }
   // 이전 대화를 흐리게 남기고 입력만 비운다. 결과 카드는 새 결과가 오기 전까지 유지한다.
   function handleStartNew() {
+    captureAnalytics("click_recommend_reset");
     handleCancelRequest();
     setPastTurns((turns) => [
       ...turns,
@@ -192,7 +208,10 @@ export function useRecommendationFlow({
     handleAddKeyword,
     handleCancelRequest,
     handleSuggestKeywords() {
-      if (interest.trim() && !isPending) void handleRequest("keywords");
+      if (interest.trim() && !isPending) {
+        captureAnalytics("click_recommend_interest", { interest_length: interest.trim().length });
+        void handleRequest("keywords");
+      }
     },
     handleReset,
     handleStartNew,
@@ -200,6 +219,11 @@ export function useRecommendationFlow({
       if (isPending) return;
       setIsAdding(false);
       setCustom("");
+      captureAnalytics("click_recommend_keyword", {
+        keyword_count: keywords.length,
+        custom_keyword_count: keywords.filter((keyword) => customKeywords.includes(keyword)).length,
+        suggestion_count: suggestions.length,
+      });
       void handleRequest("recommendations");
     },
   };

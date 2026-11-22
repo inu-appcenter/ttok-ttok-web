@@ -1,3 +1,6 @@
+"use client";
+
+import { captureAnalytics } from "@/shared/lib/analytics";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -76,6 +79,10 @@ export function SiteHeader({
                   href={item.href}
                   isAuthenticated={isAi ? isAuthenticated : true}
                   key={item.id}
+                  onClickCapture={() => {
+                    if (item.id === "search") captureAnalytics("click_header_lab_search");
+                    if (isAi) captureAnalytics("click_header_recommend");
+                  }}
                 >
                   <span
                     className="relative shrink-0 overflow-hidden"
@@ -120,6 +127,7 @@ export function SiteHeader({
             <Link
               className="hidden cursor-pointer items-center gap-[var(--spacing-spacing-0-5)] rounded-sm px-[var(--spacing-spacing-1)] text-[22px] font-semibold leading-[1.5] tracking-[-0.01em] text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary md:flex"
               href="/mypage"
+              onClick={() => captureAnalytics("click_header_mypage")}
             >
               <Image
                 alt=""
@@ -131,6 +139,7 @@ export function SiteHeader({
             </Link>
           ) : (
             <LoginEntryLink
+              onClick={() => captureAnalytics("click_header_login")}
               className="flex h-[29px] cursor-pointer items-center justify-center rounded-[var(--radius-md)] bg-bg-primary px-3 text-[length:var(--font-size-body3)] font-semibold leading-[1.5] text-text-inverse transition-colors hover:bg-bg-primary-hover active:bg-bg-primary-press focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-primary md:h-10 md:px-[var(--spacing-spacing-6)] md:text-[length:var(--font-size-body1)] md:tracking-[-0.01em]"
             >
               로그인

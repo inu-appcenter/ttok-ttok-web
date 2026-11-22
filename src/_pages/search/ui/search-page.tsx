@@ -198,8 +198,8 @@ export function SearchPage({
                   </h2>
                 </div>
                 <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                  {alternativeLabs.slice(0, 3).map((lab) => (
-                    <LabCard key={lab.labId} lab={lab} />
+                  {alternativeLabs.slice(0, 3).map((lab, index) => (
+                    <LabCard key={lab.labId} lab={lab} analytics={{ event: "click_search_no_result_suggest", position: index + 1 }} />
                   ))}
                 </div>
               </section>
