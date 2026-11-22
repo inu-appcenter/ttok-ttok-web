@@ -93,14 +93,14 @@ export function MyPage({
       </main>
       {isResearcher ? (
         <Dialog
-          className="!max-w-[340px]"
+          className="md:!max-w-[340px]"
           isOpen={statusDialogOpen}
           onClose={closeStatusDialog}
           title="학부연구생 등록을 해제하시겠어요?"
           variant="confirmation"
         >
           <div className="mt-3 flex flex-col gap-3">
-            <p className="text-center text-[length:var(--font-size-body3)] leading-[1.5] text-text-subtle">
+            <p className="text-center text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle md:text-[length:var(--font-size-body3)]">
               커피챗 정보가 삭제됩니다.
               <br />
               작성한 연구실 리뷰는 계정 연결이 해제되어

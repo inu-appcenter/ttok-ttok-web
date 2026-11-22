@@ -84,7 +84,7 @@ export function CoffeeChatSettings({
   return (
     <section className="min-w-0 flex-1 rounded-xl bg-bg-default px-5 py-3 shadow-[0_2px_4px_var(--color-opacity-black-10)]">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-text-subtle">
+        <h2 className="text-[length:var(--font-size-headline2)] font-semibold leading-[1.4] tracking-[-0.01em] text-text-default md:text-base md:leading-normal md:tracking-normal md:text-text-subtle">
           커피챗 공개
         </h2>
         <Toggle
@@ -100,7 +100,7 @@ export function CoffeeChatSettings({
         </Toggle>
       </div>
       <form
-        className="mt-[30px] flex flex-col gap-3"
+        className="mt-[30px] flex flex-col gap-[10px] md:gap-3"
         onSubmit={(event) => {
           event.preventDefault();
           void save();
@@ -109,7 +109,7 @@ export function CoffeeChatSettings({
         {contacts.map((contact, index) => (
           <div
             key={index}
-            className="flex h-11 min-w-0 items-center gap-2 rounded-xl border border-border-primary px-3"
+            className="flex h-11 min-w-0 items-center gap-2 rounded-xl border border-border-primary pl-4 pr-3 md:px-3"
           >
             <input
               aria-label={`커피챗 연락처 ${index + 1}`}
@@ -117,7 +117,7 @@ export function CoffeeChatSettings({
               value={contact.contactValue}
               placeholder="이메일 또는 오픈채팅 URL"
               disabled={pending}
-              className="min-w-0 flex-1 truncate text-sm text-text-default outline-none focus-visible:ring-2 focus-visible:ring-border-primary"
+              className="min-w-0 flex-1 truncate text-[13px] font-bold text-text-default outline-none focus-visible:ring-2 focus-visible:ring-border-primary md:text-sm md:font-normal"
               onChange={(event) => {
                 const value = event.target.value;
                 setContacts((items) =>
@@ -173,7 +173,13 @@ export function CoffeeChatSettings({
               ])
             }
           >
-            <Image alt="" src="/icons/mypage/plus.svg" width={16} height={16} />
+            <Image
+              alt=""
+              className="size-[18px] md:size-4"
+              src="/icons/mypage/plus.svg"
+              width={18}
+              height={18}
+            />
           </button>
         ) : null}
         {dirty ? (
@@ -195,7 +201,7 @@ export function CoffeeChatSettings({
         title="커피챗 공개를 중단할까요?"
         variant="confirmation"
       >
-        <p className="my-3 text-center text-sm text-text-subtle">
+        <p className="my-3 text-center text-[length:var(--font-size-caption1)] leading-[1.5] text-text-subtle md:text-sm">
           공개된 연락처가 삭제돼요.
           <br />
           다시 공개하려면 연락처를 입력해주세요.
@@ -203,7 +209,7 @@ export function CoffeeChatSettings({
         <div className="flex gap-3">
           <Button
             autoFocus
-            className="flex-1"
+            className="!h-8 flex-1 !text-[length:var(--font-size-body3)]"
             variant="tertiary"
             size="sm"
             disabled={pending}
@@ -212,7 +218,7 @@ export function CoffeeChatSettings({
             취소
           </Button>
           <Button
-            className="flex-1"
+            className="!h-8 flex-1 !text-[length:var(--font-size-body3)]"
             size="sm"
             isLoading={pending}
             onClick={() => void save(true)}
