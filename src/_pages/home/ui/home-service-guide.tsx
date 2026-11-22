@@ -1,47 +1,12 @@
 "use client";
 
 import { captureAnalytics } from "@/shared/lib/analytics";
-import Image from "next/image";
+import { LazyMotion, domAnimation } from "motion/react";
 import type { ReactNode } from "react";
 
 import { LoginRequiredLink } from "@/shared/lib/auth/login-required";
 
-const PREVIEW_LABS = [
-  { name: "자연어처리 연구실", tags: "NLP · LLM" },
-  { name: "비전·그래픽스 연구실", tags: "딥러닝" },
-];
-
-function RecommendationPreview() {
-  return (
-    <div className="flex w-full flex-col gap-2 text-[length:var(--font-size-body3)] leading-[1.5]">
-      <p className="self-start rounded-xl rounded-tl-sm bg-bg-default px-3 py-1.5">어떤 분야에 관심이 있어요?</p>
-      <p className="self-end rounded-xl rounded-tr-sm bg-text-primary px-3 py-1.5 text-text-inverse">딥러닝이랑 자연어처리요!</p>
-      <div className="flex w-[270px] max-w-full flex-col gap-1.5 rounded-xl rounded-tl-sm bg-bg-default p-2">
-        <p className="text-text-subtle">이런 연구실을 추천해요</p>
-        {PREVIEW_LABS.map((lab) => (
-          <div className="flex items-center gap-1.5 rounded-lg border border-[var(--color-primary-primary-200)] bg-bg-primary-subtle py-[5px] pl-2.5 pr-1.5" key={lab.name}>
-            <span className="min-w-0 flex-1 truncate font-semibold">{lab.name}</span>
-            <span className="shrink-0 rounded-full bg-[var(--color-primary-primary-200)] px-2 py-px text-[11px] text-[var(--color-primary-primary-700)]">{lab.tags}</span>
-            <Image alt="" height={16} src="/icons/home/services/chevron.svg" width={16} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MailPreview() {
-  return (
-    <div className="flex w-full flex-col gap-1 rounded-lg bg-bg-default px-3.5 py-3 text-[length:var(--font-size-label2)] leading-[1.5]">
-      <p><span className="mr-2 text-[length:var(--font-size-caption1)] text-text-subtle">받는 사람</span><strong className="font-semibold">OOO 교수님</strong></p>
-      <p className="truncate"><span className="mr-2 text-[length:var(--font-size-caption1)] text-text-subtle">제목</span><strong className="font-semibold">[학과] [이름] 학부연구생 문의드립니다</strong></p>
-      <div className="mb-1 h-px bg-border-subtle" />
-      <p className="truncate">안녕하세요 교수님, [학과] [학번] [이름]입니다.</p>
-      <p>연구실의 [연구 주제]에 관심이 생겨</p>
-      <p className="truncate text-text-subtle">학부연구생으로 참여하고 싶어 연락드립니다 …</p>
-    </div>
-  );
-}
+import { MailPreview, RecommendationPreview } from "./home-service-previews";
 
 function CoffeeChatPreview() {
   return (
@@ -80,11 +45,13 @@ export function HomeServiceGuide({ headingId = "home-services-heading" }: { head
   return (
     <section aria-labelledby={headingId} className="flex flex-col gap-3 py-8 md:gap-5 md:py-12">
       <h2 className="text-[20px] font-semibold leading-[1.5] tracking-[-0.01em] md:text-[length:var(--font-size-heading2)]" id={headingId}>처음이라면 이렇게 시작해 보세요</h2>
-      <div className="grid grid-cols-1 gap-2 md:gap-5 lg:grid-cols-3">
-        <ServiceCard card="recommend" href="/recommendations" requiresLogin linkLabel="추천 받으러 가기" title="AI 추천 받기" description="대화하듯 관심사를 말하면 연구실을 추천해드려요"><RecommendationPreview /></ServiceCard>
-        <ServiceCard card="mail" title="교수님께 메일 쓰기" description={<>원하는 연구실을 고르고,<br />교수님께 보낼 메일을 첨삭받아 보세요</>}><MailPreview /></ServiceCard>
-        <ServiceCard card="coffeechat" title="커피챗 신청하기" description={<>궁금한 연구실 선배에게<br />커피챗으로 연구실 생활을 물어보세요</>}><CoffeeChatPreview /></ServiceCard>
-      </div>
+      <LazyMotion features={domAnimation} strict>
+        <div className="grid grid-cols-1 gap-2 md:gap-5 lg:grid-cols-3">
+          <ServiceCard card="recommend" href="/recommendations" requiresLogin linkLabel="추천 받으러 가기" title="AI 추천 받기" description="대화하듯 관심사를 말하면 연구실을 추천해드려요"><RecommendationPreview /></ServiceCard>
+          <ServiceCard card="mail" title="교수님께 메일 쓰기" description={<>원하는 연구실을 고르고,<br />교수님께 보낼 메일을 첨삭받아 보세요</>}><MailPreview /></ServiceCard>
+          <ServiceCard card="coffeechat" title="커피챗 신청하기" description={<>궁금한 연구실 선배에게<br />커피챗으로 연구실 생활을 물어보세요</>}><CoffeeChatPreview /></ServiceCard>
+        </div>
+      </LazyMotion>
     </section>
   );
 }
