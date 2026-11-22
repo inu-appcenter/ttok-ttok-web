@@ -4,6 +4,7 @@ import { SearchPage } from "@/_pages/search";
 import { DEFAULT_OPEN_GRAPH } from "@/shared/config";
 import { getResearchCategories, getCollegeOptions } from "@/entities/lab/api";
 import {
+  getSearchAnalyticsProperties,
   parseSearchConditions,
   type SearchRouteParams,
 } from "@/features/search-lab";
@@ -44,14 +45,16 @@ export default async function Page({
         ).result?.content.slice(0, 3) ?? [])
       : [];
 
+  const searchProperties = getSearchAnalyticsProperties(conditions, categories.categories, collegesResult.colleges);
+
   return (
     <>
-      <AnalyticsView event="view_search" properties={{ result_count: search.result?.totalElements ?? null }} />
+      <AnalyticsView event="view_search" properties={{ ...searchProperties, result_count: search.result?.totalElements ?? null }} />
       {search.result?.totalElements === 0 && (
         <AnalyticsView
           key={JSON.stringify(conditions)}
           event="view_search_no_result"
-          properties={{ has_query: Boolean(conditions.query), query_length: conditions.query.length }}
+          properties={searchProperties}
         />
       )}
       <SearchPage

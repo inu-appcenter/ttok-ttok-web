@@ -8,6 +8,7 @@ import { captureAnalytics } from "@/shared/lib/analytics";
 import { Button, useStartNavigationProgress, useToast } from "@/shared/ui";
 
 import type { CollegeOption } from "@/entities/lab";
+import { getSearchAnalyticsProperties } from "../model/search-analytics";
 import { SearchConditionDropdown } from "./search-condition-dropdown";
 
 import {
@@ -85,13 +86,10 @@ export function HomeSearchField({
       return;
     }
     setMessage("");
-    captureAnalytics(pathname === "/search" ? "click_search" : "click_home_search", {
-      has_query: Boolean(conditions.query),
-      query_length: conditions.query.length,
-      has_category: Boolean(conditions.category),
-      has_college: Boolean(conditions.college),
-      has_department: Boolean(conditions.department),
-    });
+    captureAnalytics(
+      pathname === "/search" ? "click_search" : "click_home_search",
+      getSearchAnalyticsProperties(conditions, categories, colleges),
+    );
     const href = createSearchHref(conditions);
     startNavigationProgress(href);
     startTransition(() => router.push(href));

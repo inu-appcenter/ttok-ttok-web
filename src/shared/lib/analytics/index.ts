@@ -1,7 +1,7 @@
 const projectToken = process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN;
 const apiHost = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 
-type AnalyticsProperties = Record<string, boolean | number | string | null>;
+type AnalyticsProperties = Record<string, boolean | number | string | string[] | null>;
 type AnalyticsClient = typeof import("posthog-js").default;
 
 // Automatic interaction data is limited to public discovery screens.

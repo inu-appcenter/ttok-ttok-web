@@ -219,9 +219,17 @@ export function OnboardingFlow({
       case "meetingFrequency":
         captureAnalytics("click_onboarding_meeting", { purpose: eventPurpose, meeting: typeof nextAnswer === "string" ? nextAnswer : null });
         break;
-      case "activities":
-        captureAnalytics("click_onboarding_activity", { purpose: eventPurpose, activity_count: nextAnswer.length });
+      case "activities": {
+        const activities = Array.isArray(nextAnswer)
+          ? nextAnswer.filter((activity) => reviewOptions?.works.includes(activity))
+          : [];
+        captureAnalytics("click_onboarding_activity", {
+          purpose: eventPurpose,
+          activities,
+          activity_count: activities.length,
+        });
         break;
+      }
       case "coffeeChat":
         captureAnalytics("click_onboarding_coffeechat", { purpose: eventPurpose, allowed: nextAnswer === "네, 좋아요" });
         break;
