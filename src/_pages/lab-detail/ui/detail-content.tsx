@@ -9,6 +9,17 @@ import { DetailRetryButton } from "./detail-retry-button";
 
 const DETAIL_PREVIEW_LIMIT = 3;
 
+const SECTION_HEADER_LINK_CLASS_NAME =
+  "inline-flex items-center text-[length:var(--font-size-label1)] font-semibold leading-[1.5] hover:underline focus-visible:outline-2 focus-visible:outline-border-primary md:gap-1 md:text-[length:var(--font-size-heading1)]";
+
+function SectionHeaderChevron({ isMobile }: { isMobile: boolean }) {
+  return isMobile ? (
+    <Image alt="" src="/icons/lab-detail/project-chevron.svg" width={18} height={18} />
+  ) : (
+    <Image alt="" src="/icons/lab-detail/papers-chevron.svg" width={22} height={21} />
+  );
+}
+
 function ProjectList({ projects, isMobile, laboratoryId }: { projects: NonNullable<LabDetail["projects"]>; isMobile: boolean; laboratoryId: number }) {
   if (isMobile) {
     return (
@@ -102,7 +113,7 @@ export function ResearchProjects({
       id={isMobile ? "mobile-projects" : "projects"}
     >
       <section className="min-w-0 rounded-[var(--radius-2xl)] bg-bg-default px-4 py-[14px] shadow-[0_4px_16px_var(--color-opacity-black-10)] md:px-6 md:py-5">
-        <h2><AnalyticsLink event="click_lab_page_research_all" properties={{ lab_id: lab.laboratoryId }} href={`/labs/${lab.laboratoryId}/projects`} className="inline-flex items-center text-[length:var(--font-size-label1)] font-semibold leading-[1.5] hover:underline focus-visible:outline-2 focus-visible:outline-border-primary md:gap-1 md:text-[length:var(--font-size-heading1)]">연구과제{isMobile ? <Image alt="" src="/icons/lab-detail/project-chevron.svg" width={18} height={18} /> : <Image alt="" src="/icons/lab-detail/papers-chevron.svg" width={22} height={21} />}</AnalyticsLink></h2>
+        <h2><AnalyticsLink event="click_lab_page_research_all" properties={{ lab_id: lab.laboratoryId }} href={`/labs/${lab.laboratoryId}/projects`} className={SECTION_HEADER_LINK_CLASS_NAME}>연구과제<SectionHeaderChevron isMobile={isMobile} /></AnalyticsLink></h2>
         {lab.projectState?.status === "error" ? (
           <p
             role="status"
@@ -227,15 +238,10 @@ export function RecentPapers({
           event="click_lab_page_paper_all"
           properties={{ lab_id: lab.laboratoryId }}
           href={`/labs/${lab.laboratoryId}/papers`}
-          className="inline-flex items-center gap-1 text-[length:var(--font-size-label1)] font-semibold leading-[1.5] hover:underline focus-visible:outline-2 focus-visible:outline-border-primary md:text-[length:var(--font-size-heading1)]"
+          className={SECTION_HEADER_LINK_CLASS_NAME}
         >
           최근 논문
-          <Image
-            alt=""
-            src="/icons/lab-detail/papers-chevron.svg"
-            width={22}
-            height={21}
-          />
+          <SectionHeaderChevron isMobile={isMobile} />
         </AnalyticsLink>
       </h2>
       {lab.publicationState?.status === "error" ? (
