@@ -9,6 +9,7 @@ import { MobileBottomNav } from "@/widgets/mobile-bottom-nav";
 import { SiteFooter } from "@/widgets/site-footer";
 
 import { HomeDepartmentDirectory } from "./home-department-directory";
+import { HomeLabReveal } from "./home-lab-reveal";
 import { HomeServiceGuide } from "./home-service-guide";
 
 export type HomePageProps = {
@@ -58,7 +59,7 @@ export function HomePage({
           <section aria-labelledby="mobile-home-labs-heading" className="flex flex-col gap-3 px-4 py-8">
             <h2 id="mobile-home-labs-heading" className="text-[20px] font-semibold leading-[1.5] tracking-[-0.01em]">인기 연구실 둘러보기</h2>
             {labsError ? <LabLoadError message={labsError} /> : labs.length ? (
-              <div className="flex flex-col gap-2">{labs.map((lab, index) => <LabCard key={lab.labId} lab={lab} analytics={{ event: "click_home_lab_list", position: index + 1 }} />)}</div>
+              <div className="flex flex-col gap-2">{labs.map((lab, index) => <HomeLabReveal key={lab.labId}><LabCard lab={lab} analytics={{ event: "click_home_lab_list", position: index + 1 }} /></HomeLabReveal>)}</div>
             ) : <p className="py-10 text-center text-text-subtle">표시할 연구실이 아직 없어요.</p>}
           </section>
         </div>
@@ -101,7 +102,7 @@ export function HomePage({
                     <LabLoadError message={labsError} />
                   </div>
                 ) : labs.length > 0 ? (
-                  labs.map((lab, index) => <LabCard key={lab.labId} lab={lab} analytics={{ event: "click_home_lab_list", position: index + 1 }} />)
+                  labs.map((lab, index) => <HomeLabReveal key={lab.labId}><LabCard lab={lab} analytics={{ event: "click_home_lab_list", position: index + 1 }} /></HomeLabReveal>)
                 ) : (
                   <p className="col-span-full py-10 text-center text-[length:var(--font-size-body2)] leading-[1.5] text-text-subtle">
                     표시할 연구실이 아직 없어요.
