@@ -133,8 +133,9 @@ export const CompleteFlow: Story = {
     await expect(detailLink).toHaveAttribute("rel", "noopener noreferrer");
   },
 };
-// 새로 찾기: 이전 대화는 흐리게 남고 결과 카드는 유지되며, 상세 이동 후 복귀해도 현재 탭에서 복원된다.
-export const NewSearchKeepsResults: Story = {
+// 새로 찾기: 이전 대화는 흐리게 남고, 데스크톱 결과 영역은 초기 진행 단계로 돌아가며
+// 모바일은 이전 추천 결과를 계속 볼 수 있다. 상세 이동 후 복귀해도 현재 탭에서 복원된다.
+export const NewSearchResetsResultPanel: Story = {
   args: { memberId: 7001, sessionKey: "session-a" },
   render: function Render(args) {
     const [visible, setVisible] = useState(true);
@@ -180,9 +181,7 @@ export const NewSearchKeepsResults: Story = {
         canvas.getByRole("button", { name: /이전 추천/ }),
       ).toBeInTheDocument();
     } else {
-      await expect(
-        (await canvas.findAllByRole("link", { name: "연구실 보기" }))[0],
-      ).toBeInTheDocument();
+      await expectInitialProgressSidebar(canvasElement);
     }
     const toggle = canvas.getByRole("button", { name: "상세 이동 토글" });
     await userEvent.click(toggle);
@@ -548,3 +547,22 @@ export const MobileResultKeyboard: Story = {
     await expect(trigger).toHaveFocus();
   },
 };
+
+// 데스크톱 결과 영역이 결과 없이 첫 단계가 진행 중인 초기 상태인지 확인한다.
+async function expectInitialProgressSidebar(canvasElement: HTMLElement) {
+  const aside = canvasElement.querySelector("aside");
+  if (!aside) throw new Error("데스크톱 결과 영역이 필요합니다.");
+  const sidebar = within(aside);
+  await expect(
+    sidebar.getByRole("heading", { name: "어떤 연구실이 잘 맞을까요?" }),
+  ).toBeVisible();
+  const steps = within(
+    sidebar.getByRole("list", { name: "추천 준비 단계" }),
+  ).getAllByRole("listitem");
+  await expect(steps[0]).toHaveAttribute("aria-current", "step");
+  await expect(steps[0]).toHaveTextContent("관심 주제 파악하는 중…");
+  await expect(steps[1]).not.toHaveAttribute("aria-current");
+  await expect(
+    sidebar.queryAllByRole("link", { name: /연구실 보기/ }),
+  ).toHaveLength(0);
+}

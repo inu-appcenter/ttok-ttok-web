@@ -39,7 +39,8 @@ export function RecommendationResultsSidebar({
   result?: RecommendationResult;
   isPending: boolean;
 }) {
-  const hasResults = result !== undefined;
+  // 다시 받기 후에는 새 결과가 나올 때까지 진행 단계 화면으로 돌아간다.
+  const hasResults = step === "results" && result !== undefined;
   const recommendations = result?.recommendations ?? [];
   return (
     <aside className={`hidden h-[calc(100dvh-168px)] w-[440px] shrink-0 overflow-y-auto rounded-[20px] bg-bg-neutral shadow-[0_4px_16px_var(--color-opacity-black-10)] lg:block ${hasResults ? "px-9 pb-9 pt-10" : "p-10"}`}>
