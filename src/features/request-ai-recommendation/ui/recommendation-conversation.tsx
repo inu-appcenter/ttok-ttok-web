@@ -61,12 +61,12 @@ export function RecommendationConversation({
         behavior: "smooth",
       });
     } else {
-      end.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      end.current?.scrollIntoView({ block: "end", behavior: "smooth" });
     }
   }, [step]);
   return (
     <div
-      className="mt-6 flex flex-col gap-3 lg:mt-7 lg:max-h-[calc(100dvh-264px)] lg:gap-4 lg:overflow-y-auto lg:pb-4"
+      className="relative mt-6 flex flex-col gap-3 lg:mt-7 lg:max-h-[calc(100dvh-264px)] lg:gap-4 lg:overflow-y-auto lg:pb-4"
       aria-live="polite"
       aria-busy={isPending}
     >
@@ -255,7 +255,10 @@ export function RecommendationConversation({
           )}
         </>
       )}
-      <div ref={end} />
+      <div
+        ref={end}
+        className="scroll-mb-[calc(180px_+_env(safe-area-inset-bottom))]"
+      />
     </div>
   );
 }
