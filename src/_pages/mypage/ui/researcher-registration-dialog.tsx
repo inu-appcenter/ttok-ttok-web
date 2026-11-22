@@ -123,14 +123,15 @@ export function ResearcherRegistrationDialog({
 
   return (
     <Dialog
-      className="max-w-[520px] rounded-[var(--radius-3xl)] border-0"
+      className="md:max-w-[520px] md:rounded-[var(--radius-3xl)] md:border-0"
       description="연구실을 고르면 학부연구생으로 저장돼요."
       headerLayout="form"
       isOpen={isOpen}
+      mobileBottomSheet
       onClose={handleClose}
       title="소속 연구실을 알려주세요"
     >
-      <div className="flex flex-col gap-[var(--spacing-spacing-4)] px-6 pb-6 pt-[var(--spacing-spacing-4)] md:px-9 md:pb-9">
+      <div className="flex flex-col gap-[var(--spacing-spacing-4)] px-[var(--spacing-spacing-5)] pt-[var(--spacing-spacing-4)] md:px-9 md:pb-9">
         <div className="flex flex-col gap-[var(--spacing-spacing-2)]">
           <p className={LABEL_CLASSES}>연구실 정보</p>
           <LabSearchCombobox
