@@ -1,5 +1,7 @@
 "use client";
 
+import { resetAnalytics } from "@/shared/lib/analytics";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type ReactNode } from "react";
@@ -63,12 +65,14 @@ export function MemberProfilePanel({
         const result = await (kind === "logout" ? logout() : withdrawMember());
         if (!result.ok) {
           if (result.requiresLogin) {
+            await resetAnalytics();
             router.replace("/login");
             router.refresh();
             return;
           }
           throw new Error(result.message);
         }
+        await resetAnalytics();
         router.replace("/login");
         router.refresh();
       }

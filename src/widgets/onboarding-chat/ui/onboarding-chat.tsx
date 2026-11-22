@@ -1,5 +1,6 @@
 "use client";
 
+import { captureAnalytics, setAnalyticsPurpose } from "@/shared/lib/analytics";
 import { useRouter } from "next/navigation";
 
 import {
@@ -40,7 +41,10 @@ export function OnboardingChat({
     const labTab = openInNewTab ? window.open("about:blank", "_blank") : null;
     if (labTab) labTab.opener = null;
     try {
-      const result = await completeOnboarding(answers);
+      const result = await completeOnboarding(answers, ({ purpose, success, error_code }) => {
+        if (success) setAnalyticsPurpose(purpose);
+        captureAnalytics("submit_onboarding", { purpose, success, ...(error_code ? { error_code } : {}) });
+      });
       if (!result.ok) throw new Error(result.message);
 
       if (labTab) {

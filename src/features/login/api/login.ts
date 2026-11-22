@@ -1,3 +1,5 @@
+import { captureAnalytics } from "@/shared/lib/analytics";
+
 import type { LoginCredentials, LoginResult } from "../model/login";
 
 const LOGIN_ERROR_MESSAGE =
@@ -29,12 +31,17 @@ export async function login(
       const result: LoginSuccessResponse = await response.json().catch(() => ({}));
 
       if (typeof result.isNew !== "boolean" || typeof result.memberId !== "number") {
+        captureAnalytics("submit_login", { success: false, error_type: "server" });
         return { message: LOGIN_ERROR_MESSAGE, ok: false };
       }
 
       return { isNew: result.isNew, memberId: result.memberId, ok: true };
     }
 
+    const errorType = response.status === 401 ? "invalid_credentials"
+      : response.status === 400 ? "missing_input"
+      : "server";
+    captureAnalytics("submit_login", { success: false, error_type: errorType });
     const error: LoginErrorResponse = await response.json().catch(() => ({}));
 
     return {
@@ -43,6 +50,7 @@ export async function login(
       ok: false,
     };
   } catch {
+    captureAnalytics("submit_login", { success: false, error_type: "server" });
     return { message: LOGIN_ERROR_MESSAGE, ok: false };
   }
 }

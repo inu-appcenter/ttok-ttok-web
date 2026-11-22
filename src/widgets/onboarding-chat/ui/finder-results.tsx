@@ -1,5 +1,7 @@
 "use client";
 
+import { captureAnalytics } from "@/shared/lib/analytics";
+import { AnalyticsView } from "@/shared/lib/analytics/view";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
@@ -116,6 +118,7 @@ export function FinderResults({
 
   return (
     <div className="flex w-full flex-col items-start gap-4">
+      <AnalyticsView event="click_onboarding_recommend" properties={{ purpose: "FINDER", result_count: recommendations.length }} />
       <ChatMessage sender="bot">찾았어요! 이 연구실이 잘 맞을 것 같아요</ChatMessage>
       <div className="hidden md:block">
         <HomeLink disabled={disabled} onHome={onHome} />
@@ -164,7 +167,10 @@ export function FinderResults({
               aria-label={`${lab.name} 보기`}
               className="ml-auto mt-2 flex cursor-pointer items-center gap-1 text-sm font-semibold text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
               disabled={disabled}
-              onClick={() => onOpen(`/labs/${lab.id}`)}
+              onClick={() => {
+                captureAnalytics("click_onboarding_recommend_lab", { purpose: "FINDER", lab_id: lab.id, position: index + 1 });
+                onOpen(`/labs/${lab.id}`);
+              }}
               type="button"
             >
               연구실 보기
