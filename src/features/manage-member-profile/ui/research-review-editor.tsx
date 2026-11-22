@@ -3,104 +3,101 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { MemberResearchProfile } from "@/entities/member";
 import { useLoginRequiredRedirect } from "@/shared/lib/auth/login-required";
-import { Button, Dialog } from "@/shared/ui";
+import { useToast } from "@/shared/ui";
+import type { ResearchReviewOptions } from "../model/review-options";
+import {
+  isResearchReviewComplete,
+  ResearchReviewFormDialog,
+  type ResearchReviewValue,
+} from "./research-review-form-dialog";
+
+const SAVE_FAILED_MESSAGE = "연구실 정보를 저장하지 못했어요. 다시 시도해주세요.";
+
+function toMessage(value: unknown) {
+  return value &&
+    typeof value === "object" &&
+    "message" in value &&
+    typeof value.message === "string"
+    ? value.message
+    : null;
+}
 
 export function ResearchReviewEditor({
   research,
   onClose,
+  reviewOptions,
+  reviewOptionsError,
 }: {
   research: MemberResearchProfile;
   onClose: () => void;
+  reviewOptions?: ResearchReviewOptions;
+  reviewOptionsError?: string;
 }) {
   const router = useRouter();
+  const showToast = useToast();
   const redirectToLogin = useLoginRequiredRedirect();
-  const [coreTime, setCoreTime] = useState(research.review?.coreTime ?? "");
-  const [weeklyMeeting, setWeeklyMeeting] = useState(
-    research.review?.weeklyMeeting ?? "",
-  );
-  const [doings, setDoings] = useState(
-    research.review?.doings.join(", ") ?? "",
-  );
-  const [pending, setPending] = useState(false),
-    [error, setError] = useState("");
+  // 저장된 값이 현재 선택지에 없어도 칩 그룹이 덧붙여 보여주므로 그대로 미리 선택한다.
+  const [value, setValue] = useState<ResearchReviewValue>({
+    coreTime: research.review?.coreTime ?? "",
+    doings: research.review?.doings ?? [],
+    weeklyMeeting: research.review?.weeklyMeeting ?? "",
+  });
+  const [isPending, setIsPending] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const busy = useRef(false);
-  async function save(event: React.FormEvent) {
-    event.preventDefault();
-    if (busy.current) return;
+
+  function handleClose() {
+    if (!busy.current) onClose();
+  }
+
+  async function handleSubmit() {
+    if (busy.current || !reviewOptions || !isResearchReviewComplete(value))
+      return;
     busy.current = true;
-    setPending(true);
-    setError("");
+    setIsPending(true);
+    setErrorMessage("");
     try {
       const response = await fetch("/api/member/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          coreTime,
-          weeklyMeeting,
-          doings: doings
-            .split(",")
-            .map((item) => item.trim())
-            .filter(Boolean),
-        }),
+        body: JSON.stringify(value),
       });
-      const body = await response.json();
-      if (response.status === 401) redirectToLogin();
-      if (!response.ok)
-        throw new Error(body.message || "연구실 정보를 저장하지 못했어요.");
+      const body: unknown = await response.json().catch(() => null);
+      if (response.status === 401) {
+        redirectToLogin();
+        return;
+      }
+      if (!response.ok) {
+        setErrorMessage(toMessage(body) ?? SAVE_FAILED_MESSAGE);
+        return;
+      }
+      showToast({ state: "success", title: "연구실 정보를 저장했어요." });
       router.refresh();
       onClose();
-    } catch (failure) {
-      setError(
-        failure instanceof Error
-          ? failure.message
-          : "연구실 정보를 저장하지 못했어요.",
-      );
+    } catch {
+      setErrorMessage(SAVE_FAILED_MESSAGE);
     } finally {
       busy.current = false;
-      setPending(false);
+      setIsPending(false);
     }
   }
+
   return (
-    <Dialog
+    <ResearchReviewFormDialog
+      canSubmit={Boolean(reviewOptions) && isResearchReviewComplete(value)}
+      description="학부연구생으로 제공한 연구실 정보를 수정할 수 있어요."
+      errorMessage={errorMessage}
       isOpen
+      isPending={isPending}
+      name="review"
+      onChange={setValue}
+      onClose={handleClose}
+      onSubmit={() => void handleSubmit()}
+      reviewOptions={reviewOptions}
+      reviewOptionsError={reviewOptionsError}
+      submitLabel="저장"
       title="연구실 정보 수정"
-      onClose={() => {
-        if (!busy.current) onClose();
-      }}
-    >
-      <form onSubmit={save} className="flex flex-col gap-4 p-6">
-        {(
-          [
-            ["코어타임", coreTime, setCoreTime],
-            ["주간 미팅", weeklyMeeting, setWeeklyMeeting],
-            ["하는 일 (쉼표로 구분)", doings, setDoings],
-          ] as const
-        ).map(([label, value, setter], index) => (
-          <label
-            key={label}
-            className="flex flex-col gap-2 text-sm text-text-subtle"
-          >
-            {label}
-            <input
-              autoFocus={index === 0}
-              required
-              maxLength={index < 2 ? 30 : 1000}
-              value={value}
-              disabled={pending}
-              onChange={(event) => setter(event.target.value)}
-              className="h-11 rounded-lg border border-border-primary px-3 text-text-default focus-visible:outline-2 focus-visible:outline-border-primary"
-            />
-          </label>
-        ))}
-        {error ? (
-          <p role="alert" className="text-sm text-text-error">
-            {error}
-          </p>
-        ) : null}
-        <Button type="submit" isLoading={pending}>
-          저장
-        </Button>
-      </form>
-    </Dialog>
+      value={value}
+    />
   );
 }
