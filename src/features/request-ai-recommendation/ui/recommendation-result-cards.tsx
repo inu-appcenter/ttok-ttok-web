@@ -17,7 +17,7 @@ export function RecommendationResultCards({
       {recommendations.map((lab, index) => (
         <article
           key={lab.id}
-          className="rounded-xl border border-transparent bg-white px-4 py-[12px] shadow-[0_4px_16px_var(--color-opacity-black-10)] hover:border-border-primary hover:bg-bg-primary-subtle focus-within:border-border-primary focus-within:bg-bg-primary-subtle"
+          className="relative cursor-pointer rounded-xl border border-transparent bg-white px-4 py-[12px] shadow-[0_4px_16px_var(--color-opacity-black-10)] hover:border-border-primary hover:bg-bg-primary-subtle focus-within:border-border-primary focus-within:bg-bg-primary-subtle has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-border-primary"
         >
           {index === 0 && (
             <span className="mb-2 inline-block rounded-full bg-[linear-gradient(90deg,#a7c0db,#c2aed6,#d699c5)] px-3 py-1 text-[14px] font-semibold text-white">
@@ -55,8 +55,9 @@ export function RecommendationResultCards({
             onClick={() => captureAnalytics("click_recommend_result", { lab_id: lab.id, position: index + 1 })}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 flex items-center justify-end gap-1 text-[14px] text-text-primary"
+            className="mt-2 flex items-center justify-end gap-1 text-[14px] text-text-primary after:absolute after:inset-0 after:rounded-xl after:content-[''] focus-visible:outline-none"
           >
+            <span className="sr-only">{lab.name} </span>
             연구실 보기
             <Image
               src="/icons/recommendations/chevron-right.svg"
